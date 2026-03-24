@@ -47,6 +47,8 @@ def main():
     ]
     ydna_cols = [c for c in ydna_cols if c in df_ydna.columns]
     df_ydna = df_ydna[ydna_cols].copy()
+    if "Name" in df_ydna.columns:
+        df_ydna.rename(columns={"Name": "Name_ydna"}, inplace=True)
 
     # Preserve original order from the primary file
     df_ydna["sort_order"] = range(len(df_ydna))
@@ -55,9 +57,11 @@ def main():
     snp_cols = [c for c in snp_cols if c in df_snp.columns]
     df_snp = df_snp[snp_cols]
 
-    test_cols = ["kit", "test"]
+    test_cols = ["kit", "surname", "test"]
     test_cols = [c for c in test_cols if c in df_test.columns]
-    df_test = df_test[test_cols]
+    df_test = df_test[test_cols].copy()
+    if "surname" in df_test.columns:
+        df_test.rename(columns={"surname": "surname_test"}, inplace=True)
 
     # Merge dataframes on 'kit'
     df = df_ydna.merge(df_snp, on="kit", how="outer")
@@ -70,7 +74,7 @@ def main():
     # Map column names to standard JSON properties
     df.rename(
         columns={
-            "Name": "surname",
+            "Name_ydna": "surname_ydna",
             "Sub Group": "group",
             "Paternal Ancestor Name": "ancestor",
             "Map Location": "location",
@@ -95,7 +99,18 @@ def main():
             return words[-2]
         return words[-1]
 
-    df["surname"] = df["surname"].apply(get_surname)
+    if "surname_test" in df.columns and "surname_ydna" in df.columns:
+        df["surname_ydna"] = df["surname_ydna"].apply(get_surname)
+        df["surname"] = df.apply(
+            lambda row: (
+                row["surname_test"] if row["surname_test"] else row["surname_ydna"]
+            ),
+            axis=1,
+        )
+    elif "surname_test" in df.columns:
+        df.rename(columns={"surname_test": "surname"}, inplace=True)
+    elif "surname_ydna" in df.columns:
+        df["surname"] = df["surname_ydna"].apply(get_surname)
 
     # Convert lat/lon to float
     df["latitude"] = pd.to_numeric(df["latitude"], errors="coerce").fillna(0.0)
