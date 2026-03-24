@@ -14,3 +14,7 @@ export function refreshYDNADisplay() {
     if (!ydnaInitialized) return;
     ydnaTree.render(ydnaHaploData, ydnaPeopleData, ydnaGroupRoots);
 }
+
+export function resetYDNATree() {
+    if (ydnaTree) ydnaTree.resetZoom();
+}

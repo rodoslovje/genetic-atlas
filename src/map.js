@@ -32,6 +32,16 @@ export class MapVisualizer {
         this.refreshMap();
     }
 
+    resetZoom() {
+        if (!this.map || !this.markers) return;
+        const bounds = this.markers.getBounds();
+        if (bounds && bounds.isValid()) {
+            this.map.fitBounds(bounds, { maxZoom: 14, padding: [40, 40] });
+        } else {
+            this.map.fitBounds([[45.421, 13.375], [46.876, 16.606]]);
+        }
+    }
+
     refreshMap() {
         const view = (window.location.hash || "#map").substring(1);
         if (view !== "map") return;

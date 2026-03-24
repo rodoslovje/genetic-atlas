@@ -1,6 +1,6 @@
 import { state, translations, loadData, initFilters, updateURLState, getActiveData, getSelectedGroups, ydnaPeopleData, mtdnaPeopleData, ydnaGroupRoots, mtdnaGroupRoots } from "./shared.js";
-import { initYDNA, refreshYDNADisplay, ydnaInitialized } from "./ydna.js";
-import { initMTDNA, refreshMTDNADisplay, mtdnaInitialized } from "./mtdna.js";
+import { initYDNA, refreshYDNADisplay, ydnaInitialized, resetYDNATree } from "./ydna.js";
+import { initMTDNA, refreshMTDNADisplay, mtdnaInitialized, resetMTDNATree } from "./mtdna.js";
 import { mapVis } from "./map.js";
 
 function applyTranslations() {
@@ -118,6 +118,18 @@ window.addEventListener("click", (e) => {
         langMenu.classList.remove("open");
     }
 });
+
+window.resetView = function (e) {
+    e.preventDefault();
+    const view = (window.location.hash || "#map").substring(1);
+    if (view === "map") {
+        mapVis.resetZoom();
+    } else if (view === "ydna") {
+        resetYDNATree();
+    } else if (view === "mtdna") {
+        resetMTDNATree();
+    }
+};
 
 window.exportView = function (e) {
     e.preventDefault();
@@ -376,6 +388,7 @@ function handleHashChange() {
     const treeOptions = document.getElementById("tree-options");
     const ydnaEras = document.getElementById("ydna-eras");
     const exportBtn = document.getElementById("export-btn");
+    const resetBtn = document.getElementById("reset-btn");
 
     const isMap = view === "map";
     const isTree = view === "ydna" || view === "mtdna";
@@ -385,6 +398,10 @@ function handleHashChange() {
         const titleKey = isMap ? "exportMap" : "exportTree";
         exportBtn.setAttribute("data-i18n-title", titleKey);
         exportBtn.setAttribute("title", translations[state.currentLang][titleKey]);
+    }
+
+    if (resetBtn) {
+        resetBtn.style.display = (isMap || isTree) ? "flex" : "none";
     }
 
     if (isMap || isTree) {

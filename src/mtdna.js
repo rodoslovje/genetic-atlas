@@ -14,3 +14,7 @@ export function refreshMTDNADisplay() {
     if (!mtdnaInitialized) return;
     mtdnaTree.render(mtdnaHaploData, mtdnaPeopleData, mtdnaGroupRoots);
 }
+
+export function resetMTDNATree() {
+    if (mtdnaTree) mtdnaTree.resetZoom();
+}

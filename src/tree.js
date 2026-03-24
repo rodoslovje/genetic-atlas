@@ -178,6 +178,12 @@ export class TreeVisualizer {
         }
     }
 
+    resetZoom() {
+        if (this.root) {
+            this.zoomToNode(this.root, 750);
+        }
+    }
+
     zoomToNode(d, duration = 750) {
         const scale = 0.75;
         const tx = 30;
