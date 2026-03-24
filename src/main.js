@@ -121,8 +121,9 @@ window.exportTree = function (e) {
 
     const style = document.createElement("style");
     style.textContent = `
+        text { font-family: 'Segoe UI', Tahoma, sans-serif; }
         .node circle { stroke-width: 2.5px; }
-        .node text { font-size: 11px; fill: #1a202c; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        .node text { font-size: 11px; fill: #1a202c; }
         .node--person text { font-weight: normal; fill: #2c5282; font-size: 12px; }
         .node--prominent text { font-weight: bold; font-size: 12px; }
         .node--autoplaced circle { fill: #e53e3e !important; stroke: #9b2c2c !important; }
@@ -144,14 +145,19 @@ window.exportTree = function (e) {
     rect.setAttribute("fill", "#f1f5f9");
     clone.insertBefore(rect, clone.firstChild);
 
+    const titleLink = document.createElementNS("http://www.w3.org/2000/svg", "a");
+    titleLink.setAttribute("href", window.location.origin);
+    titleLink.setAttribute("target", "_blank");
+
     const titleText = document.createElementNS("http://www.w3.org/2000/svg", "text");
     titleText.textContent = `${translations[state.currentLang].brand} - ${translations[state.currentLang][view]}`;
     titleText.setAttribute("x", bbox.x - 40);
     titleText.setAttribute("y", bbox.y - 45);
-    titleText.setAttribute("font-size", "18px");
+    titleText.setAttribute("font-size", "24px");
     titleText.setAttribute("font-weight", "bold");
     titleText.setAttribute("fill", "#1a365d");
-    clone.appendChild(titleText);
+    titleLink.appendChild(titleText);
+    clone.appendChild(titleLink);
 
     const urlLink = document.createElementNS("http://www.w3.org/2000/svg", "a");
     urlLink.setAttribute("href", window.location.origin);
