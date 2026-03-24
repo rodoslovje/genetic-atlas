@@ -142,6 +142,11 @@ def main():
         "Ukraine": "ua",
         "Saudi Arabia": "sa",
         "Austria": "at",
+        "Sweden": "se",
+        "Russian Federation": "ru",
+        "Switzerland": "ch",
+        "Portugal": "pt",
+        "Belarus": "by",
         "Unknown Origin": "",
         "": "",
     }
