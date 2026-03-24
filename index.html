@@ -12,7 +12,7 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
-        :root { --nav-height: 60px; --sidebar-width: 220px; --accent: #1a365d; }
+        :root { --nav-height: 60px; --sidebar-width: 230px; --accent: #1a365d; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; overflow: hidden; background: #f1f5f9; display: flex; flex-direction: column; height: 100vh; }
         #navbar { height: var(--nav-height); background: white; width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-sizing: border-box; border-bottom: 1px solid #e2e8f0; z-index: 2001; box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex-shrink: 0; }
         #navbar .brand { font-size: 20px; font-weight: bold; color: var(--accent); text-decoration: none; }
@@ -129,7 +129,8 @@
         <div class="sidebar-section">
             <h4 class="sidebar-section-title" data-i18n="searchTitle">Search</h4>
             <div style="position: relative;">
-                <input type="text" id="search-input" data-i18n-placeholder="searchPlaceholder" placeholder="Surname, ancestor, kit..." style="width: 100%; padding: 6px 24px 6px 6px; font-size: 13px; border: 1px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; outline: none;" autocomplete="off">
+                <input type="text" id="search-input" data-i18n-placeholder="searchPlaceholder" placeholder="Surname, ancestor, kit..." style="width: 100%; padding: 6px; font-size: 13px; border: 1px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; outline: none;" autocomplete="off">
+                <span id="search-counter" style="position: absolute; right: 28px; top: 50%; transform: translateY(-50%); font-size: 11px; color: #718096; pointer-events: none; display: none;"></span>
                 <span id="search-clear" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #a0aec0; display: none; font-weight: bold; font-size: 12px; padding: 4px;">✕</span>
             </div>
         </div>

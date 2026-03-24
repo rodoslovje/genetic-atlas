@@ -121,14 +121,14 @@ window.addEventListener("click", (e) => {
 
 window.exportView = function (e) {
     e.preventDefault();
-    const view = (window.location.hash || "#map").substring(1);
+    const view = (window.location.hash || "#ymap").substring(1);
     const overlay = document.getElementById("loading-overlay");
     if (overlay) overlay.classList.add("active");
 
     // Delay briefly to allow the browser to paint the loading UI
     setTimeout(() => {
-        if (view === "map") {
-            const mapEl = document.getElementById("map-container");
+        if (view === "ymap" || view === "mmap") {
+            const mapEl = document.getElementById(view + "-container");
             if (!mapEl || typeof html2canvas === "undefined") {
                 if (overlay) overlay.classList.remove("active");
                 return;
@@ -212,11 +212,11 @@ window.exportView = function (e) {
         const style = document.createElement("style");
         style.textContent = `
             text { font-family: 'Segoe UI', Tahoma, sans-serif; }
-            .node circle, .node rect { stroke-width: 2.5px; }
+            .node circle { stroke-width: 2.5px; }
             .node text { font-size: 11px; fill: #1a202c; }
             .node--person text { font-weight: normal; fill: #2c5282; font-size: 12px; }
             .node--prominent text { font-weight: bold; font-size: 12px; }
-            .node--autoplaced circle, .node--autoplaced rect { fill: #e53e3e !important; stroke: #9b2c2c !important; }
+            .node--autoplaced circle { fill: #e53e3e !important; stroke: #9b2c2c !important; }
             .node--autoplaced text { fill: #c53030 !important; font-weight: bold; }
             .node--search-match text { fill: #c05621 !important; font-weight: 800 !important; font-size: 13.5px !important; }
             .link { fill: none; stroke-width: 1.5px; opacity: 0.5; }
@@ -303,16 +303,17 @@ window.exportView = function (e) {
 
 function validateSearch() {
     const searchInput = document.getElementById("search-input");
+    const searchCounter = document.getElementById("search-counter");
     if (!searchInput) return;
 
     let hasResults = true;
     if (state.searchQuery) {
         const query = state.searchQuery.toLowerCase();
         const currentView = (window.location.hash || "#map").substring(1);
-        hasResults = false;
+        let matchCount = 0;
 
         const checkPeople = (people, selectedGroups, rootsMap) => {
-            return people.some(p => {
+            const matches = people.filter(p => {
                 const matchesText = (p.surname && p.surname.toLowerCase().includes(query)) ||
                     (p.ancestor && p.ancestor.toLowerCase().includes(query)) ||
                     (p.kit && p.kit.toLowerCase().includes(query)) ||
@@ -321,14 +322,23 @@ function validateSearch() {
                 const missingPath = ((currentView === "ydna" || currentView === "mtdna") && p.haplogroup === "" && !rootsMap[p.group]);
                 return matchesText && matchesGroup && !missingPath;
             });
+            return matches.length;
         };
 
         if ((currentView === "ydna" || currentView === "map") && ydnaPeopleData) {
-            if (checkPeople(ydnaPeopleData, state.ydnaSelectedGroups, ydnaGroupRoots)) hasResults = true;
+            matchCount += checkPeople(ydnaPeopleData, state.ydnaSelectedGroups, ydnaGroupRoots);
         }
         if ((currentView === "mtdna" || currentView === "map") && mtdnaPeopleData) {
-            if (checkPeople(mtdnaPeopleData, state.mtdnaSelectedGroups, mtdnaGroupRoots)) hasResults = true;
+            matchCount += checkPeople(mtdnaPeopleData, state.mtdnaSelectedGroups, mtdnaGroupRoots);
         }
+
+        hasResults = matchCount > 0;
+        if (searchCounter) {
+            searchCounter.innerText = translations[state.currentLang].searchMatches.replace("{0}", matchCount);
+            searchCounter.style.display = "block";
+        }
+    } else {
+        if (searchCounter) searchCounter.style.display = "none";
     }
     searchInput.style.color = hasResults ? "" : "#e53e3e";
 }
@@ -444,11 +454,15 @@ function initApp() {
         searchInput.value = state.searchQuery;
         if (state.searchQuery) {
             searchClear.style.display = "block";
+            searchInput.style.paddingRight = "75px";
+        } else {
+            searchInput.style.paddingRight = "6px";
         }
 
         const updateSearch = (val) => {
             state.searchQuery = val;
             searchClear.style.display = val ? "block" : "none";
+            searchInput.style.paddingRight = val ? "75px" : "6px";
             validateSearch();
             updateURLState();
 

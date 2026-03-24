@@ -95,11 +95,10 @@ export class MapVisualizer {
         this.lastSearchQuery = state.searchQuery;
 
         if (searchChanged || this.firstLoad) {
-            const maxZoom = this.firstLoad ? 12 : this.map.getZoom();
             this.firstLoad = false;
 
             if (state.searchQuery && hasResults) {
-                this.map.fitBounds(bounds, { maxZoom: maxZoom, padding: [40, 40] });
+                this.map.fitBounds(bounds, { maxZoom: 14, padding: [40, 40] });
             } else if (!state.searchQuery) {
                 this.map.fitBounds([[45.421, 13.375], [46.876, 16.606]]);
             }

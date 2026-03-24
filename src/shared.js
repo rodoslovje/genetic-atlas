@@ -10,8 +10,9 @@ export const translations = {
         ageEstimate: "Age Estimate", missingPath: "Missing data", notePathMissing: "Path missing in JSON",
         bce: "BCE", ce: "CE", snpLabel: "SNP", haplogroup: "Haplogroup", haplotype: "Haplotype", location: "Location",
         infoDataFtdna: "Slovenian Origin project on FamilyTreeDNA", infoSloDnaPool: "Slovenian DNA Pool",
-        infoSloGenSoc: "Slovenian Genealogical Society", searchTitle: "Search", searchPlaceholder: "Surname, ancestor, kit, haplogroup...",
+        infoSloGenSoc: "Slovenian Genealogical Society", searchTitle: "Search", searchPlaceholder: "Surname, haplogroup, kit...",
         exportTree: "Export Tree as SVG", exportMap: "Export Map as PNG", infoButton: "Additional Information", exporting: "Exporting...",
+        searchMatches: "Found: {0}",
         attributionHtml: "Source: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> and <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a> project."
     },
     sl: {
@@ -25,8 +26,9 @@ export const translations = {
         ageEstimate: "Ocena starosti", missingPath: "Pomanjkljivi podatki", notePathMissing: "V JSON manjka pot",
         bce: "pr. n. št.", ce: "n. št.", snpLabel: "SNP", haplogroup: "Haploskupina", haplotype: "Haplotip", location: "Lokacija",
         infoDataFtdna: "Projekt Slovensko poreklo na FamilyTreeDNA", infoSloDnaPool: "Slovenski DNK sklad",
-        infoSloGenSoc: "Slovensko rodoslovno društvo", searchTitle: "Iskanje", searchPlaceholder: "Priimek, prednik, kit, haploskupina...",
+        infoSloGenSoc: "Slovensko rodoslovno društvo", searchTitle: "Iskanje", searchPlaceholder: "Priimek, haploskupina, kit...",
         exportTree: "Izvozi drevo kot SVG", exportMap: "Izvozi zemljevid kot PNG", infoButton: "Dodatne informacije", exporting: "Izvažanje...",
+        searchMatches: "Najdeno: {0}",
         attributionHtml: "Vir: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> in projekt <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovensko poreklo</a>."
     }
 };
