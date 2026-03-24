@@ -188,8 +188,7 @@ export class TreeVisualizer {
 
         if (!zoomTargetNode) {
             let zoomTargetGroup = state.lastZoomedGroup;
-            if (!selectedGroups.has(zoomTargetGroup)) zoomTargetGroup = selectedGroups.size > 0 ? Array.from(selectedGroups)[0] : null;
-            if (zoomTargetGroup) {
+            if (zoomTargetGroup && selectedGroups.has(zoomTargetGroup)) {
                 const hg = groupRootsMap[zoomTargetGroup] || zoomTargetGroup;
                 const findHg = (n, targetHg) => {
                     if (n.data.haplogroup === targetHg) return n;
