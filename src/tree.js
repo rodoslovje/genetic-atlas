@@ -136,75 +136,11 @@ export class TreeVisualizer {
             });
         }
 
-        const groups = [...new Set(peopleData.map((p) => p.group))].filter((g) => g).sort();
-        groups.forEach((groupName) => {
-            const isChecked = selectedGroups.has(groupName);
-            const targetRoot = groupRootsMap[groupName] || groupName;
-            const target = allNodes.find((d) => d.data.haplogroup === targetRoot);
-
-            if (target) {
-                if (!isChecked && target.children) {
-                    target._children = target.children;
-                    target.children = null;
-                } else if (isChecked && target._children) {
-                    target.children = target._children;
-                    target._children = null;
-                }
-            }
-
-            if (!isChecked) {
-                const visiblePeople = allNodes.filter((d) => d.data.isPerson && d.data.majorGroup === groupName);
-                visiblePeople.forEach((personNode) => {
-                    const parent = personNode.parent;
-                    if (parent) {
-                        if (parent.children) {
-                            parent.children = parent.children.filter((c) => c !== personNode);
-                        }
-                        if (parent._children) {
-                            parent._children = parent._children.filter((c) => c !== personNode);
-                        }
-                        if (!parent._hiddenChildren) parent._hiddenChildren = [];
-                        if (!parent._hiddenChildren.includes(personNode)) {
-                            parent._hiddenChildren.push(personNode);
-                        }
-                    }
-                });
-            }
-        });
-
-        // Ensure ancestors of selected groups are expanded
-        groups.forEach((groupName) => {
-            if (selectedGroups.has(groupName)) {
-                const targetRoot = groupRootsMap[groupName] || groupName;
-                const target = allNodes.find((d) => d.data.haplogroup === targetRoot);
-                if (target) {
-                    let curr = target.parent;
-                    while (curr) {
-                        if (curr._children) {
-                            curr.children = curr._children;
-                            curr._children = null;
-                        }
-                        curr = curr.parent;
-                    }
-                }
-            }
-        });
-
         this.root = newRoot;
 
         let zoomTargetNode = null;
         if (state.searchQuery) {
             zoomTargetNode = allNodes.find((d) => d.data.isPerson);
-            if (zoomTargetNode) {
-                let curr = zoomTargetNode.parent;
-                while (curr) {
-                    if (curr._children) {
-                        curr.children = curr._children;
-                        curr._children = null;
-                    }
-                    curr = curr.parent;
-                }
-            }
         }
 
         if (!zoomTargetNode) {
@@ -212,6 +148,18 @@ export class TreeVisualizer {
             if (zoomTargetGroup && selectedGroups.has(zoomTargetGroup)) {
                 const hg = groupRootsMap[zoomTargetGroup] || zoomTargetGroup;
                 zoomTargetNode = allNodes.find((d) => d.data.haplogroup === hg);
+            }
+        }
+
+        // Expand ancestors of the target node to ensure it is visible for zooming
+        if (zoomTargetNode) {
+            let curr = zoomTargetNode.parent;
+            while (curr) {
+                if (curr._children) {
+                    curr.children = curr._children;
+                    curr._children = null;
+                }
+                curr = curr.parent;
             }
         }
 
