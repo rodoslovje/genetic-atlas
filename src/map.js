@@ -13,7 +13,8 @@ export function initMap() {
     map = L.map("map-container");
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
-        attribution: "© OpenStreetMap contributors"
+        attribution: "© OpenStreetMap contributors",
+        crossOrigin: true
     }).addTo(map);
 
     markers = L.markerClusterGroup({
