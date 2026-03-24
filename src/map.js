@@ -47,8 +47,8 @@ export function refreshMap() {
             )) return;
         }
 
-        const lat = parseFloat(p.latitude);
-        const lon = parseFloat(p.longitude);
+        const lat = Number(p.latitude);
+        const lon = Number(p.longitude);
 
         if (!lat || !lon || (lat === 0 && lon === 0)) return;
 
