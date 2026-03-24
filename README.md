@@ -1,35 +1,61 @@
-# Spletna stran in orodja za pretvorbo Slovenian Origin projekta iz FTDNA
+# Slovenian Origin - FamilyTreeDNA Web & Tools
 
-## Spletna predstavitev
+This repository contains the web application and data conversion tools for the **Slovenian Origin** project at FamilyTreeDNA. It includes an interactive frontend for visualizing Y-DNA and mtDNA data, as well as Python scripts to convert FamilyTreeDNA CSV exports into a web-friendly JSON format.
 
-### Install
+## 🌐 Web Application
 
+The frontend is built using Vite, D3.js, and Leaflet.
+
+### Installation
+
+```bash
 yarn install
+```
 
-### Run local test server
+### Development Server
 
+```bash
 yarn dev
+```
 
-### Build production version
+### Production Build
 
+```bash
 yarn build
+```
 
-## Orodja za pretvorbo Slovenian Origin FTDNA podatkov za prikaz na spletni strani
+## 🛠️ Data Conversion Tools
 
-### Pripravi virtualno delovno okolje (.venv)
+These Python scripts process FamilyTreeDNA exported data for the web application.
 
+### 1. Setup Virtual Environment
+
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r scripts/requirements.txt
+```
 
-### Pretvorba testiranih iz CSV (copy&paste iz FTDNA) v JSON
+### 2. Process Data
 
+**Convert and merge exported CSV into JSON:**
+
+```bash
 python scripts/ydna-csv-to-json.py
+```
 
-### Pobiranje celotne SNP poti iz FTDNA za vse končne SNP (update)
+**Collect full SNP path for all haplogroups used (Incremental Update):**
 
+```bash
 python scripts/ydna-get-paths-ftdna.py
+```
 
-### Pobiranje celotne SNP poti iz FTDNA za vse končne SNP (full rebuild)
+**Collect full SNP path for all haplogroups used (Full Rebuild):**
 
+```bash
 python scripts/ydna-get-paths-ftdna.py --mode full
+```
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE.md).
