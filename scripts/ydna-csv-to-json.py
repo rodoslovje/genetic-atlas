@@ -86,7 +86,6 @@ def main():
     df = df.fillna("")
     df["group"] = df["group"].str.replace(" haplogroup", "", regex=False).str.strip()
     df["location"] = df["location"].replace("No Location Saved", "")
-    df["haplogroup"] = df["haplogroup"].replace("", "-")
 
     def get_surname(name):
         words = str(name).strip().split()
@@ -98,9 +97,9 @@ def main():
 
     df["surname"] = df["surname"].apply(get_surname)
 
-    # Ensure lat/lon are handled as strings
-    df["latitude"] = df["latitude"].replace("", "0").astype(str)
-    df["longitude"] = df["longitude"].replace("", "0").astype(str)
+    # Convert lat/lon to float
+    df["latitude"] = pd.to_numeric(df["latitude"], errors="coerce").fillna(0.0)
+    df["longitude"] = pd.to_numeric(df["longitude"], errors="coerce").fillna(0.0)
 
     # Convert country names to standard 2-letter codes
     country_map = {
