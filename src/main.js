@@ -79,6 +79,11 @@ window.toggleLangMenu = function (e) {
     document.getElementById("lang-menu").classList.toggle("open");
 };
 
+window.toggleLangMenuSidebar = function (e) {
+    e.stopPropagation();
+    document.getElementById("lang-menu-sidebar").classList.toggle("open");
+};
+
 window.setLanguage = function (e, lang) {
     e.preventDefault();
     state.currentLang = lang;
@@ -89,19 +94,30 @@ window.setLanguage = function (e, lang) {
     refreshYDNADisplay();
     refreshMTDNADisplay();
     document.getElementById("lang-menu").classList.remove("open");
+    const sidebarMenu = document.getElementById("lang-menu-sidebar");
+    if (sidebarMenu) sidebarMenu.classList.remove("open");
+    const sidebar = document.getElementById("sidebar");
+    if (sidebar) sidebar.classList.remove("open");
 };
 
 function updateLangIcon() {
+    const isSl = state.currentLang === "sl";
+    const imgSrc = isSl ? "https://flagcdn.com/w20/si.png" : "https://flagcdn.com/w20/gb.png";
+    const textVal = isSl ? "SL" : "EN";
+    const fullTextVal = isSl ? "Slovenščina (SL)" : "English (EN)";
+
     const flag = document.getElementById("lang-btn-flag");
     const text = document.getElementById("lang-btn-text");
     if (flag && text) {
-        if (state.currentLang === "sl") {
-            flag.src = "https://flagcdn.com/w20/si.png";
-            text.innerText = "SL";
-        } else {
-            flag.src = "https://flagcdn.com/w20/gb.png";
-            text.innerText = "EN";
-        }
+        flag.src = imgSrc;
+        text.innerText = textVal;
+    }
+
+    const flagSidebar = document.getElementById("lang-btn-flag-sidebar");
+    const textSidebar = document.getElementById("lang-btn-text-sidebar");
+    if (flagSidebar && textSidebar) {
+        flagSidebar.src = imgSrc;
+        textSidebar.innerText = fullTextVal;
     }
 }
 
@@ -116,6 +132,12 @@ window.addEventListener("click", (e) => {
     const langMenu = document.getElementById("lang-menu");
     if (langSelector && langMenu && !langSelector.contains(e.target)) {
         langMenu.classList.remove("open");
+    }
+
+    const langSelectorSidebar = document.querySelector(".lang-selector-sidebar");
+    const langMenuSidebar = document.getElementById("lang-menu-sidebar");
+    if (langSelectorSidebar && langMenuSidebar && !langSelectorSidebar.contains(e.target)) {
+        langMenuSidebar.classList.remove("open");
     }
 });
 

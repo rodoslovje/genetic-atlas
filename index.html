@@ -24,6 +24,7 @@
         .mobile-nav-section { display: none !important; }
         body.compact-nav .mobile-nav-section { display: block !important; }
         body.compact-nav .desktop-nav { display: none !important; }
+        body.compact-nav .lang-selector { display: none !important; }
         .brand, .nav-links a { white-space: nowrap; }
         #navbar > * { flex-shrink: 0; }
         .nav-right { display: flex; align-items: center; gap: 15px; }
@@ -43,8 +44,9 @@
         .sidebar-section { margin-bottom: 20px; }
         h4.sidebar-section-title { margin: 0 0 10px 0; font-size: 15px; color: #2d3748; border-bottom: 1px solid #edf2f7; padding-bottom: 5px; }
         .nav-list-mobile { display: flex; flex-direction: column; gap: 12px; }
-        .nav-list-mobile a { text-decoration: none; color: #4a5568; font-size: 14px; }
+        .nav-list-mobile a { text-decoration: none; color: #4a5568; font-size: 14px; display: flex; align-items: center; gap: 8px; }
         .nav-list-mobile a.active { color: #3182ce; }
+        .nav-list-mobile img { width: 16px; border-radius: 2px; }
         .group-item { display: flex; align-items: center; margin-bottom: 8px; font-size: 12px; color: #4a5568; cursor: pointer; }
         .group-item input { margin-right: 8px; cursor: pointer; }
         .select-all-btn { background: #edf2f7; border: 1px solid #cbd5e0; padding: 6px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-bottom: 15px; width: 100%; color: #4a5568; font-weight: 600; }
@@ -126,6 +128,21 @@
                 <a href="#map" class="nav-route" onclick="toggleSidebar()" data-i18n="map">Map</a>
                 <a href="#ydna" class="nav-route" onclick="toggleSidebar()" data-i18n="ydna">Y-DNA</a>
                 <a href="#mtdna" class="nav-route" onclick="toggleSidebar()" data-i18n="mtdna">mtDNA</a>
+            </div>
+        </div>
+        <div class="sidebar-section mobile-nav-section">
+            <div class="lang-selector-sidebar" style="position: relative;">
+                <button class="lang-btn" onclick="toggleLangMenuSidebar(event)" style="width: 100%; justify-content: space-between;">
+                    <span style="display: flex; align-items: center; gap: 6px;">
+                        <img src="https://flagcdn.com/w20/gb.png" id="lang-btn-flag-sidebar" alt="Flag">
+                        <span id="lang-btn-text-sidebar">English (EN)</span>
+                    </span>
+                    <span style="font-size: 10px; color: #a0aec0;">▼</span>
+                </button>
+                <div class="lang-menu" id="lang-menu-sidebar" style="width: 100%; box-sizing: border-box;">
+                    <a href="#" onclick="setLanguage(event, 'en')"><img src="https://flagcdn.com/w20/gb.png" alt="EN"> English (EN)</a>
+                    <a href="#" onclick="setLanguage(event, 'sl')"><img src="https://flagcdn.com/w20/si.png" alt="SL"> Slovenščina (SL)</a>
+                </div>
             </div>
         </div>
         <div class="sidebar-section">
