@@ -1,5 +1,6 @@
-import { state, translations, loadData, initFilters, updateURLState, rawPeopleData, groupRoots } from "./shared.js";
+import { state, translations, loadData, initFilters, updateURLState, getActiveData, getSelectedGroups } from "./shared.js";
 import { initYDNA, refreshYDNADisplay, ydnaInitialized } from "./ydna.js";
+import { initMTDNA, refreshMTDNADisplay, mtdnaInitialized } from "./mtdna.js";
 import { initMap, mapInitialized } from "./map.js";
 
 function applyTranslations() {
@@ -23,11 +24,6 @@ function applyTranslations() {
             el.innerHTML = translations[state.currentLang][key];
         }
     });
-
-    const toggleAllBtn = document.getElementById("toggle-all");
-    if (toggleAllBtn) {
-        toggleAllBtn.innerText = translations[state.currentLang][state.allSelected ? "deselectAll" : "selectAll"];
-    }
 
     checkNavOverflow();
 }
@@ -70,6 +66,7 @@ window.setLanguage = function (e, lang) {
     applyTranslations();
     initFilters();
     refreshYDNADisplay();
+    refreshMTDNADisplay();
     document.getElementById("lang-menu").classList.remove("open");
 };
 
@@ -103,21 +100,23 @@ window.addEventListener("click", (e) => {
 
 function validateSearch() {
     const searchInput = document.getElementById("search-input");
-    if (!searchInput || !rawPeopleData) return;
+    const { people, roots } = getActiveData();
+    const selectedGroups = getSelectedGroups();
+    if (!searchInput || !people) return;
 
     let hasResults = true;
     if (state.searchQuery) {
         const query = state.searchQuery.toLowerCase();
         const currentView = (window.location.hash || "#map").substring(1);
 
-        hasResults = rawPeopleData.some(p => {
+        hasResults = people.some(p => {
             const matchesText = (p.surname && p.surname.toLowerCase().includes(query)) ||
                 (p.ancestor && p.ancestor.toLowerCase().includes(query)) ||
                 (p.kit && p.kit.toLowerCase().includes(query)) ||
                 (p.haplogroup && p.haplogroup.toLowerCase().includes(query));
 
-            const matchesGroup = state.selectedGroups.has(p.group);
-            const missingPath = (currentView === "ydna" && p.haplogroup === "" && !groupRoots[p.group]);
+            const matchesGroup = selectedGroups.has(p.group);
+            const missingPath = ((currentView === "ydna" || currentView === "mtdna") && p.haplogroup === "" && !roots[p.group]);
 
             return matchesText && matchesGroup && !missingPath;
         });
@@ -127,7 +126,9 @@ function validateSearch() {
 
 window.addEventListener("filterChanged", () => {
     validateSearch();
-    refreshYDNADisplay();
+    const view = (window.location.hash || "#map").substring(1);
+    if (view === "ydna") refreshYDNADisplay();
+    else if (view === "mtdna") refreshMTDNADisplay();
 });
 
 function handleHashChange() {
@@ -170,6 +171,9 @@ function handleHashChange() {
             if (view === "ydna" && !ydnaInitialized) {
                 initYDNA();
             }
+            if (view === "mtdna" && !mtdnaInitialized) {
+                initMTDNA();
+            }
             if (view === "map" && !mapInitialized) {
                 setTimeout(initMap, 50);
             }
@@ -197,7 +201,9 @@ function initApp() {
         chkPassthrough.addEventListener("change", (e) => {
             state.showPassthrough = e.target.checked;
             updateURLState();
-            refreshYDNADisplay();
+            const view = (window.location.hash || "#map").substring(1);
+            if (view === "ydna") refreshYDNADisplay();
+            else if (view === "mtdna") refreshMTDNADisplay();
         });
     }
 
@@ -220,7 +226,9 @@ function initApp() {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 window.dispatchEvent(new CustomEvent("searchChanged"));
-                refreshYDNADisplay();
+                const view = (window.location.hash || "#map").substring(1);
+                if (view === "ydna") refreshYDNADisplay();
+                else if (view === "mtdna") refreshMTDNADisplay();
             }, 300);
         };
 

@@ -1,4 +1,4 @@
-import { state, rawPeopleData, getPersonTooltip, haploColors } from "./shared.js";
+import { state, getActiveData, getSelectedGroups, getPersonTooltip, haploColors } from "./shared.js";
 
 export let mapInitialized = false;
 let map;
@@ -28,14 +28,16 @@ export function initMap() {
 }
 
 export function refreshMap() {
-    if (!markers || !rawPeopleData) return;
+    const { people } = getActiveData();
+    const selectedGroups = getSelectedGroups();
+    if (!markers || !people) return;
     markers.clearLayers();
 
     let bounds = L.latLngBounds();
     let hasResults = false;
 
-    rawPeopleData.forEach((p) => {
-        if (!state.selectedGroups.has(p.group)) return;
+    people.forEach((p) => {
+        if (!selectedGroups.has(p.group)) return;
 
         if (state.searchQuery) {
             const q = state.searchQuery.toLowerCase();
