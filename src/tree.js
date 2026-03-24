@@ -61,7 +61,8 @@ export class TreeVisualizer {
                     dataMap[hg].children.push({
                         id: `${p.surname} (${p.kit})`, kit: p.kit, surname: p.surname, country: p.country, location: p.location,
                         ancestor: p.ancestor, test: p.test, majorGroup: p.group, isPerson: true,
-                        originalHaplo: p.haplogroup, isAutoPlaced: !!dataMap[hg].isAutoPlaced
+                        originalHaplo: p.haplogroup, isAutoPlaced: !!dataMap[hg].isAutoPlaced,
+                        isSearchMatch: p.isSearchMatch
                     });
                 }
             });
@@ -97,12 +98,16 @@ export class TreeVisualizer {
 
         if (state.searchQuery) {
             const query = state.searchQuery.toLowerCase();
-            filteredPeople = filteredPeople.filter((p) =>
-                (p.surname && p.surname.toLowerCase().includes(query)) ||
+            filteredPeople = filteredPeople.filter((p) => {
+                const isMatch = (p.surname && p.surname.toLowerCase().includes(query)) ||
                 (p.ancestor && p.ancestor.toLowerCase().includes(query)) ||
                 (p.kit && p.kit.toLowerCase().includes(query)) ||
-                (p.haplogroup && p.haplogroup.toLowerCase().includes(query))
-            );
+                    (p.haplogroup && p.haplogroup.toLowerCase().includes(query));
+                if (isMatch) p.isSearchMatch = true;
+                return isMatch;
+            });
+        } else {
+            filteredPeople.forEach(p => p.isSearchMatch = false);
         }
 
         const processedData = pruneTree(buildHierarchy(haploData, filteredPeople));
@@ -201,17 +206,20 @@ export class TreeVisualizer {
 
         const node = this.g.selectAll(".node").data(nodes, (d) => d.data.id);
 
+        const getNodeClass = (d) => {
+            let cls = "node";
+            if (d.data.isPerson) cls += " node--person";
+            if (d.data.isAutoPlaced) cls += " node--autoplaced";
+            if (d.data.isSearchMatch) cls += " node--search-match";
+            const hasNote = d.data.note && d.data.note.trim() !== "" && d.data.note !== translations[state.currentLang].notePathMissing;
+            if (hasNote || allRoots.has(d.data.haplogroup) || (d.data.isPerson && d.data.test && d.data.test.includes("Big Y"))) {
+                cls += " node--prominent";
+            }
+            return cls;
+        };
+
         const nodeEnter = node.enter().append("g")
-            .attr("class", (d) => {
-                let cls = "node";
-                if (d.data.isPerson) cls += " node--person";
-                if (d.data.isAutoPlaced) cls += " node--autoplaced";
-                const hasNote = d.data.note && d.data.note.trim() !== "" && d.data.note !== translations[state.currentLang].notePathMissing;
-                if (hasNote || allRoots.has(d.data.haplogroup) || (d.data.isPerson && d.data.test && d.data.test.includes("Big Y"))) {
-                    cls += " node--prominent";
-                }
-                return cls;
-            })
+            .attr("class", getNodeClass)
             .attr("transform", (d) => `translate(${d.y},${d.x})`)
             .style("opacity", 0)
             .style("cursor", d => d.data.isPerson ? "default" : "pointer")
@@ -266,7 +274,9 @@ export class TreeVisualizer {
             return `${d.data.haplogroup}${notePart}`;
         });
 
-        node.merge(nodeEnter).transition().duration(600)
+        node.merge(nodeEnter)
+            .attr("class", getNodeClass)
+            .transition().duration(600)
             .attr("transform", (d) => `translate(${d.y},${d.x})`)
             .style("opacity", 1);
 
