@@ -25,7 +25,7 @@ function renderYDNATree() {
         const dataMap = nodes.reduce((m, d) => ((m[d.haplogroup] = { ...d, id: d.haplogroup, children: [] }), m), {});
 
         leaves.forEach((p) => {
-            let hg = p.haplogroup === "-" ? groupRoots[p.group] : p.haplogroup;
+            let hg = p.haplogroup === "" ? groupRoots[p.group] : p.haplogroup;
             if (hg && !dataMap[hg]) {
                 dataMap[hg] = {
                     haplogroup: hg, parent: groupRoots[p.group] || "A0000", age: null,
@@ -43,7 +43,7 @@ function renderYDNATree() {
         });
 
         leaves.forEach((p) => {
-            let hg = p.haplogroup === "-" ? groupRoots[p.group] : p.haplogroup;
+            let hg = p.haplogroup === "" ? groupRoots[p.group] : p.haplogroup;
 
             if (hg && dataMap[hg]) {
                 dataMap[hg].children.push({

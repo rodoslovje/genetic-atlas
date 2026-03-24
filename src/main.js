@@ -117,7 +117,7 @@ function validateSearch() {
                 (p.haplogroup && p.haplogroup.toLowerCase().includes(query));
 
             const matchesGroup = state.selectedGroups.has(p.group);
-            const missingPath = (currentView === "ydna" && p.haplogroup === "-" && !groupRoots[p.group]);
+            const missingPath = (currentView === "ydna" && p.haplogroup === "" && !groupRoots[p.group]);
 
             return matchesText && matchesGroup && !missingPath;
         });

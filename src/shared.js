@@ -112,15 +112,16 @@ export function formatAge(age) {
 
 export function getPersonTooltip(person, error = "") {
     const lang = translations[state.currentLang];
-    const majorGroup = person.majorGroup || person.group;
-    const haplo = person.originalHaplo || person.haplogroup;
+    const majorGroup = person.majorGroup || person.group || "N/A";
+    let haplo = person.originalHaplo ?? person.haplogroup ?? "";
+    if (haplo === "-") haplo = "";
 
     return (
-        `${lang.kit}: <b>${person.kit}</b><br>` +
+        `${lang.kit}: <b>${person.kit || "N/A"}</b><br>` +
         `${lang.testType}: <b>${person.test || "N/A"}</b><br>` +
         `${lang.lineage}: <b>${majorGroup}</b><br>` +
-        `${lang.haplogroup}: <b>${haplo}</b>${error}<br>` +
-        `${lang.surname}: <b>${person.surname}</b><br>` +
+        `${lang.haplogroup}: <b>${haplo || "N/A"}</b>${error}<br>` +
+        `${lang.surname}: <b>${person.surname || "N/A"}</b><br>` +
         `${lang.ancestor}: <b>${person.ancestor || "N/A"}</b><br>` +
         `${lang.location}: <b>${person.location || "N/A"}</b>`
     );
@@ -139,7 +140,7 @@ export function loadData() {
             rawHaploData = haplo;
 
             people.forEach((p) => {
-                if (!p.group && p.haplogroup && p.haplogroup !== "-") {
+                if (!p.group && p.haplogroup) {
                     if (p.haplogroup.startsWith("D")) {
                         p.group = "D";
                     } else if (p.haplogroup.startsWith("R-YP")) {
