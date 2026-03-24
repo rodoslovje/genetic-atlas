@@ -1,7 +1,7 @@
-import { state, translations, loadData, initFilters, updateURLState, getActiveData, getSelectedGroups } from "./shared.js";
+import { state, translations, loadData, initFilters, updateURLState, getActiveData, getSelectedGroups, ydnaPeopleData, mtdnaPeopleData, ydnaGroupRoots, mtdnaGroupRoots } from "./shared.js";
 import { initYDNA, refreshYDNADisplay, ydnaInitialized } from "./ydna.js";
 import { initMTDNA, refreshMTDNADisplay, mtdnaInitialized } from "./mtdna.js";
-import { ymapVis, mmapVis } from "./map.js";
+import { mapVis } from "./map.js";
 
 function applyTranslations() {
     document.querySelectorAll("[data-i18n]").forEach(el => {
@@ -37,7 +37,7 @@ function applyTranslations() {
 }
 
 function updatePageTitle() {
-    const view = (window.location.hash || "#ymap").substring(1);
+    const view = (window.location.hash || "#map").substring(1);
     const lang = translations[state.currentLang];
     const viewName = lang[view] || view;
     const domain = window.location.hostname;
@@ -121,14 +121,14 @@ window.addEventListener("click", (e) => {
 
 window.exportView = function (e) {
     e.preventDefault();
-    const view = (window.location.hash || "#ymap").substring(1);
+    const view = (window.location.hash || "#map").substring(1);
     const overlay = document.getElementById("loading-overlay");
     if (overlay) overlay.classList.add("active");
 
     // Delay briefly to allow the browser to paint the loading UI
     setTimeout(() => {
-        if (view === "ymap" || view === "mmap") {
-            const mapEl = document.getElementById(view + "-container");
+        if (view === "map") {
+            const mapEl = document.getElementById("map-container");
             if (!mapEl || typeof html2canvas === "undefined") {
                 if (overlay) overlay.classList.remove("active");
                 return;
@@ -176,7 +176,7 @@ window.exportView = function (e) {
                 ctx.fillText(sourceText, 20 * scale, height - (footerHeight / 2));
 
                 const link = document.createElement("a");
-                link.download = `Slovenian_${view === "ymap" ? "Y-DNA" : "mtDNA"}_Map.png`;
+                link.download = `Slovenian_DNA_Map.png`;
                 link.href = newCanvas.toDataURL("image/png");
                 document.body.appendChild(link);
                 link.click();
@@ -303,41 +303,46 @@ window.exportView = function (e) {
 
 function validateSearch() {
     const searchInput = document.getElementById("search-input");
-    const { people, roots } = getActiveData();
-    const selectedGroups = getSelectedGroups();
-    if (!searchInput || !people) return;
+    if (!searchInput) return;
 
     let hasResults = true;
     if (state.searchQuery) {
         const query = state.searchQuery.toLowerCase();
-        const currentView = (window.location.hash || "#ymap").substring(1);
+        const currentView = (window.location.hash || "#map").substring(1);
+        hasResults = false;
 
-        hasResults = people.some(p => {
-            const matchesText = (p.surname && p.surname.toLowerCase().includes(query)) ||
-                (p.ancestor && p.ancestor.toLowerCase().includes(query)) ||
-                (p.kit && p.kit.toLowerCase().includes(query)) ||
-                (p.haplogroup && p.haplogroup.toLowerCase().includes(query));
+        const checkPeople = (people, selectedGroups, rootsMap) => {
+            return people.some(p => {
+                const matchesText = (p.surname && p.surname.toLowerCase().includes(query)) ||
+                    (p.ancestor && p.ancestor.toLowerCase().includes(query)) ||
+                    (p.kit && p.kit.toLowerCase().includes(query)) ||
+                    (p.haplogroup && p.haplogroup.toLowerCase().includes(query));
+                const matchesGroup = selectedGroups.has(p.group);
+                const missingPath = ((currentView === "ydna" || currentView === "mtdna") && p.haplogroup === "" && !rootsMap[p.group]);
+                return matchesText && matchesGroup && !missingPath;
+            });
+        };
 
-            const matchesGroup = selectedGroups.has(p.group);
-            const isTreeView = currentView === "ydna" || currentView === "mtdna";
-            const missingPath = (isTreeView && p.haplogroup === "" && !roots[p.group]);
-
-            return matchesText && matchesGroup && !missingPath;
-        });
+        if ((currentView === "ydna" || currentView === "map") && ydnaPeopleData) {
+            if (checkPeople(ydnaPeopleData, state.ydnaSelectedGroups, ydnaGroupRoots)) hasResults = true;
+        }
+        if ((currentView === "mtdna" || currentView === "map") && mtdnaPeopleData) {
+            if (checkPeople(mtdnaPeopleData, state.mtdnaSelectedGroups, mtdnaGroupRoots)) hasResults = true;
+        }
     }
     searchInput.style.color = hasResults ? "" : "#e53e3e";
 }
 
 window.addEventListener("filterChanged", () => {
     validateSearch();
-    const view = (window.location.hash || "#ymap").substring(1);
+    const view = (window.location.hash || "#map").substring(1);
     if (view === "ydna") refreshYDNADisplay();
     else if (view === "mtdna") refreshMTDNADisplay();
 });
 
 function handleHashChange() {
     let hash = window.location.hash;
-    if (!hash || hash === "#map") hash = "#ymap"; // Migrate old links gracefully
+    if (!hash || hash === "#ymap" || hash === "#mmap") hash = "#map";
     window.location.hash = hash;
 
     updatePageTitle();
@@ -356,21 +361,14 @@ function handleHashChange() {
 
     const view = hash.substring(1);
     const sidebar = document.getElementById("sidebar");
-    const lineageControls = document.getElementById("lineage-controls");
+    const lineageYdna = document.getElementById("lineage-controls-ydna");
+    const lineageMtdna = document.getElementById("lineage-controls-mtdna");
+    const treeOptions = document.getElementById("tree-options");
     const ydnaEras = document.getElementById("ydna-eras");
-    const passthroughContainer = document.getElementById("passthrough-container");
     const exportBtn = document.getElementById("export-btn");
 
-    const isMap = view === "ymap" || view === "mmap";
+    const isMap = view === "map";
     const isTree = view === "ydna" || view === "mtdna";
-    const isMtDna = view === "mtdna" || view === "mmap";
-
-    const filterTitleEl = document.getElementById("filter-title");
-    if (filterTitleEl) {
-        const titleKey = isMtDna ? "filterTitleMtdna" : "filterTitleYdna";
-        filterTitleEl.setAttribute("data-i18n", titleKey);
-        filterTitleEl.innerText = translations[state.currentLang][titleKey];
-    }
 
     if (exportBtn) {
         exportBtn.style.display = (isMap || isTree) ? "flex" : "none";
@@ -380,14 +378,12 @@ function handleHashChange() {
     }
 
     if (isMap || isTree) {
-        if (lineageControls) lineageControls.style.display = "block";
+        if (lineageYdna) lineageYdna.style.display = (isMap || view === "ydna") ? "block" : "none";
+        if (lineageMtdna) lineageMtdna.style.display = (isMap || view === "mtdna") ? "block" : "none";
+        if (treeOptions) treeOptions.style.display = isTree ? "block" : "none";
 
         if (isTree && ydnaEras) ydnaEras.style.display = "block";
         else if (ydnaEras) ydnaEras.style.display = "none";
-
-        if (passthroughContainer) {
-            passthroughContainer.style.display = isTree ? "flex" : "none";
-        }
 
         if (window.innerWidth > 768 && sidebar) {
             sidebar.classList.add("open");
@@ -401,16 +397,15 @@ function handleHashChange() {
             if (view === "mtdna" && !mtdnaInitialized) {
                 initMTDNA();
             }
-            if (view === "ymap") {
-                setTimeout(() => ymapVis.initMap(), 50);
-            }
-            if (view === "mmap") {
-                setTimeout(() => mmapVis.initMap(), 50);
+            if (view === "map") {
+                setTimeout(() => mapVis.initMap(), 50);
             }
             validateSearch();
         });
     } else {
-        if (lineageControls) lineageControls.style.display = "none";
+        if (lineageYdna) lineageYdna.style.display = "none";
+        if (lineageMtdna) lineageMtdna.style.display = "none";
+        if (treeOptions) treeOptions.style.display = "none";
         if (ydnaEras) ydnaEras.style.display = "none";
     }
 }
@@ -423,8 +418,8 @@ function initApp() {
         if (sidebar) sidebar.classList.add("closed");
     }
 
-    if (window.location.hash === "#map" || !window.location.hash) {
-        window.location.hash = "#ymap";
+    if (window.location.hash === "#ymap" || window.location.hash === "#mmap" || !window.location.hash) {
+        window.location.hash = "#map";
     }
 
     updateLangIcon();
@@ -435,7 +430,7 @@ function initApp() {
         chkPassthrough.addEventListener("change", (e) => {
             state.showPassthrough = e.target.checked;
             updateURLState();
-            const view = (window.location.hash || "#ymap").substring(1);
+            const view = (window.location.hash || "#map").substring(1);
             if (view === "ydna") refreshYDNADisplay();
             else if (view === "mtdna") refreshMTDNADisplay();
         });
@@ -460,7 +455,7 @@ function initApp() {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 window.dispatchEvent(new CustomEvent("searchChanged"));
-                const view = (window.location.hash || "#ymap").substring(1);
+                const view = (window.location.hash || "#map").substring(1);
                 if (view === "ydna") refreshYDNADisplay();
                 else if (view === "mtdna") refreshMTDNADisplay();
             }, 300);

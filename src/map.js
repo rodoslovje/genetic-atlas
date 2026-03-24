@@ -1,9 +1,8 @@
-import { state, getActiveData, getSelectedGroups, getPersonTooltip, getHaploColor } from "./shared.js";
+import { state, ydnaPeopleData, mtdnaPeopleData, getPersonTooltip, getHaploColor } from "./shared.js";
 
 export class MapVisualizer {
-    constructor(containerId, isMtDna) {
+    constructor(containerId) {
         this.containerId = containerId;
-        this.isMtDna = isMtDna;
         this.mapInitialized = false;
         this.map = null;
         this.markers = null;
@@ -34,19 +33,17 @@ export class MapVisualizer {
     }
 
     refreshMap() {
-        const view = (window.location.hash || "#ymap").substring(1);
-        if (this.isMtDna && view !== "mmap") return;
-        if (!this.isMtDna && view !== "ymap") return;
+        const view = (window.location.hash || "#map").substring(1);
+        if (view !== "map") return;
 
-        const { people } = getActiveData();
-        const selectedGroups = getSelectedGroups();
-        if (!this.markers || !people) return;
+        if (!this.markers || !ydnaPeopleData || !mtdnaPeopleData) return;
         this.markers.clearLayers();
 
         let bounds = L.latLngBounds();
         let hasResults = false;
 
-        people.forEach((p) => {
+        const addPersonToMap = (p, isMtDna) => {
+            const selectedGroups = isMtDna ? state.mtdnaSelectedGroups : state.ydnaSelectedGroups;
             if (!selectedGroups.has(p.group)) return;
 
             if (state.searchQuery) {
@@ -65,17 +62,34 @@ export class MapVisualizer {
             if (!lat || !lon || (lat === 0 && lon === 0)) return;
 
             const color = getHaploColor(p.group);
-            const marker = L.circleMarker([lat, lon], {
-                radius: 6, fillColor: color, color: "#ffffff",
-                weight: 1.5, opacity: 1, fillOpacity: 0.9
-            });
+            let marker;
+            if (isMtDna) {
+                marker = L.circleMarker([lat, lon], {
+                    radius: 6, fillColor: color, color: "#ffffff",
+                    weight: 1.5, opacity: 1, fillOpacity: 0.9
+                });
+            } else {
+                const size = 12;
+                const html = `<div style="background-color: ${color}; border: 1.5px solid #ffffff; width: ${size}px; height: ${size}px; opacity: 0.9; box-sizing: border-box; box-shadow: 0 0 1px rgba(0,0,0,0.5);"></div>`;
+                const icon = L.divIcon({
+                    html: html,
+                    className: 'ydna-square-marker',
+                    iconSize: [size, size],
+                    iconAnchor: [size / 2, size / 2],
+                    popupAnchor: [0, -size / 2]
+                });
+                marker = L.marker([lat, lon], { icon: icon });
+            }
 
             const popupContent = `<div style="font-size: 13px; line-height: 1.5;">${getPersonTooltip(p)}</div>`;
             marker.bindPopup(popupContent);
             this.markers.addLayer(marker);
             bounds.extend([lat, lon]);
             hasResults = true;
-        });
+        };
+
+        ydnaPeopleData.forEach(p => addPersonToMap(p, false));
+        mtdnaPeopleData.forEach(p => addPersonToMap(p, true));
 
         const searchChanged = this.lastSearchQuery !== state.searchQuery;
         this.lastSearchQuery = state.searchQuery;
@@ -93,15 +107,12 @@ export class MapVisualizer {
     }
 }
 
-export const ymapVis = new MapVisualizer("ymap-container", false);
-export const mmapVis = new MapVisualizer("mmap-container", true);
+export const mapVis = new MapVisualizer("map-container");
 
 window.addEventListener("filterChanged", () => {
-    if (ymapVis.mapInitialized) ymapVis.refreshMap();
-    if (mmapVis.mapInitialized) mmapVis.refreshMap();
+    if (mapVis.mapInitialized) mapVis.refreshMap();
 });
 
 window.addEventListener("searchChanged", () => {
-    if (ymapVis.mapInitialized) ymapVis.refreshMap();
-    if (mmapVis.mapInitialized) mmapVis.refreshMap();
+    if (mapVis.mapInitialized) mapVis.refreshMap();
 });

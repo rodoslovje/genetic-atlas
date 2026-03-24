@@ -60,6 +60,7 @@
         .node--autoplaced text { fill: #c53030 !important; font-weight: bold; }
         .node--search-match text { fill: #c05621 !important; font-weight: 800 !important; font-size: 13.5px !important; text-shadow: 0 0 4px rgba(237, 137, 54, 0.4); }
         .node--search-match image { filter: drop-shadow(0px 0px 4px rgba(221, 107, 32, 0.8)); }
+        .ydna-square-marker { background: none; border: none; }
         .link { fill: none; stroke: #cbd5e0; stroke-width: 1.5px; opacity: 0.5; }
         .legend-item { display: flex; align-items: center; margin-bottom: 10px; font-size: 12px; color: #4a5568; }
         .legend-color { width: 24px; height: 4px; border-radius: 2px; margin-right: 12px; flex-shrink: 0; }
@@ -92,9 +93,8 @@
     <nav id="navbar">
         <a href="#" onclick="resetApp(event)" class="brand" data-i18n="brand">Slovenian DNA</a>
         <div class="nav-links desktop-nav">
-            <a href="#ymap" class="nav-route" id="link-ymap" data-i18n="ymap">Map (Y-DNA)</a>
+            <a href="#map" class="nav-route" id="link-map" data-i18n="map">Map</a>
             <a href="#ydna" class="nav-route" id="link-ydna" data-i18n="ydna">Y-DNA</a>
-            <a href="#mmap" class="nav-route" id="link-mmap" data-i18n="mmap">Map (mtDNA)</a>
             <a href="#mtdna" class="nav-route" id="link-mtdna" data-i18n="mtdna">mtDNA</a>
         </div>
         <div class="nav-right">
@@ -112,18 +112,16 @@
         </div>
     </nav>
     <div id="view-container">
-        <div id="view-ymap" class="page-view"><div id="ymap-container" style="width: 100%; height: 100%; z-index: 1;"></div></div>
+        <div id="view-map" class="page-view"><div id="map-container" style="width: 100%; height: 100%; z-index: 1;"></div></div>
         <div id="view-ydna" class="page-view"><div id="tree-container-ydna" style="width: 100%; height: 100%; position: relative; overflow: visible;"></div></div>
-        <div id="view-mmap" class="page-view"><div id="mmap-container" style="width: 100%; height: 100%; z-index: 1;"></div></div>
         <div id="view-mtdna" class="page-view"><div id="tree-container-mtdna" style="width: 100%; height: 100%; position: relative; overflow: visible;"></div></div>
     </div>
     <div id="sidebar">
         <div class="sidebar-section mobile-nav-section">
             <h4 class="sidebar-section-title" data-i18n="navTitle">Navigation</h4>
             <div class="nav-list-mobile">
-                <a href="#ymap" class="nav-route" onclick="toggleSidebar()" data-i18n="ymap">Map (Y-DNA)</a>
+                <a href="#map" class="nav-route" onclick="toggleSidebar()" data-i18n="map">Map</a>
                 <a href="#ydna" class="nav-route" onclick="toggleSidebar()" data-i18n="ydna">Y-DNA</a>
-                <a href="#mmap" class="nav-route" onclick="toggleSidebar()" data-i18n="mmap">Map (mtDNA)</a>
                 <a href="#mtdna" class="nav-route" onclick="toggleSidebar()" data-i18n="mtdna">mtDNA</a>
             </div>
         </div>
@@ -134,12 +132,23 @@
                 <span id="search-clear" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #a0aec0; display: none; font-weight: bold; font-size: 12px; padding: 4px;">✕</span>
             </div>
         </div>
-        <div id="lineage-controls" style="display: none;">
+        <div id="lineage-controls-ydna" style="display: none;">
             <div class="sidebar-section">
-                <h4 class="sidebar-section-title" id="filter-title" data-i18n="filterTitleYdna">Lineage (Y-DNA)</h4>
-                <button class="select-all-btn" id="toggle-all" data-i18n="selectAll">Select All</button>
-                <div id="group-list"></div>
-                <label class="passthrough-item" id="passthrough-container">
+                <h4 class="sidebar-section-title" data-i18n="filterTitleYdna">Lineage (Y-DNA)</h4>
+                <button class="select-all-btn" id="toggle-all-ydna" data-i18n="selectAll">Select All</button>
+                <div id="group-list-ydna"></div>
+            </div>
+        </div>
+        <div id="lineage-controls-mtdna" style="display: none;">
+            <div class="sidebar-section">
+                <h4 class="sidebar-section-title" data-i18n="filterTitleMtdna">Lineage (mtDNA)</h4>
+                <button class="select-all-btn" id="toggle-all-mtdna" data-i18n="selectAll">Select All</button>
+                <div id="group-list-mtdna"></div>
+            </div>
+        </div>
+        <div id="tree-options" style="display: none;">
+            <div class="sidebar-section">
+                <label class="passthrough-item" id="passthrough-container" style="margin-top: 0;">
                     <input type="checkbox" id="chk-passthrough">
                     <span data-i18n="showPassthrough">Show all SNPs</span>
                 </label>

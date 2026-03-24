@@ -1,6 +1,6 @@
 export const translations = {
     en: {
-        brand: "Slovenian Genetic Heritage", ymap: "Map (Y-DNA)", ydna: "Paternal Tree (Y-DNA)", mmap: "Map (mtDNA)", mtdna: "Maternal Tree (mtDNA)",
+        brand: "Slovenian Genetic Heritage", map: "Map", ydna: "Paternal Tree (Y-DNA)", mtdna: "Maternal Tree (mtDNA)",
         comingSoon: "View (Coming Soon)", navTitle: "Navigation", langTitle: "Language",
         filterTitleYdna: "Lineage (Y-DNA)", filterTitleMtdna: "Lineage (mtDNA)", selectAll: "Select All", deselectAll: "Deselect All",
         showPassthrough: "Show all SNPs", eraTitle: "Eras", eraStone: "Stone Age",
@@ -15,7 +15,7 @@ export const translations = {
         attributionHtml: "Source: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> and <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a> project."
     },
     sl: {
-        brand: "Slovenska genetska dediščina", ymap: "Zemljevid (Y-DNK)", ydna: "Očetovsko drevo (Y-DNK)", mmap: "Zemljevid (mtDNK)", mtdna: "Materinsko drevo (mtDNK)",
+        brand: "Slovenska genetska dediščina", map: "Zemljevid", ydna: "Očetovsko drevo (Y-DNK)", mtdna: "Materinsko drevo (mtDNK)",
         comingSoon: "Pogled (Kmalu)", navTitle: "Navigacija", langTitle: "Jezik",
         filterTitleYdna: "Rod (Y-DNK)", filterTitleMtdna: "Rod (mtDNK)", selectAll: "Izberi vse", deselectAll: "Počisti vse",
         showPassthrough: "Prikaži vse SNP", eraTitle: "Obdobja", eraStone: "Kamena doba",
@@ -165,16 +165,16 @@ export const state = {
 };
 
 export function getActiveData() {
-    const view = (window.location.hash || "#ymap").substring(1);
-    if (view === "mtdna" || view === "mmap") {
+    const view = (window.location.hash || "#map").substring(1);
+    if (view === "mtdna") {
         return { haplo: mtdnaHaploData, people: mtdnaPeopleData, roots: mtdnaGroupRoots };
     }
     return { haplo: ydnaHaploData, people: ydnaPeopleData, roots: ydnaGroupRoots };
 }
 
 export function getSelectedGroups() {
-    const view = (window.location.hash || "#ymap").substring(1);
-    return (view === "mtdna" || view === "mmap") ? state.mtdnaSelectedGroups : state.ydnaSelectedGroups;
+    const view = (window.location.hash || "#map").substring(1);
+    return view === "mtdna" ? state.mtdnaSelectedGroups : state.ydnaSelectedGroups;
 }
 
 export function updateURLState() {
@@ -194,7 +194,7 @@ export function updateURLState() {
         params.delete("q");
     }
 
-    const newUrl = window.location.pathname + "?" + params.toString().replace(/%2C/g, ",") + (window.location.hash || "#ymap");
+    const newUrl = window.location.pathname + "?" + params.toString().replace(/%2C/g, ",") + (window.location.hash || "#map");
     window.history.replaceState(null, "", newUrl);
 }
 
@@ -263,13 +263,12 @@ export function loadData() {
             mtGroups.forEach(k => state.mtdnaSelectedGroups.add(k));
 
             const urlParams = new URLSearchParams(window.location.search);
-            const view = (window.location.hash || "#ymap").substring(1);
-            const isMtDnaView = view === "mtdna" || view === "mmap";
+            const view = (window.location.hash || "#map").substring(1);
 
             if (urlParams.has("ygroups")) {
                 const groupsParam = urlParams.get("ygroups");
                 state.ydnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
-            } else if (urlParams.has("groups") && !isMtDnaView) {
+            } else if (urlParams.has("groups") && view !== "mtdna") {
                 const groupsParam = urlParams.get("groups");
                 state.ydnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
             }
@@ -277,7 +276,7 @@ export function loadData() {
             if (urlParams.has("mgroups")) {
                 const groupsParam = urlParams.get("mgroups");
                 state.mtdnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
-            } else if (urlParams.has("groups") && isMtDnaView) {
+            } else if (urlParams.has("groups") && view === "mtdna") {
                 const groupsParam = urlParams.get("groups");
                 state.mtdnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
             }
@@ -287,73 +286,68 @@ export function loadData() {
 }
 
 export function initFilters() {
-    const { people, roots } = getActiveData();
-    if (!people) return;
-    const groups = [...new Set(people.map((p) => p.group))].filter((g) => g).sort();
-    const listContainer = d3.select("#group-list");
-    listContainer.html("");
+    if (!ydnaPeopleData || !mtdnaPeopleData) return;
 
-    const selectedGroups = getSelectedGroups();
-
-    groups.forEach((groupName) => {
-        const count = people.filter((p) => p.group === groupName).length;
-        const isChecked = selectedGroups.has(groupName);
-        const color = getHaploColor(groupName);
-
-        listContainer.append("div").attr("class", "group-item")
-            .html(`<input type="checkbox" id="chk-${groupName}" ${isChecked ? "checked" : ""}><span style="width: 12px; height: 12px; border-radius: 50%; background: ${color}; margin-right: 6px; border: 1px solid rgba(0,0,0,0.15); flex-shrink: 0; display: inline-block;"></span><label for="chk-${groupName}">${translations[state.currentLang].haplogroup} ${groupName} (${count})</label>`)
-            .on("change", function () {
-                const cb = this.querySelector("input");
-                if (cb.checked) {
-                    selectedGroups.add(groupName);
-                    state.lastZoomedGroup = groupName;
-                } else {
-                    selectedGroups.delete(groupName);
-                }
-
-                const view = (window.location.hash || "#ymap").substring(1);
-                if (view === "mtdna" || view === "mmap") state.mtdnaAllSelected = selectedGroups.size === groups.length;
-                else state.ydnaAllSelected = selectedGroups.size === Object.keys(roots).length;
-
-                updateURLState();
-                window.dispatchEvent(new CustomEvent("filterChanged", { detail: { groupName, checked: cb.checked } }));
-            });
-    });
-
-    const view = (window.location.hash || "#ymap").substring(1);
-    const isMtDnaView = view === "mtdna" || view === "mmap";
-    const isAllSelected = isMtDnaView ? state.mtdnaAllSelected : state.ydnaAllSelected;
-
-    d3.select("#toggle-all").on("click", function () {
-        const view = (window.location.hash || "#ymap").substring(1);
-        const isMtDnaView = view === "mtdna" || view === "mmap";
-        let newState;
-        if (isMtDnaView) {
-            state.mtdnaAllSelected = !state.mtdnaAllSelected;
-            newState = state.mtdnaAllSelected;
-            if (newState) groups.forEach(k => state.mtdnaSelectedGroups.add(k));
-            else state.mtdnaSelectedGroups.clear();
-        } else {
-            state.ydnaAllSelected = !state.ydnaAllSelected;
-            newState = state.ydnaAllSelected;
-            if (newState) Object.keys(roots).forEach((k) => state.ydnaSelectedGroups.add(k));
-            else state.ydnaSelectedGroups.clear();
-        }
-
-        this.innerText = translations[state.currentLang][newState ? "deselectAll" : "selectAll"];
+    const buildList = (people, rootsMap, selectedGroups, listId, toggleId, isMtDna) => {
+        const groups = [...new Set(people.map((p) => p.group))].filter((g) => g).sort();
+        const listContainer = d3.select(listId);
+        listContainer.html("");
 
         groups.forEach((groupName) => {
-            const chk = document.getElementById("chk-" + groupName);
-            if (chk) chk.checked = newState;
-        });
-        updateURLState();
-        window.dispatchEvent(new CustomEvent("filterChanged", { detail: { groupName: "ALL", checked: newState } }));
-    });
+            const count = people.filter((p) => p.group === groupName).length;
+            const isChecked = selectedGroups.has(groupName);
+            const color = getHaploColor(groupName);
+            const shapeStyle = isMtDna ? "border-radius: 50%;" : "border-radius: 0%;";
 
-    const toggleAllBtn = document.getElementById("toggle-all");
-    if (toggleAllBtn) {
-        toggleAllBtn.innerText = translations[state.currentLang][isAllSelected ? "deselectAll" : "selectAll"];
-    }
+            listContainer.append("div").attr("class", "group-item")
+                .html(`<input type="checkbox" id="chk-${isMtDna?'m':'y'}-${groupName}" ${isChecked ? "checked" : ""}><span style="width: 12px; height: 12px; ${shapeStyle} background: ${color}; margin-right: 6px; border: 1px solid rgba(0,0,0,0.15); flex-shrink: 0; display: inline-block;"></span><label for="chk-${isMtDna?'m':'y'}-${groupName}">${translations[state.currentLang].haplogroup} ${groupName} (${count})</label>`)
+                .on("change", function () {
+                    const cb = this.querySelector("input");
+                    if (cb.checked) {
+                        selectedGroups.add(groupName);
+                        state.lastZoomedGroup = groupName;
+                    } else {
+                        selectedGroups.delete(groupName);
+                    }
+                    if (isMtDna) state.mtdnaAllSelected = selectedGroups.size === groups.length;
+                    else state.ydnaAllSelected = selectedGroups.size === Object.keys(rootsMap).length;
+                    updateURLState();
+                    window.dispatchEvent(new CustomEvent("filterChanged"));
+                });
+        });
+
+        d3.select(toggleId).on("click", function () {
+            let newState;
+            if (isMtDna) {
+                state.mtdnaAllSelected = !state.mtdnaAllSelected;
+                newState = state.mtdnaAllSelected;
+                if (newState) groups.forEach(k => state.mtdnaSelectedGroups.add(k));
+                else state.mtdnaSelectedGroups.clear();
+            } else {
+                state.ydnaAllSelected = !state.ydnaAllSelected;
+                newState = state.ydnaAllSelected;
+                if (newState) Object.keys(rootsMap).forEach((k) => state.ydnaSelectedGroups.add(k));
+                else state.ydnaSelectedGroups.clear();
+            }
+
+            this.innerText = translations[state.currentLang][newState ? "deselectAll" : "selectAll"];
+            groups.forEach((groupName) => {
+                const chk = document.getElementById(`chk-${isMtDna?'m':'y'}-${groupName}`);
+                if (chk) chk.checked = newState;
+            });
+            updateURLState();
+            window.dispatchEvent(new CustomEvent("filterChanged"));
+        });
+
+        const btnEl = document.getElementById(toggleId.substring(1));
+        if (btnEl) {
+            const allSel = isMtDna ? state.mtdnaAllSelected : state.ydnaAllSelected;
+            btnEl.innerText = translations[state.currentLang][allSel ? "deselectAll" : "selectAll"];
+        }
+    };
+
+    buildList(ydnaPeopleData, ydnaGroupRoots, state.ydnaSelectedGroups, "#group-list-ydna", "#toggle-all-ydna", false);
+    buildList(mtdnaPeopleData, mtdnaGroupRoots, state.mtdnaSelectedGroups, "#group-list-mtdna", "#toggle-all-mtdna", true);
 
     const eraListContainer = d3.select("#era-list");
     if (!eraListContainer.empty() && eraListContainer.html() === "") {
