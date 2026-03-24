@@ -35,6 +35,30 @@ def main():
         if hg and hg != "-":
             target_haplogroups.add(hg)
 
+    # Ensure all major haplogroup roots are always included
+    major_roots = [
+        # "A-M91",
+        # "B-M60",
+        # "C-M130",
+        "D-M174",
+        "E-M96",
+        "G-M201",
+        "H-L901",
+        "I-M170",
+        "I-M253",
+        "I-P215",
+        "J-M304",
+        "L-M20",
+        "N-M231",
+        "O-M175",
+        "Q-M242",
+        "R-M420",
+        "R-M343",
+        "R-M479",
+        "T-M184",
+    ]
+    target_haplogroups.update(major_roots)
+
     print(f"Found {len(target_haplogroups)} unique haplogroups in {input_json}")
 
     # Load existing paths if in update mode
