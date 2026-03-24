@@ -267,6 +267,9 @@ export class TreeVisualizer {
                 const getGroupKey = (hg) => Object.keys(groupRootsMap).find(k => groupRootsMap[k] === hg || k === hg);
                 const groupKey = getGroupKey(d.data.haplogroup);
                 const color = d.data.isAutoPlaced ? "#e53e3e" : groupKey ? getHaploColor(groupKey) : "#cbd5e0";
+                const isSolid = !!d._children || (!d.children && !d._children);
+                const fill = isSolid ? color : "#ffffff";
+                const stroke = isSolid ? d3.rgb(color).darker(1.2) : color;
 
                 if (isSquare) {
                     const size = radius * 1.8;
@@ -276,10 +279,10 @@ export class TreeVisualizer {
                         .attr("width", size)
                         .attr("height", size)
                         .attr("rx", 1.5)
-                        .style("fill", color)
-                        .style("stroke", d3.rgb(color).darker(1.2));
+                        .style("fill", fill)
+                        .style("stroke", stroke);
                 } else {
-                    el.append("circle").attr("r", radius).style("fill", color).style("stroke", d3.rgb(color).darker(1.2));
+                    el.append("circle").attr("r", radius).style("fill", fill).style("stroke", stroke);
                 }
             }
         });
@@ -294,11 +297,29 @@ export class TreeVisualizer {
             return `${d.data.haplogroup}${notePart}`;
         });
 
-        node.merge(nodeEnter)
+        const mergedNode = node.merge(nodeEnter);
+
+        mergedNode
             .attr("class", getNodeClass)
             .transition().duration(600)
             .attr("transform", (d) => `translate(${d.y},${d.x})`)
             .style("opacity", 1);
+
+        mergedNode.selectAll("circle, rect").transition().duration(600)
+            .style("fill", d => {
+                const getGroupKey = (hg) => Object.keys(groupRootsMap).find(k => groupRootsMap[k] === hg || k === hg);
+                const groupKey = getGroupKey(d.data.haplogroup);
+                const color = d.data.isAutoPlaced ? "#e53e3e" : groupKey ? getHaploColor(groupKey) : "#cbd5e0";
+                const isSolid = !!d._children || (!d.children && !d._children);
+                return isSolid ? color : "#ffffff";
+            })
+            .style("stroke", d => {
+                const getGroupKey = (hg) => Object.keys(groupRootsMap).find(k => groupRootsMap[k] === hg || k === hg);
+                const groupKey = getGroupKey(d.data.haplogroup);
+                const color = d.data.isAutoPlaced ? "#e53e3e" : groupKey ? getHaploColor(groupKey) : "#cbd5e0";
+                const isSolid = !!d._children || (!d.children && !d._children);
+                return isSolid ? d3.rgb(color).darker(1.2) : color;
+            });
 
         node.exit().transition().duration(600)
             .style("opacity", 0)
