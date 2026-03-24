@@ -1,8 +1,8 @@
 export const translations = {
     en: {
-        brand: "Slovenian Genetic Heritage", map: "Map (Y-DNA)", ydna: "Paternal Tree (Y-DNA)", mtdna: "Maternal Tree (mtDNA)",
+        brand: "Slovenian Genetic Heritage", ymap: "Map (Y-DNA)", ydna: "Paternal Tree (Y-DNA)", mmap: "Map (mtDNA)", mtdna: "Maternal Tree (mtDNA)",
         comingSoon: "View (Coming Soon)", navTitle: "Navigation", langTitle: "Language",
-        filterTitle: "Lineage", selectAll: "Select All", deselectAll: "Deselect All",
+        filterTitleYdna: "Lineage (Y-DNA)", filterTitleMtdna: "Lineage (mtDNA)", selectAll: "Select All", deselectAll: "Deselect All",
         showPassthrough: "Show all SNPs", eraTitle: "Eras", eraStone: "Stone Age",
         eraBronze: "Bronze Age", eraIron: "Iron Age", eraAntiquity: "Antiquity",
         eraMiddle: "Middle Age", eraModern: "Modern Age", kit: "Kit", surname: "Surname",
@@ -15,9 +15,9 @@ export const translations = {
         attributionHtml: "Source: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> and <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a> project."
     },
     sl: {
-        brand: "Slovenska genetska dediščina", map: "Zemljevid (Y-DNK)", ydna: "Očetovsko drevo (Y-DNK)", mtdna: "Materinsko drevo (mtDNK)",
+        brand: "Slovenska genetska dediščina", ymap: "Zemljevid (Y-DNK)", ydna: "Očetovsko drevo (Y-DNK)", mmap: "Zemljevid (mtDNK)", mtdna: "Materinsko drevo (mtDNK)",
         comingSoon: "Pogled (Kmalu)", navTitle: "Navigacija", langTitle: "Jezik",
-        filterTitle: "Rod", selectAll: "Izberi vse", deselectAll: "Počisti vse",
+        filterTitleYdna: "Rod (Y-DNK)", filterTitleMtdna: "Rod (mtDNK)", selectAll: "Izberi vse", deselectAll: "Počisti vse",
         showPassthrough: "Prikaži vse SNP", eraTitle: "Obdobja", eraStone: "Kamena doba",
         eraBronze: "Bronasta doba", eraIron: "Železna doba", eraAntiquity: "Antika",
         eraMiddle: "Srednji vek", eraModern: "Novi vek", kit: "Komplet", surname: "Priimek",
@@ -165,16 +165,16 @@ export const state = {
 };
 
 export function getActiveData() {
-    const view = (window.location.hash || "#map").substring(1);
-    if (view === "mtdna") {
+    const view = (window.location.hash || "#ymap").substring(1);
+    if (view === "mtdna" || view === "mmap") {
         return { haplo: mtdnaHaploData, people: mtdnaPeopleData, roots: mtdnaGroupRoots };
     }
     return { haplo: ydnaHaploData, people: ydnaPeopleData, roots: ydnaGroupRoots };
 }
 
 export function getSelectedGroups() {
-    const view = (window.location.hash || "#map").substring(1);
-    return view === "mtdna" ? state.mtdnaSelectedGroups : state.ydnaSelectedGroups;
+    const view = (window.location.hash || "#ymap").substring(1);
+    return (view === "mtdna" || view === "mmap") ? state.mtdnaSelectedGroups : state.ydnaSelectedGroups;
 }
 
 export function updateURLState() {
@@ -194,7 +194,7 @@ export function updateURLState() {
         params.delete("q");
     }
 
-    const newUrl = window.location.pathname + "?" + params.toString().replace(/%2C/g, ",") + window.location.hash;
+    const newUrl = window.location.pathname + "?" + params.toString().replace(/%2C/g, ",") + (window.location.hash || "#ymap");
     window.history.replaceState(null, "", newUrl);
 }
 
@@ -263,12 +263,13 @@ export function loadData() {
             mtGroups.forEach(k => state.mtdnaSelectedGroups.add(k));
 
             const urlParams = new URLSearchParams(window.location.search);
-            const view = (window.location.hash || "#map").substring(1);
+            const view = (window.location.hash || "#ymap").substring(1);
+            const isMtDnaView = view === "mtdna" || view === "mmap";
 
             if (urlParams.has("ygroups")) {
                 const groupsParam = urlParams.get("ygroups");
                 state.ydnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
-            } else if (urlParams.has("groups") && view !== "mtdna") {
+            } else if (urlParams.has("groups") && !isMtDnaView) {
                 const groupsParam = urlParams.get("groups");
                 state.ydnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
             }
@@ -276,7 +277,7 @@ export function loadData() {
             if (urlParams.has("mgroups")) {
                 const groupsParam = urlParams.get("mgroups");
                 state.mtdnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
-            } else if (urlParams.has("groups") && view === "mtdna") {
+            } else if (urlParams.has("groups") && isMtDnaView) {
                 const groupsParam = urlParams.get("groups");
                 state.mtdnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
             }
@@ -310,8 +311,8 @@ export function initFilters() {
                     selectedGroups.delete(groupName);
                 }
 
-                const view = (window.location.hash || "#map").substring(1);
-                if (view === "mtdna") state.mtdnaAllSelected = selectedGroups.size === groups.length;
+                const view = (window.location.hash || "#ymap").substring(1);
+                if (view === "mtdna" || view === "mmap") state.mtdnaAllSelected = selectedGroups.size === groups.length;
                 else state.ydnaAllSelected = selectedGroups.size === Object.keys(roots).length;
 
                 updateURLState();
@@ -319,12 +320,15 @@ export function initFilters() {
             });
     });
 
-    const isAllSelected = (window.location.hash || "#map").substring(1) === "mtdna" ? state.mtdnaAllSelected : state.ydnaAllSelected;
+    const view = (window.location.hash || "#ymap").substring(1);
+    const isMtDnaView = view === "mtdna" || view === "mmap";
+    const isAllSelected = isMtDnaView ? state.mtdnaAllSelected : state.ydnaAllSelected;
 
     d3.select("#toggle-all").on("click", function () {
-        const view = (window.location.hash || "#map").substring(1);
+        const view = (window.location.hash || "#ymap").substring(1);
+        const isMtDnaView = view === "mtdna" || view === "mmap";
         let newState;
-        if (view === "mtdna") {
+        if (isMtDnaView) {
             state.mtdnaAllSelected = !state.mtdnaAllSelected;
             newState = state.mtdnaAllSelected;
             if (newState) groups.forEach(k => state.mtdnaSelectedGroups.add(k));

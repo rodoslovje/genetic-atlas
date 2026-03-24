@@ -92,8 +92,9 @@
     <nav id="navbar">
         <a href="#" onclick="resetApp(event)" class="brand" data-i18n="brand">Slovenian DNA</a>
         <div class="nav-links desktop-nav">
-            <a href="#map" class="nav-route" id="link-map" data-i18n="map">Map</a>
+            <a href="#ymap" class="nav-route" id="link-ymap" data-i18n="ymap">Map (Y-DNA)</a>
             <a href="#ydna" class="nav-route" id="link-ydna" data-i18n="ydna">Y-DNA</a>
+            <a href="#mmap" class="nav-route" id="link-mmap" data-i18n="mmap">Map (mtDNA)</a>
             <a href="#mtdna" class="nav-route" id="link-mtdna" data-i18n="mtdna">mtDNA</a>
         </div>
         <div class="nav-right">
@@ -111,16 +112,18 @@
         </div>
     </nav>
     <div id="view-container">
-        <div id="view-map" class="page-view"><div id="map-container" style="width: 100%; height: 100%; z-index: 1;"></div></div>
+        <div id="view-ymap" class="page-view"><div id="ymap-container" style="width: 100%; height: 100%; z-index: 1;"></div></div>
         <div id="view-ydna" class="page-view"><div id="tree-container-ydna" style="width: 100%; height: 100%; position: relative; overflow: visible;"></div></div>
+        <div id="view-mmap" class="page-view"><div id="mmap-container" style="width: 100%; height: 100%; z-index: 1;"></div></div>
         <div id="view-mtdna" class="page-view"><div id="tree-container-mtdna" style="width: 100%; height: 100%; position: relative; overflow: visible;"></div></div>
     </div>
     <div id="sidebar">
         <div class="sidebar-section mobile-nav-section">
             <h4 class="sidebar-section-title" data-i18n="navTitle">Navigation</h4>
             <div class="nav-list-mobile">
-                <a href="#map" class="nav-route" onclick="toggleSidebar()" data-i18n="map">Map</a>
+                <a href="#ymap" class="nav-route" onclick="toggleSidebar()" data-i18n="ymap">Map (Y-DNA)</a>
                 <a href="#ydna" class="nav-route" onclick="toggleSidebar()" data-i18n="ydna">Y-DNA</a>
+                <a href="#mmap" class="nav-route" onclick="toggleSidebar()" data-i18n="mmap">Map (mtDNA)</a>
                 <a href="#mtdna" class="nav-route" onclick="toggleSidebar()" data-i18n="mtdna">mtDNA</a>
             </div>
         </div>
@@ -133,7 +136,7 @@
         </div>
         <div id="lineage-controls" style="display: none;">
             <div class="sidebar-section">
-                <h4 class="sidebar-section-title" data-i18n="filterTitle">Lineage</h4>
+                <h4 class="sidebar-section-title" id="filter-title" data-i18n="filterTitleYdna">Lineage (Y-DNA)</h4>
                 <button class="select-all-btn" id="toggle-all" data-i18n="selectAll">Select All</button>
                 <div id="group-list"></div>
                 <label class="passthrough-item" id="passthrough-container">

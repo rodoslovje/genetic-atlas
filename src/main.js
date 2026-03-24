@@ -1,7 +1,7 @@
 import { state, translations, loadData, initFilters, updateURLState, getActiveData, getSelectedGroups } from "./shared.js";
 import { initYDNA, refreshYDNADisplay, ydnaInitialized } from "./ydna.js";
 import { initMTDNA, refreshMTDNADisplay, mtdnaInitialized } from "./mtdna.js";
-import { initMap, mapInitialized } from "./map.js";
+import { ymapVis, mmapVis } from "./map.js";
 
 function applyTranslations() {
     document.querySelectorAll("[data-i18n]").forEach(el => {
@@ -37,7 +37,7 @@ function applyTranslations() {
 }
 
 function updatePageTitle() {
-    const view = (window.location.hash || "#map").substring(1);
+    const view = (window.location.hash || "#ymap").substring(1);
     const lang = translations[state.currentLang];
     const viewName = lang[view] || view;
     const domain = window.location.hostname;
@@ -121,14 +121,14 @@ window.addEventListener("click", (e) => {
 
 window.exportView = function (e) {
     e.preventDefault();
-    const view = (window.location.hash || "#map").substring(1);
+    const view = (window.location.hash || "#ymap").substring(1);
     const overlay = document.getElementById("loading-overlay");
     if (overlay) overlay.classList.add("active");
 
     // Delay briefly to allow the browser to paint the loading UI
     setTimeout(() => {
-        if (view === "map") {
-            const mapEl = document.getElementById("map-container");
+        if (view === "ymap" || view === "mmap") {
+            const mapEl = document.getElementById(view + "-container");
             if (!mapEl || typeof html2canvas === "undefined") {
                 if (overlay) overlay.classList.remove("active");
                 return;
@@ -176,7 +176,7 @@ window.exportView = function (e) {
                 ctx.fillText(sourceText, 20 * scale, height - (footerHeight / 2));
 
                 const link = document.createElement("a");
-                link.download = `Slovenian_DNA_Map.png`;
+                link.download = `Slovenian_${view === "ymap" ? "Y-DNA" : "mtDNA"}_Map.png`;
                 link.href = newCanvas.toDataURL("image/png");
                 document.body.appendChild(link);
                 link.click();
@@ -310,7 +310,7 @@ function validateSearch() {
     let hasResults = true;
     if (state.searchQuery) {
         const query = state.searchQuery.toLowerCase();
-        const currentView = (window.location.hash || "#map").substring(1);
+        const currentView = (window.location.hash || "#ymap").substring(1);
 
         hasResults = people.some(p => {
             const matchesText = (p.surname && p.surname.toLowerCase().includes(query)) ||
@@ -319,7 +319,8 @@ function validateSearch() {
                 (p.haplogroup && p.haplogroup.toLowerCase().includes(query));
 
             const matchesGroup = selectedGroups.has(p.group);
-            const missingPath = ((currentView === "ydna" || currentView === "mtdna") && p.haplogroup === "" && !roots[p.group]);
+            const isTreeView = currentView === "ydna" || currentView === "mtdna";
+            const missingPath = (isTreeView && p.haplogroup === "" && !roots[p.group]);
 
             return matchesText && matchesGroup && !missingPath;
         });
@@ -329,13 +330,16 @@ function validateSearch() {
 
 window.addEventListener("filterChanged", () => {
     validateSearch();
-    const view = (window.location.hash || "#map").substring(1);
+    const view = (window.location.hash || "#ymap").substring(1);
     if (view === "ydna") refreshYDNADisplay();
     else if (view === "mtdna") refreshMTDNADisplay();
 });
 
 function handleHashChange() {
-    const hash = window.location.hash || "#map";
+    let hash = window.location.hash;
+    if (!hash || hash === "#map") hash = "#ymap"; // Migrate old links gracefully
+    window.location.hash = hash;
+
     updatePageTitle();
     document.querySelectorAll(".page-view").forEach(el => el.classList.remove("active"));
 
@@ -357,21 +361,32 @@ function handleHashChange() {
     const passthroughContainer = document.getElementById("passthrough-container");
     const exportBtn = document.getElementById("export-btn");
 
+    const isMap = view === "ymap" || view === "mmap";
+    const isTree = view === "ydna" || view === "mtdna";
+    const isMtDna = view === "mtdna" || view === "mmap";
+
+    const filterTitleEl = document.getElementById("filter-title");
+    if (filterTitleEl) {
+        const titleKey = isMtDna ? "filterTitleMtdna" : "filterTitleYdna";
+        filterTitleEl.setAttribute("data-i18n", titleKey);
+        filterTitleEl.innerText = translations[state.currentLang][titleKey];
+    }
+
     if (exportBtn) {
-        exportBtn.style.display = (view === "ydna" || view === "mtdna" || view === "map") ? "flex" : "none";
-        const titleKey = view === "map" ? "exportMap" : "exportTree";
+        exportBtn.style.display = (isMap || isTree) ? "flex" : "none";
+        const titleKey = isMap ? "exportMap" : "exportTree";
         exportBtn.setAttribute("data-i18n-title", titleKey);
         exportBtn.setAttribute("title", translations[state.currentLang][titleKey]);
     }
 
-    if (view === "ydna" || view === "mtdna" || view === "map") {
+    if (isMap || isTree) {
         if (lineageControls) lineageControls.style.display = "block";
 
-        if ((view === "ydna" || view === "mtdna") && ydnaEras) ydnaEras.style.display = "block";
+        if (isTree && ydnaEras) ydnaEras.style.display = "block";
         else if (ydnaEras) ydnaEras.style.display = "none";
 
         if (passthroughContainer) {
-            passthroughContainer.style.display = (view === "ydna" || view === "mtdna") ? "flex" : "none";
+            passthroughContainer.style.display = isTree ? "flex" : "none";
         }
 
         if (window.innerWidth > 768 && sidebar) {
@@ -386,8 +401,11 @@ function handleHashChange() {
             if (view === "mtdna" && !mtdnaInitialized) {
                 initMTDNA();
             }
-            if (view === "map" && !mapInitialized) {
-                setTimeout(initMap, 50);
+            if (view === "ymap") {
+                setTimeout(() => ymapVis.initMap(), 50);
+            }
+            if (view === "mmap") {
+                setTimeout(() => mmapVis.initMap(), 50);
             }
             validateSearch();
         });
@@ -405,6 +423,10 @@ function initApp() {
         if (sidebar) sidebar.classList.add("closed");
     }
 
+    if (window.location.hash === "#map" || !window.location.hash) {
+        window.location.hash = "#ymap";
+    }
+
     updateLangIcon();
 
     const chkPassthrough = document.getElementById("chk-passthrough");
@@ -413,7 +435,7 @@ function initApp() {
         chkPassthrough.addEventListener("change", (e) => {
             state.showPassthrough = e.target.checked;
             updateURLState();
-            const view = (window.location.hash || "#map").substring(1);
+            const view = (window.location.hash || "#ymap").substring(1);
             if (view === "ydna") refreshYDNADisplay();
             else if (view === "mtdna") refreshMTDNADisplay();
         });
@@ -438,7 +460,7 @@ function initApp() {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 window.dispatchEvent(new CustomEvent("searchChanged"));
-                const view = (window.location.hash || "#map").substring(1);
+                const view = (window.location.hash || "#ymap").substring(1);
                 if (view === "ydna") refreshYDNADisplay();
                 else if (view === "mtdna") refreshMTDNADisplay();
             }, 300);
