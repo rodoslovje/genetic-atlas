@@ -173,8 +173,9 @@ export function getSelectedGroups() {
 
 export function updateURLState() {
     const params = new URLSearchParams(window.location.search);
-    const selected = getSelectedGroups();
-    params.set("groups", Array.from(selected).join(","));
+    params.set("ygroups", Array.from(state.ydnaSelectedGroups).join(","));
+    params.set("mgroups", Array.from(state.mtdnaSelectedGroups).join(","));
+    params.delete("groups");
     if (state.lastZoomedGroup) params.set("zoom", state.lastZoomedGroup);
     if (state.showPassthrough) {
         params.set("showAllSNP", "true");
@@ -256,15 +257,22 @@ export function loadData() {
             mtGroups.forEach(k => state.mtdnaSelectedGroups.add(k));
 
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has("groups")) {
+            const view = (window.location.hash || "#map").substring(1);
+
+            if (urlParams.has("ygroups")) {
+                const groupsParam = urlParams.get("ygroups");
+                state.ydnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
+            } else if (urlParams.has("groups") && view !== "mtdna") {
                 const groupsParam = urlParams.get("groups");
-                const groups = groupsParam ? groupsParam.split(",") : [];
-                const view = (window.location.hash || "#map").substring(1);
-                if (view === "mtdna") {
-                    state.mtdnaSelectedGroups = new Set(groups);
-                } else {
-                    state.ydnaSelectedGroups = new Set(groups);
-                }
+                state.ydnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
+            }
+
+            if (urlParams.has("mgroups")) {
+                const groupsParam = urlParams.get("mgroups");
+                state.mtdnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
+            } else if (urlParams.has("groups") && view === "mtdna") {
+                const groupsParam = urlParams.get("groups");
+                state.mtdnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
             }
         });
     }
