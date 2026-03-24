@@ -1,4 +1,4 @@
-import { state, translations, formatAge, getPersonTooltip, haploColors, eraColors, getSelectedGroups } from "./shared.js";
+import { state, translations, formatAge, getPersonTooltip, getHaploColor, eraColors, getSelectedGroups } from "./shared.js";
 
 export class TreeVisualizer {
     constructor(containerSelector) {
@@ -293,7 +293,7 @@ export class TreeVisualizer {
                 const radius = d3.select(this.parentNode).classed("node--prominent") ? 10.5 : 6.5;
                 const getGroupKey = (hg) => Object.keys(groupRootsMap).find(k => groupRootsMap[k] === hg || k === hg);
                 const groupKey = getGroupKey(d.data.haplogroup);
-                const color = d.data.isAutoPlaced ? "#e53e3e" : groupKey ? (haploColors[groupKey] || haploColors["default"]) : "#cbd5e0";
+                const color = d.data.isAutoPlaced ? "#e53e3e" : groupKey ? getHaploColor(groupKey) : "#cbd5e0";
 
                 el.append("circle").attr("r", radius).style("fill", color).style("stroke", d3.rgb(color).darker(1.2));
             }

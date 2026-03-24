@@ -1,4 +1,4 @@
-import { state, getActiveData, getSelectedGroups, getPersonTooltip, haploColors } from "./shared.js";
+import { state, getActiveData, getSelectedGroups, getPersonTooltip, getHaploColor } from "./shared.js";
 
 export let mapInitialized = false;
 let map;
@@ -54,7 +54,7 @@ export function refreshMap() {
 
         if (!lat || !lon || (lat === 0 && lon === 0)) return;
 
-        const color = haploColors[p.group] || haploColors["default"];
+        const color = getHaploColor(p.group);
         const marker = L.circleMarker([lat, lon], {
             radius: 6, fillColor: color, color: "#ffffff",
             weight: 1.5, opacity: 1, fillOpacity: 0.9
