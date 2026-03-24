@@ -25,6 +25,13 @@ function applyTranslations() {
         }
     });
 
+    document.querySelectorAll("[data-i18n-title]").forEach(el => {
+        const key = el.getAttribute("data-i18n-title");
+        if (translations[state.currentLang][key]) {
+            el.setAttribute("title", translations[state.currentLang][key]);
+        }
+    });
+
     checkNavOverflow();
 }
 
@@ -98,6 +105,104 @@ window.addEventListener("click", (e) => {
     }
 });
 
+window.exportTree = function (e) {
+    e.preventDefault();
+    const view = (window.location.hash || "#map").substring(1);
+    if (view !== "ydna" && view !== "mtdna") return;
+
+    const svgContainer = document.querySelector("#tree-container-" + view + " svg");
+    if (!svgContainer) return;
+
+    const clone = svgContainer.cloneNode(true);
+    const g = clone.querySelector("g");
+    if (!g) return;
+
+    g.removeAttribute("transform"); // Reset pan/zoom on the exported version
+
+    const style = document.createElement("style");
+    style.textContent = `
+        .node circle { stroke-width: 2.5px; }
+        .node text { font-size: 11px; fill: #1a202c; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        .node--person text { font-weight: normal; fill: #2c5282; font-size: 12px; }
+        .node--prominent text { font-weight: bold; font-size: 12px; }
+        .node--autoplaced circle { fill: #e53e3e !important; stroke: #9b2c2c !important; }
+        .node--autoplaced text { fill: #c53030 !important; font-weight: bold; }
+        .node--search-match text { fill: #c05621 !important; font-weight: 800 !important; font-size: 13.5px !important; }
+        .link { fill: none; stroke-width: 1.5px; opacity: 0.5; }
+    `;
+    clone.insertBefore(style, clone.firstChild);
+
+    const originalG = svgContainer.querySelector("g");
+    const bbox = originalG.getBBox();
+    clone.setAttribute("viewBox", `${bbox.x - 50} ${bbox.y - 80} ${bbox.width + 100} ${bbox.height + 130}`);
+    clone.setAttribute("width", bbox.width + 100);
+    clone.setAttribute("height", bbox.height + 130);
+
+    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    rect.setAttribute("x", bbox.x - 50); rect.setAttribute("y", bbox.y - 80);
+    rect.setAttribute("width", bbox.width + 100); rect.setAttribute("height", bbox.height + 130);
+    rect.setAttribute("fill", "#f1f5f9");
+    clone.insertBefore(rect, clone.firstChild);
+
+    const titleText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    titleText.textContent = `${translations[state.currentLang].brand} - ${translations[state.currentLang][view]}`;
+    titleText.setAttribute("x", bbox.x - 40);
+    titleText.setAttribute("y", bbox.y - 45);
+    titleText.setAttribute("font-size", "18px");
+    titleText.setAttribute("font-weight", "bold");
+    titleText.setAttribute("fill", "#1a365d");
+    clone.appendChild(titleText);
+
+    const urlLink = document.createElementNS("http://www.w3.org/2000/svg", "a");
+    urlLink.setAttribute("href", window.location.origin);
+    urlLink.setAttribute("target", "_blank");
+
+    const urlText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    urlText.textContent = window.location.hostname;
+    urlText.setAttribute("x", bbox.x + bbox.width + 40);
+    urlText.setAttribute("y", bbox.y - 45);
+    urlText.setAttribute("font-size", "18px");
+    urlText.setAttribute("text-anchor", "end");
+    urlText.setAttribute("fill", "#2b6cb0");
+    urlLink.appendChild(urlText);
+    clone.appendChild(urlLink);
+
+    const sourceText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    sourceText.setAttribute("x", bbox.x - 40);
+    sourceText.setAttribute("y", bbox.y + bbox.height + 40);
+    sourceText.setAttribute("font-size", "14px");
+    sourceText.setAttribute("fill", "#4a5568");
+    sourceText.setAttribute("xml:space", "preserve");
+
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = translations[state.currentLang].attributionHtml;
+
+    Array.from(tempDiv.childNodes).forEach(node => {
+        if (node.nodeType === 3) { // TEXT_NODE
+            const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+            tspan.textContent = node.textContent;
+            sourceText.appendChild(tspan);
+        } else if (node.nodeName === "A") {
+            const a = document.createElementNS("http://www.w3.org/2000/svg", "a");
+            a.setAttribute("href", node.getAttribute("href"));
+            a.setAttribute("target", "_blank");
+            const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+            tspan.textContent = node.textContent;
+            tspan.setAttribute("fill", "#2b6cb0");
+            a.appendChild(tspan);
+            sourceText.appendChild(a);
+        }
+    });
+
+    clone.appendChild(sourceText);
+
+    const blob = new Blob([new XMLSerializer().serializeToString(clone)], { type: "image/svg+xml;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Slovenian_${view.toUpperCase()}_Tree.svg`;
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+};
+
 function validateSearch() {
     const searchInput = document.getElementById("search-input");
     const { people, roots } = getActiveData();
@@ -151,6 +256,11 @@ function handleHashChange() {
     const lineageControls = document.getElementById("lineage-controls");
     const ydnaEras = document.getElementById("ydna-eras");
     const passthroughContainer = document.getElementById("passthrough-container");
+    const exportBtn = document.getElementById("export-btn");
+
+    if (exportBtn) {
+        exportBtn.style.display = (view === "ydna" || view === "mtdna") ? "flex" : "none";
+    }
 
     if (view === "ydna" || view === "mtdna" || view === "map") {
         if (lineageControls) lineageControls.style.display = "block";

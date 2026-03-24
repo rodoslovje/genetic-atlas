@@ -11,6 +11,7 @@ export const translations = {
         bce: "BCE", ce: "CE", snpLabel: "SNP", haplogroup: "Haplogroup", location: "Location",
         infoDataFtdna: "Slovenian Origin project on FamilyTreeDNA", infoSloDnaPool: "Slovenian DNA Pool",
         infoSloGenSoc: "Slovenian Genealogical Society", searchTitle: "Search", searchPlaceholder: "Surname, ancestor, kit, haplogroup...",
+        exportTree: "Export Tree as SVG", infoButton: "Additional Information",
         attributionHtml: "Source: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> and <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a> project."
     },
     sl: {
@@ -25,6 +26,7 @@ export const translations = {
         bce: "pr. n. št.", ce: "n. št.", snpLabel: "SNP", haplogroup: "Haploskupina", location: "Lokacija",
         infoDataFtdna: "Projekt Slovensko poreklo na FamilyTreeDNA", infoSloDnaPool: "Slovenski DNK sklad",
         infoSloGenSoc: "Slovensko rodoslovno društvo", searchTitle: "Iskanje", searchPlaceholder: "Priimek, prednik, kit, haploskupina...",
+        exportTree: "Izvozi drevo kot SVG", infoButton: "Dodatne informacije",
         attributionHtml: "Vir: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> in projekt <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovensko poreklo</a>."
     }
 };
