@@ -42,18 +42,21 @@ pip install -r scripts/requirements.txt
 
 ```bash
 python scripts/ydna-csv-to-json.py
+python scripts/mtdna-csv-to-json.py
 ```
 
 **Collect full SNP path for all haplogroups used (Incremental Update):**
 
 ```bash
 python scripts/ydna-get-paths-ftdna.py
+python scripts/mtdna-get-paths-ftdna.py
 ```
 
 **Collect full SNP path for all haplogroups used (Full Rebuild):**
 
 ```bash
 python scripts/ydna-get-paths-ftdna.py --mode full
+python scripts/mtdna-get-paths-ftdna.py --mode full
 ```
 
 ## 📄 License
