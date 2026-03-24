@@ -105,7 +105,11 @@ export function getHaploColor(groupName) {
     if (haploColors[groupName]) return haploColors[groupName];
 
     if (groupName.startsWith("H") && !groupName.startsWith("HV")) {
-        const num = parseInt(groupName.replace(/\D/g, '')) || 0;
+        const match = groupName.match(/^H(\d+)/);
+        const baseH = match ? match[0] : "H";
+        if (haploColors[baseH]) return haploColors[baseH];
+
+        const num = match ? parseInt(match[1], 10) : 0;
         const reds = [
             "#ef4444", "#dc2626", "#b91c1c", "#991b1b", "#7f1d1d",
             "#f87171", "#fca5a5", "#e11d48", "#be123c", "#9f1239",

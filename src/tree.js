@@ -116,10 +116,18 @@ export class TreeVisualizer {
 
         const newRoot = d3.hierarchy(processedData);
 
+        const findAllDescendants = (node, arr = []) => {
+            arr.push(node);
+            const kids = node.children || node._children;
+            if (kids) kids.forEach(c => findAllDescendants(c, arr));
+            return arr;
+        };
+        const allNodes = findAllDescendants(newRoot);
+
         if (this.root) {
             const oldNodes = new Map();
-            this.root.each(d => oldNodes.set(d.data.id, d));
-            newRoot.each(d => {
+            findAllDescendants(this.root).forEach(d => oldNodes.set(d.data.id, d));
+            allNodes.forEach(d => {
                 const old = oldNodes.get(d.data.id);
                 if (old && old._children) {
                     d._children = d.children;
@@ -132,7 +140,7 @@ export class TreeVisualizer {
         groups.forEach((groupName) => {
             const isChecked = selectedGroups.has(groupName);
             const targetRoot = groupRootsMap[groupName] || groupName;
-            const target = newRoot.descendants().find((d) => d.data.haplogroup === targetRoot);
+            const target = allNodes.find((d) => d.data.haplogroup === targetRoot);
 
             if (target) {
                 if (!isChecked && target.children) {
@@ -145,35 +153,48 @@ export class TreeVisualizer {
             }
 
             if (!isChecked) {
-                const visiblePeople = newRoot.descendants().filter((d) => d.data.isPerson && d.data.majorGroup === groupName);
+                const visiblePeople = allNodes.filter((d) => d.data.isPerson && d.data.majorGroup === groupName);
                 visiblePeople.forEach((personNode) => {
                     const parent = personNode.parent;
-                    if (parent && parent.children) {
-                        parent.children = parent.children.filter((c) => c !== personNode);
+                    if (parent) {
+                        if (parent.children) {
+                            parent.children = parent.children.filter((c) => c !== personNode);
+                        }
+                        if (parent._children) {
+                            parent._children = parent._children.filter((c) => c !== personNode);
+                        }
                         if (!parent._hiddenChildren) parent._hiddenChildren = [];
-                        parent._hiddenChildren.push(personNode);
+                        if (!parent._hiddenChildren.includes(personNode)) {
+                            parent._hiddenChildren.push(personNode);
+                        }
                     }
                 });
             }
         });
 
-        this.root = newRoot;
-
-        const findPersonRecursively = (node) => {
-            if (node.data.isPerson) return node;
-            const kids = node.children || node._children;
-            if (kids) {
-                for (let c of kids) {
-                    const found = findPersonRecursively(c);
-                    if (found) return found;
+        // Ensure ancestors of selected groups are expanded
+        groups.forEach((groupName) => {
+            if (selectedGroups.has(groupName)) {
+                const targetRoot = groupRootsMap[groupName] || groupName;
+                const target = allNodes.find((d) => d.data.haplogroup === targetRoot);
+                if (target) {
+                    let curr = target.parent;
+                    while (curr) {
+                        if (curr._children) {
+                            curr.children = curr._children;
+                            curr._children = null;
+                        }
+                        curr = curr.parent;
+                    }
                 }
             }
-            return null;
-        };
+        });
+
+        this.root = newRoot;
 
         let zoomTargetNode = null;
         if (state.searchQuery) {
-            zoomTargetNode = findPersonRecursively(this.root);
+            zoomTargetNode = allNodes.find((d) => d.data.isPerson);
             if (zoomTargetNode) {
                 let curr = zoomTargetNode.parent;
                 while (curr) {
@@ -190,18 +211,7 @@ export class TreeVisualizer {
             let zoomTargetGroup = state.lastZoomedGroup;
             if (zoomTargetGroup && selectedGroups.has(zoomTargetGroup)) {
                 const hg = groupRootsMap[zoomTargetGroup] || zoomTargetGroup;
-                const findHg = (n, targetHg) => {
-                    if (n.data.haplogroup === targetHg) return n;
-                    const kids = n.children || n._children;
-                    if (kids) {
-                        for (let c of kids) {
-                            const f = findHg(c, targetHg);
-                            if (f) return f;
-                        }
-                    }
-                    return null;
-                };
-                zoomTargetNode = findHg(this.root, hg);
+                zoomTargetNode = allNodes.find((d) => d.data.haplogroup === hg);
             }
         }
 
