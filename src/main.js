@@ -33,6 +33,20 @@ function applyTranslations() {
     });
 
     checkNavOverflow();
+    updatePageTitle();
+}
+
+function updatePageTitle() {
+    const view = (window.location.hash || "#map").substring(1);
+    const lang = translations[state.currentLang];
+    const viewName = lang[view] || view;
+    const domain = window.location.hostname;
+
+    if (domain) {
+        document.title = `${viewName} - ${lang.brand} - ${domain}`;
+    } else {
+        document.title = `${viewName} - ${lang.brand}`;
+    }
 }
 
 function checkNavOverflow() {
@@ -322,6 +336,7 @@ window.addEventListener("filterChanged", () => {
 
 function handleHashChange() {
     const hash = window.location.hash || "#map";
+    updatePageTitle();
     document.querySelectorAll(".page-view").forEach(el => el.classList.remove("active"));
 
     const viewId = "view-" + hash.substring(1);
