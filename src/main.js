@@ -152,14 +152,14 @@ function handleHashChange() {
     const ydnaEras = document.getElementById("ydna-eras");
     const passthroughContainer = document.getElementById("passthrough-container");
 
-    if (view === "ydna" || view === "map") {
+    if (view === "ydna" || view === "mtdna" || view === "map") {
         if (lineageControls) lineageControls.style.display = "block";
 
-        if (view === "ydna" && ydnaEras) ydnaEras.style.display = "block";
+        if ((view === "ydna" || view === "mtdna") && ydnaEras) ydnaEras.style.display = "block";
         else if (ydnaEras) ydnaEras.style.display = "none";
 
         if (passthroughContainer) {
-            passthroughContainer.style.display = view === "ydna" ? "flex" : "none";
+            passthroughContainer.style.display = (view === "ydna" || view === "mtdna") ? "flex" : "none";
         }
 
         if (window.innerWidth > 768 && sidebar) {
