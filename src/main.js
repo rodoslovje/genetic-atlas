@@ -212,11 +212,11 @@ window.exportView = function (e) {
         const style = document.createElement("style");
         style.textContent = `
             text { font-family: 'Segoe UI', Tahoma, sans-serif; }
-            .node circle { stroke-width: 2.5px; }
+            .node circle, .node rect { stroke-width: 2.5px; }
             .node text { font-size: 11px; fill: #1a202c; }
             .node--person text { font-weight: normal; fill: #2c5282; font-size: 12px; }
             .node--prominent text { font-weight: bold; font-size: 12px; }
-            .node--autoplaced circle { fill: #e53e3e !important; stroke: #9b2c2c !important; }
+            .node--autoplaced circle, .node--autoplaced rect { fill: #e53e3e !important; stroke: #9b2c2c !important; }
             .node--autoplaced text { fill: #c53030 !important; font-weight: bold; }
             .node--search-match text { fill: #c05621 !important; font-weight: 800 !important; font-size: 13.5px !important; }
             .link { fill: none; stroke-width: 1.5px; opacity: 0.5; }

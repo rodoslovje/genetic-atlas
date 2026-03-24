@@ -1,8 +1,9 @@
 import { state, translations, formatAge, getPersonTooltip, getHaploColor, eraColors, getSelectedGroups } from "./shared.js";
 
 export class TreeVisualizer {
-    constructor(containerSelector) {
+    constructor(containerSelector, isSquare = false) {
         this.containerSelector = containerSelector;
+        this.isSquare = isSquare;
         this.svg = d3.select(containerSelector).append("svg").attr("width", "100%").attr("height", "100%");
         this.g = this.svg.append("g");
         this.zoom = d3.zoom().scaleExtent([0.05, 5]).on("zoom", (e) => this.g.attr("transform", e.transform));
@@ -197,6 +198,7 @@ export class TreeVisualizer {
     update(source, allRoots, groupRootsMap) {
         const nodes = this.root.descendants();
         const links = this.root.links();
+        const isSquare = this.isSquare;
 
         let index = -1;
         this.root.eachBefore((n) => {
@@ -260,7 +262,19 @@ export class TreeVisualizer {
                 const groupKey = getGroupKey(d.data.haplogroup);
                 const color = d.data.isAutoPlaced ? "#e53e3e" : groupKey ? getHaploColor(groupKey) : "#cbd5e0";
 
-                el.append("circle").attr("r", radius).style("fill", color).style("stroke", d3.rgb(color).darker(1.2));
+                if (isSquare) {
+                    const size = radius * 1.8;
+                    el.append("rect")
+                        .attr("x", -size / 2)
+                        .attr("y", -size / 2)
+                        .attr("width", size)
+                        .attr("height", size)
+                        .attr("rx", 1.5)
+                        .style("fill", color)
+                        .style("stroke", d3.rgb(color).darker(1.2));
+                } else {
+                    el.append("circle").attr("r", radius).style("fill", color).style("stroke", d3.rgb(color).darker(1.2));
+                }
             }
         });
 

@@ -6,7 +6,7 @@ let ydnaTree = null;
 
 export function initYDNA() {
     ydnaInitialized = true;
-    ydnaTree = new TreeVisualizer("#tree-container-ydna");
+    ydnaTree = new TreeVisualizer("#tree-container-ydna", true);
     refreshYDNADisplay();
 }
 

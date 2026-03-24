@@ -6,7 +6,7 @@ let mtdnaTree = null;
 
 export function initMTDNA() {
     mtdnaInitialized = true;
-    mtdnaTree = new TreeVisualizer("#tree-container-mtdna");
+    mtdnaTree = new TreeVisualizer("#tree-container-mtdna", false);
     refreshMTDNADisplay();
 }
 
