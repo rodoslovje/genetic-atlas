@@ -87,7 +87,12 @@ def main():
 
     # Clean up data
     df = df.fillna("")
-    df["group"] = df["group"].str.replace(" haplogroup", "", regex=False).str.strip()
+    df["group"] = (
+        df["group"]
+        .str.replace(" haplogroup", "", regex=False)
+        .str.replace(r"\s*\(.*?\)", "", regex=True)
+        .str.strip()
+    )
     df["location"] = df["location"].replace("No Location Saved", "")
 
     df["haplogroup"] = df.apply(
