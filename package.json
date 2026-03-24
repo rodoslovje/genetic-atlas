@@ -1,0 +1,17 @@
+{
+  "name": "slovenian-dna",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && cp -r data dist/",
+    "preview": "vite preview",
+    "tdeploy": "npm run build && rsync -avz --delete dist/ ${SDNA_DEPLOY_TEST}",
+    "deploy": "npm run build && rsync -avz --delete dist/ ${SDNA_DEPLOY_PROD}",
+    "format": "prettier --write \"src/**/*.js\""
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "vite": "^5.2.0"
+  }
+}
