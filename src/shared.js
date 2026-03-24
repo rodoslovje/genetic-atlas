@@ -8,7 +8,7 @@ export const translations = {
         eraMiddle: "Middle Age", eraModern: "Modern Age", kit: "Kit", surname: "Surname",
         testType: "Test", ancestor: "Ancestor", lineage: "Lineage", newestSnp: "Newest SNP",
         ageEstimate: "Age Estimate", missingPath: "Missing data", notePathMissing: "Path missing in JSON",
-        bce: "BCE", ce: "CE", snpLabel: "SNP", haplogroup: "Haplogroup", location: "Location",
+        bce: "BCE", ce: "CE", snpLabel: "SNP", haplogroup: "Haplogroup", haplotype: "Haplotype", location: "Location",
         infoDataFtdna: "Slovenian Origin project on FamilyTreeDNA", infoSloDnaPool: "Slovenian DNA Pool",
         infoSloGenSoc: "Slovenian Genealogical Society", searchTitle: "Search", searchPlaceholder: "Surname, ancestor, kit, haplogroup...",
         exportTree: "Export Tree as SVG", exportMap: "Export Map as PNG", infoButton: "Additional Information", exporting: "Exporting...",
@@ -23,7 +23,7 @@ export const translations = {
         eraMiddle: "Srednji vek", eraModern: "Novi vek", kit: "Komplet", surname: "Priimek",
         testType: "Test", ancestor: "Prednik", lineage: "Rod", newestSnp: "Najnovejši SNP",
         ageEstimate: "Ocena starosti", missingPath: "Pomanjkljivi podatki", notePathMissing: "V JSON manjka pot",
-        bce: "pr. n. št.", ce: "n. št.", snpLabel: "SNP", haplogroup: "Haploskupina", location: "Lokacija",
+        bce: "pr. n. št.", ce: "n. št.", snpLabel: "SNP", haplogroup: "Haploskupina", haplotype: "Haplotip", location: "Lokacija",
         infoDataFtdna: "Projekt Slovensko poreklo na FamilyTreeDNA", infoSloDnaPool: "Slovenski DNK sklad",
         infoSloGenSoc: "Slovensko rodoslovno društvo", searchTitle: "Iskanje", searchPlaceholder: "Priimek, prednik, kit, haploskupina...",
         exportTree: "Izvozi drevo kot SVG", exportMap: "Izvozi zemljevid kot PNG", infoButton: "Dodatne informacije", exporting: "Izvažanje...",
@@ -214,6 +214,7 @@ export function getPersonTooltip(person, error = "") {
     if (person.test) html += `${lang.testType}: <b>${person.test}</b><br>`;
     html += `${lang.lineage}: <b>${majorGroup}</b><br>`;
     html += `${lang.haplogroup}: <b>${haplo || "N/A"}</b>${error}<br>`;
+    if (person.haplotype) html += `${lang.haplotype}: <b>${person.haplotype}</b><br>`;
     html += `${lang.surname}: <b>${person.surname || "N/A"}</b><br>`;
     html += `${lang.ancestor}: <b>${person.ancestor || "N/A"}</b><br>`;
     if (person.location) html += `${lang.location}: <b>${person.location}</b>`;
