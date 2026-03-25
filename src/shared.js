@@ -204,8 +204,18 @@ export function getSelectedGroups() {
 
 export function updateURLState() {
     const params = new URLSearchParams(window.location.search);
-    params.set("ygroups", Array.from(state.ydnaSelectedGroups).join(","));
-    params.set("mgroups", Array.from(state.mtdnaSelectedGroups).join(","));
+
+    if (state.ydnaAllSelected) {
+        params.delete("ygroups");
+    } else {
+        params.set("ygroups", Array.from(state.ydnaSelectedGroups).join(","));
+    }
+    if (state.mtdnaAllSelected) {
+        params.delete("mgroups");
+    } else {
+        params.set("mgroups", Array.from(state.mtdnaSelectedGroups).join(","));
+    }
+
     params.delete("groups");
     if (state.lastZoomedGroup) params.set("zoom", state.lastZoomedGroup);
     if (state.showPassthrough) {
@@ -294,17 +304,21 @@ export function loadData() {
             if (urlParams.has("ygroups")) {
                 const groupsParam = urlParams.get("ygroups");
                 state.ydnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
+                state.ydnaAllSelected = state.ydnaSelectedGroups.size === Object.keys(ydnaGroupRoots).length;
             } else if (urlParams.has("groups") && view !== "mtdna") {
                 const groupsParam = urlParams.get("groups");
                 state.ydnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
+                state.ydnaAllSelected = state.ydnaSelectedGroups.size === Object.keys(ydnaGroupRoots).length;
             }
 
             if (urlParams.has("mgroups")) {
                 const groupsParam = urlParams.get("mgroups");
                 state.mtdnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
+                state.mtdnaAllSelected = state.mtdnaSelectedGroups.size === mtGroups.length;
             } else if (urlParams.has("groups") && view === "mtdna") {
                 const groupsParam = urlParams.get("groups");
                 state.mtdnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
+                state.mtdnaAllSelected = state.mtdnaSelectedGroups.size === mtGroups.length;
             }
         });
     }
