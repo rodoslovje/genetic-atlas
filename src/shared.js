@@ -51,7 +51,7 @@ export const mtdnaGroupRoots = {
 };
 
 // Configurable colors for each major haplogroup
-export const haploColors = {
+export const ydnaHaploColors = {
     // --- Shared & Y-DNA ---
     "A": "#4b5563",    // Dark Grey
     "B": "#78350f",    // Brown
@@ -77,36 +77,12 @@ export const haploColors = {
     "Y": "#fb7185",    // Light Rose
     "Z": "#22d3ee",    // Cyan
 
-    // --- mtDNA Specific Families ---
-    // H Family (Reds)
-    "H": "#ef4444", "H1": "#dc2626", "H2": "#b91c1c", "H3": "#991b1b",
-    "H4": "#7f1d1d", "H5": "#f87171", "H6": "#fca5a5", "H7": "#fecaca",
-    "H10": "#450a0a", "H11": "#9f1239",
-    // U Family (Oranges/Ambers)
-    "U": "#f59e0b", "U1": "#d97706", "U2": "#b45309", "U3": "#92400e",
-    "U4": "#78350f", "U5a": "#fbbf24", "U5b": "#fcd34d", "U7": "#fef3c7",
-    // J Family (Light Blues)
-    "J": "#0ea5e9", "J1": "#0284c7", "J2": "#0369a1",
-    // T Family (Tans/Yellows)
-    "T": "#d97706", "T1": "#ca8a04", "T2": "#a16207",
-    // K Family (Emerald/Greens)
-    "K": "#10b981", "K1": "#059669", "K2": "#047857",
-    // V & HV Family (Indigos/Purples)
-    "HV": "#6366f1", "V": "#4f46e5", "V7": "#4338ca", "V13": "#3730a3",
-    // W Family (Rose/Pinks)
-    "W": "#f43f5e", "W1": "#e11d48", "W5": "#be123c",
-    // X Family (Cyans)
-    "X": "#06b6d4", "X2": "#0891b2",
-    // L Family (Fuchsia/Pink)
-    "L0": "#c026d3", "L1": "#a21caf", "L2": "#86198f", "L3": "#701a75",
-    "L4": "#e879f9", "L5": "#f0abfc", "L6": "#fdf4ff",
-
     "default": "#6b7280" // Gray fallback
 };
 
 export function getHaploColor(groupName) {
-    if (!groupName) return haploColors["default"];
-    if (haploColors[groupName]) return haploColors[groupName];
+    if (!groupName) return ydnaHaploColors["default"];
+    if (ydnaHaploColors[groupName]) return ydnaHaploColors[groupName];
 
     // Dynamically generate a shade based on the letter, subgroup number, and trailing suffix
     const match = groupName.match(/^([a-zA-Z]+)(\d*)(.*)/);
@@ -166,7 +142,7 @@ export function getHaploColor(groupName) {
         }
     }
 
-    return haploColors["default"];
+    return ydnaHaploColors["default"];
 }
 
 export const eraColors = [
