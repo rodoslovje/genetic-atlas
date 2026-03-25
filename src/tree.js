@@ -274,6 +274,17 @@ export class TreeVisualizer {
                 if (isSquare) {
                     const size = radius * 1.8;
                     el.append("rect")
+                        .attr("class", "halo")
+                        .attr("x", -size / 2)
+                        .attr("y", -size / 2)
+                        .attr("width", size)
+                        .attr("height", size)
+                        .attr("rx", 1.5)
+                        .style("fill", "none")
+                        .style("stroke", "#ffffff")
+                        .style("stroke-width", "5.5px");
+                    el.append("rect")
+                        .attr("class", "shape")
                         .attr("x", -size / 2)
                         .attr("y", -size / 2)
                         .attr("width", size)
@@ -282,7 +293,8 @@ export class TreeVisualizer {
                         .style("fill", fill)
                         .style("stroke", stroke);
                 } else {
-                    el.append("circle").attr("r", radius).style("fill", fill).style("stroke", stroke);
+                    el.append("circle").attr("class", "halo").attr("r", radius).style("fill", "none").style("stroke", "#ffffff").style("stroke-width", "5.5px");
+                    el.append("circle").attr("class", "shape").attr("r", radius).style("fill", fill).style("stroke", stroke);
                 }
             }
         });
@@ -305,7 +317,7 @@ export class TreeVisualizer {
             .attr("transform", (d) => `translate(${d.y},${d.x})`)
             .style("opacity", 1);
 
-        mergedNode.selectAll("circle, rect").transition().duration(600)
+        mergedNode.selectAll(".shape").transition().duration(600)
             .style("fill", d => {
                 const getGroupKey = (hg) => Object.keys(groupRootsMap).find(k => groupRootsMap[k] === hg || k === hg);
                 const groupKey = getGroupKey(d.data.haplogroup);
