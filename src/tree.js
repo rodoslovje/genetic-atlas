@@ -18,6 +18,8 @@ export class TreeVisualizer {
     render(haploData, peopleData, groupRootsMap) {
         if (!haploData || !peopleData) return;
 
+        this.peopleData = peopleData;
+
         const allRoots = new Set(Object.values(groupRootsMap));
         peopleData.forEach(p => {
             if (p.group) allRoots.add(groupRootsMap[p.group] || p.group);
@@ -151,7 +153,7 @@ export class TreeVisualizer {
 
         if (!zoomTargetNode) {
             let zoomTargetGroup = state.lastZoomedGroup;
-            if (zoomTargetGroup && selectedGroups.has(zoomTargetGroup)) {
+            if (zoomTargetGroup) {
                 const hg = groupRootsMap[zoomTargetGroup] || zoomTargetGroup;
                 zoomTargetNode = allNodes.find((d) => d.data.haplogroup === hg);
             }
@@ -167,7 +169,46 @@ export class TreeVisualizer {
                 }
                 curr = curr.parent;
             }
+
+            if (!state.searchQuery && state.lastZoomedGroup) {
+                const hg = groupRootsMap[state.lastZoomedGroup] || state.lastZoomedGroup;
+                if (zoomTargetNode.data.haplogroup === hg) {
+                    if (selectedGroups.has(state.lastZoomedGroup)) {
+                        if (zoomTargetNode._children) {
+                            zoomTargetNode.children = zoomTargetNode._children;
+                            zoomTargetNode._children = null;
+                        }
+                    } else {
+                        if (zoomTargetNode.children) {
+                            zoomTargetNode._children = zoomTargetNode.children;
+                            zoomTargetNode.children = null;
+                        }
+                    }
+                }
+            }
         }
+
+        // Ensure all selected groups remain visible and expanded, preventing nested hides
+        const nodeByHg = new Map();
+        allNodes.forEach(d => nodeByHg.set(d.data.haplogroup, d));
+
+        const groups = [...new Set(peopleData.map((p) => p.group))].filter(Boolean);
+        groups.forEach((groupName) => {
+            if (selectedGroups.has(groupName)) {
+                const targetRoot = groupRootsMap[groupName] || groupName;
+                const target = nodeByHg.get(targetRoot);
+                if (target) {
+                    let curr = target;
+                    while (curr) {
+                        if (curr._children) {
+                            curr.children = curr._children;
+                            curr._children = null;
+                        }
+                        curr = curr.parent;
+                    }
+                }
+            }
+        });
 
         this.update(this.root, allRoots, groupRootsMap);
 
@@ -205,6 +246,7 @@ export class TreeVisualizer {
         const nodes = this.root.descendants();
         const links = this.root.links();
         const isSquare = this.isSquare;
+        const peopleData = this.peopleData;
 
         let index = -1;
         this.root.eachBefore((n) => {
@@ -234,8 +276,25 @@ export class TreeVisualizer {
             .on("click", (event, d) => {
                 if (d.data.isPerson) return;
                 event.stopPropagation();
-                if (d.children) { d._children = d.children; d.children = null; }
-                else if (d._children) { d.children = d._children; d._children = null; }
+
+                const getGroupKey = (hg) => Object.keys(groupRootsMap).find(k => groupRootsMap[k] === hg || k === hg);
+                const groupKey = getGroupKey(d.data.haplogroup);
+
+                if (groupKey) {
+                    const selectedGroups = getSelectedGroups();
+                    if (!selectedGroups.has(groupKey)) {
+                        const chkId = this.isSquare ? `chk-y-${groupKey}` : `chk-m-${groupKey}`;
+                        const chk = document.getElementById(chkId);
+                        if (chk) {
+                            chk.checked = true;
+                            chk.dispatchEvent(new Event("change", { bubbles: true }));
+                            return;
+                        }
+                    }
+                }
+
+                if (d.children && d.children.length > 0) { d._children = d.children; d.children = null; }
+                else if (d._children && d._children.length > 0) { d.children = d._children; d._children = null; }
                 else return;
                 this.update(d, allRoots, groupRootsMap);
             })
@@ -267,9 +326,16 @@ export class TreeVisualizer {
                 const getGroupKey = (hg) => Object.keys(groupRootsMap).find(k => groupRootsMap[k] === hg || k === hg);
                 const groupKey = getGroupKey(d.data.haplogroup);
                 const color = d.data.isAutoPlaced ? "#e53e3e" : groupKey ? getHaploColor(groupKey) : "#cbd5e0";
-                const isSolid = !!d._children || (!d.children && !d._children);
+
+                const isDeselectedRoot = groupKey && !getSelectedGroups().has(groupKey);
+                const hasHiddenChildren = d._children && d._children.length > 0;
+                let hasPeople = false;
+                if (isDeselectedRoot && peopleData) {
+                    hasPeople = peopleData.some(p => p.group === groupKey);
+                }
+                const isSolid = !hasHiddenChildren && !(isDeselectedRoot && hasPeople);
                 const fill = isSolid ? color : "#ffffff";
-                const stroke = isSolid ? d3.rgb(color).darker(1.2) : color;
+                const stroke = d.data.isAutoPlaced ? "#9b2c2c" : color;
 
                 if (isSquare) {
                     const size = radius * 1.8;
@@ -317,20 +383,25 @@ export class TreeVisualizer {
             .attr("transform", (d) => `translate(${d.y},${d.x})`)
             .style("opacity", 1);
 
-        mergedNode.selectAll(".shape").transition().duration(600)
+        mergedNode.select(".shape").transition().duration(600)
             .style("fill", d => {
                 const getGroupKey = (hg) => Object.keys(groupRootsMap).find(k => groupRootsMap[k] === hg || k === hg);
                 const groupKey = getGroupKey(d.data.haplogroup);
                 const color = d.data.isAutoPlaced ? "#e53e3e" : groupKey ? getHaploColor(groupKey) : "#cbd5e0";
-                const isSolid = !!d._children || (!d.children && !d._children);
+
+                const isDeselectedRoot = groupKey && !getSelectedGroups().has(groupKey);
+                const hasHiddenChildren = d._children && d._children.length > 0;
+                let hasPeople = false;
+                if (isDeselectedRoot && peopleData) {
+                    hasPeople = peopleData.some(p => p.group === groupKey);
+                }
+                const isSolid = !hasHiddenChildren && !(isDeselectedRoot && hasPeople);
                 return isSolid ? color : "#ffffff";
             })
             .style("stroke", d => {
                 const getGroupKey = (hg) => Object.keys(groupRootsMap).find(k => groupRootsMap[k] === hg || k === hg);
                 const groupKey = getGroupKey(d.data.haplogroup);
-                const color = d.data.isAutoPlaced ? "#e53e3e" : groupKey ? getHaploColor(groupKey) : "#cbd5e0";
-                const isSolid = !!d._children || (!d.children && !d._children);
-                return isSolid ? d3.rgb(color).darker(1.2) : color;
+                return d.data.isAutoPlaced ? "#9b2c2c" : groupKey ? getHaploColor(groupKey) : "#cbd5e0";
             });
 
         node.exit().transition().duration(600)

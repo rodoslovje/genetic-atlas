@@ -291,27 +291,118 @@ export function loadData() {
 export function initFilters() {
     if (!ydnaPeopleData || !mtdnaPeopleData) return;
 
-    const buildList = (people, rootsMap, selectedGroups, listId, toggleId, isMtDna) => {
-        const groups = [...new Set(people.map((p) => p.group))].filter((g) => g).sort();
+    const buildList = (people, haploData, rootsMap, selectedGroups, listId, toggleId, isMtDna) => {
+        const groups = [...new Set(people.map((p) => p.group))].filter(Boolean);
+
+        // 1. Build parent lookup from true phylogenetic tree paths
+        const parentMap = {};
+        if (haploData) {
+            haploData.forEach(d => {
+                parentMap[d.haplogroup] = d.parent;
+            });
+        }
+
+        const getAncestors = (hg) => {
+            const ancestors = new Set();
+            let curr = parentMap[hg];
+            let maxDepth = 0;
+            while (curr && maxDepth < 1000) {
+                ancestors.add(curr);
+                curr = parentMap[curr];
+                maxDepth++;
+            }
+            return ancestors;
+        };
+
+        // 2. Map groups to their tree nodes and fetch their full ancestry
+        const groupHgs = {};
+        groups.forEach(g => groupHgs[g] = rootsMap[g] || g);
+
+        const groupAncestors = {};
+        groups.forEach(g => groupAncestors[g] = getAncestors(groupHgs[g]));
+
+        // 3. Find the closest visible parent group for each group
+        const groupHierarchy = {};
+        groups.forEach(g => {
+            let parent = null;
+            let maxDepth = -1;
+            groups.forEach(otherG => {
+                if (g !== otherG && groupAncestors[g].has(groupHgs[otherG])) {
+                    const depth = groupAncestors[otherG].size;
+                    if (depth > maxDepth) {
+                        maxDepth = depth;
+                        parent = otherG;
+                    }
+                }
+            });
+            groupHierarchy[g] = parent;
+        });
+
+        // 4. Sort siblings logically and build final ordered structure
+        const childrenMap = {};
+        groups.forEach(g => childrenMap[g] = []);
+
+        groups.sort((a, b) => {
+            const re = /([A-Za-z]+)|([0-9]+)/g;
+            const aParts = a.match(re) || [];
+            const bParts = b.match(re) || [];
+            for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+                if (!aParts[i]) return -1;
+                if (!bParts[i]) return 1;
+                const aIsNum = !isNaN(aParts[i]);
+                const bIsNum = !isNaN(bParts[i]);
+                if (aIsNum && bIsNum) {
+                    const diff = parseInt(aParts[i], 10) - parseInt(bParts[i], 10);
+                    if (diff !== 0) return diff;
+                } else if (aParts[i] !== bParts[i]) {
+                    return aParts[i] > bParts[i] ? 1 : -1;
+                }
+            }
+            return 0;
+        });
+
+        const rootGroups = [];
+        groups.forEach(g => {
+            const p = groupHierarchy[g];
+            if (p && childrenMap[p]) childrenMap[p].push(g);
+            else rootGroups.push(g);
+        });
+
+        const orderedGroups = [];
+        const groupDepths = {};
+        const traverse = (node, depth) => {
+            orderedGroups.push(node);
+            groupDepths[node] = depth;
+            if (childrenMap[node]) childrenMap[node].forEach(child => traverse(child, depth + 1));
+        };
+        rootGroups.forEach(root => traverse(root, 0));
+
         const listContainer = d3.select(listId);
         listContainer.html("");
 
-        groups.forEach((groupName) => {
+        orderedGroups.forEach((groupName) => {
             const count = people.filter((p) => p.group === groupName).length;
             const isChecked = selectedGroups.has(groupName);
             const color = getHaploColor(groupName);
             const shapeStyle = isMtDna ? "border-radius: 50%;" : "border-radius: 0%;";
 
+            let indentStyle = null;
+            const depth = groupDepths[groupName];
+            if (depth > 0) {
+                indentStyle = `margin-left: ${depth * 12}px;`;
+            }
+
             listContainer.append("div").attr("class", "group-item")
+                .attr("style", indentStyle)
                 .html(`<input type="checkbox" id="chk-${isMtDna?'m':'y'}-${groupName}" ${isChecked ? "checked" : ""}><span style="width: 12px; height: 12px; ${shapeStyle} background: ${color}; margin-right: 6px; border: 1px solid rgba(0,0,0,0.15); flex-shrink: 0; display: inline-block;"></span><label for="chk-${isMtDna?'m':'y'}-${groupName}">${translations[state.currentLang].haplogroup} ${groupName} (${count})</label>`)
                 .on("change", function () {
                     const cb = this.querySelector("input");
                     if (cb.checked) {
                         selectedGroups.add(groupName);
-                        state.lastZoomedGroup = groupName;
                     } else {
                         selectedGroups.delete(groupName);
                     }
+                    state.lastZoomedGroup = groupName;
                     if (isMtDna) state.mtdnaAllSelected = selectedGroups.size === groups.length;
                     else state.ydnaAllSelected = selectedGroups.size === Object.keys(rootsMap).length;
                     updateURLState();
@@ -321,6 +412,7 @@ export function initFilters() {
 
         d3.select(toggleId).on("click", function () {
             let newState;
+            state.lastZoomedGroup = null;
             if (isMtDna) {
                 state.mtdnaAllSelected = !state.mtdnaAllSelected;
                 newState = state.mtdnaAllSelected;
@@ -349,8 +441,8 @@ export function initFilters() {
         }
     };
 
-    buildList(ydnaPeopleData, ydnaGroupRoots, state.ydnaSelectedGroups, "#group-list-ydna", "#toggle-all-ydna", false);
-    buildList(mtdnaPeopleData, mtdnaGroupRoots, state.mtdnaSelectedGroups, "#group-list-mtdna", "#toggle-all-mtdna", true);
+    buildList(ydnaPeopleData, ydnaHaploData, ydnaGroupRoots, state.ydnaSelectedGroups, "#group-list-ydna", "#toggle-all-ydna", false);
+    buildList(mtdnaPeopleData, mtdnaHaploData, mtdnaGroupRoots, state.mtdnaSelectedGroups, "#group-list-mtdna", "#toggle-all-mtdna", true);
 
     const eraListContainer = d3.select("#era-list");
     if (!eraListContainer.empty() && eraListContainer.html() === "") {
