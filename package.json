@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "vite build && cp -r data dist/",
+    "build": "node -e \"require('fs').writeFileSync('./public/version.json', JSON.stringify({ buildDate: new Date().toISOString() }))\" && vite build && cp -r data dist/",
     "preview": "vite preview",
     "format": "prettier --write \"src/**/*.js\""
   },

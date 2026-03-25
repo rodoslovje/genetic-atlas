@@ -12,7 +12,7 @@ export const translations = {
         infoDataFtdna: "Slovenian Origin project on FamilyTreeDNA", infoSloDnaPool: "Slovenian DNA Pool",
         infoSloGenSoc: "Slovenian Genealogical Society", searchTitle: "Search", searchPlaceholder: "Surname, haplogroup, kit...",
         exportTree: "Export Tree as SVG", exportMap: "Export Map as PNG", infoButton: "Additional Information", exporting: "Exporting...",
-        searchMatches: "Found: {0}", resetView: "Reset View",
+        searchMatches: "Found: {0}", resetView: "Reset View", versionLabel: "Version: {0}",
         attributionHtml: "Source: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> and <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a> project."
     },
     sl: {
@@ -28,7 +28,7 @@ export const translations = {
         infoDataFtdna: "Projekt Slovensko poreklo na FamilyTreeDNA", infoSloDnaPool: "Slovenski DNK sklad",
         infoSloGenSoc: "Slovensko rodoslovno društvo", searchTitle: "Iskanje", searchPlaceholder: "Priimek, haploskupina, kit...",
         exportTree: "Izvozi drevo kot SVG", exportMap: "Izvozi zemljevid kot PNG", infoButton: "Dodatne informacije", exporting: "Izvažanje...",
-        searchMatches: "Najdeno: {0}", resetView: "Ponastavi pogled",
+        searchMatches: "Najdeno: {0}", resetView: "Ponastavi pogled", versionLabel: "Verzija: {0}",
         attributionHtml: "Vir: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> in projekt <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovensko poreklo</a>."
     }
 };

@@ -88,6 +88,7 @@ window.setLanguage = function (e, lang) {
     e.preventDefault();
     state.currentLang = lang;
     localStorage.setItem("preferredLang", lang);
+    loadVersionInfo();
     updateLangIcon();
     applyTranslations();
     initFilters();
@@ -523,6 +524,33 @@ function initApp() {
 
     applyTranslations();
     handleHashChange();
+    loadVersionInfo();
+}
+
+function loadVersionInfo() {
+    fetch('/version.json', { cache: "no-store" })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('version.json not found');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const versionEl = document.getElementById('version-info');
+            if (versionEl && data.buildDate) {
+                const date = new Date(data.buildDate);
+                const formattedDate = date.toLocaleString(state.currentLang.startsWith('sl') ? 'sl-SI' : 'en-US', {
+                    year: 'numeric', month: 'short', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+                versionEl.innerText = translations[state.currentLang].versionLabel.replace('{0}', formattedDate);
+            }
+        })
+        .catch(error => {
+            console.warn(error.message);
+            const versionEl = document.getElementById('version-info');
+            if (versionEl) versionEl.style.display = 'none';
+        });
 }
 
 if (document.readyState === "loading") {
