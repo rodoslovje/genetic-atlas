@@ -124,6 +124,16 @@ export class TreeVisualizer {
 
         const newRoot = d3.hierarchy(processedData);
 
+        newRoot.sort((a, b) => {
+            const ageA = a.data.age !== null && a.data.age !== undefined ? a.data.age : 999999;
+            const ageB = b.data.age !== null && b.data.age !== undefined ? b.data.age : 999999;
+            if (ageA !== ageB) return ageA - ageB;
+
+            const nameA = a.data.isPerson ? a.data.surname : a.data.haplogroup;
+            const nameB = b.data.isPerson ? b.data.surname : b.data.haplogroup;
+            return (nameA || "").localeCompare(nameB || "");
+        });
+
         const findAllDescendants = (node, arr = []) => {
             arr.push(node);
             const kids = node.children || node._children;
