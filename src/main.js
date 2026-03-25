@@ -160,13 +160,13 @@ window.resetView = function (e) {
 
 window.exportView = function (e) {
     e.preventDefault();
-    const view = (window.location.hash || "#ymap").substring(1);
+    const view = (window.location.hash || "#map").substring(1);
     const overlay = document.getElementById("loading-overlay");
     if (overlay) overlay.classList.add("active");
 
     // Delay briefly to allow the browser to paint the loading UI
     setTimeout(() => {
-        if (view === "ymap" || view === "mmap") {
+        if (view === "map") {
             const mapEl = document.getElementById(view + "-container");
             if (!mapEl || typeof html2canvas === "undefined") {
                 if (overlay) overlay.classList.remove("active");
