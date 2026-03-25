@@ -108,40 +108,63 @@ export function getHaploColor(groupName) {
     if (!groupName) return haploColors["default"];
     if (haploColors[groupName]) return haploColors[groupName];
 
-    if (groupName.startsWith("H") && !groupName.startsWith("HV")) {
-        const match = groupName.match(/^H(\d+)/);
-        const baseH = match ? match[0] : "H";
-        if (haploColors[baseH]) return haploColors[baseH];
+    // Dynamically generate a shade based on the letter, subgroup number, and trailing suffix
+    const match = groupName.match(/^([a-zA-Z]+)(\d*)(.*)/);
+    if (match) {
+        let baseLetter = match[1].toUpperCase();
+        let num = match[2] ? parseInt(match[2], 10) : 0;
+        const sub = match[3] || "";
 
-        const num = match ? parseInt(match[1], 10) : 0;
-        const reds = [
-            "#ef4444", "#dc2626", "#b91c1c", "#991b1b", "#7f1d1d",
-            "#f87171", "#fca5a5", "#e11d48", "#be123c", "#9f1239",
-            "#881337", "#f43f5e", "#fb7185", "#fda4af"
-        ];
-        return reds[num % reds.length];
+        // Separate H5+ into an Orange scale, leaving H and H1-H4 as Red
+        if (baseLetter === "H" && num >= 5) {
+            baseLetter = "H_orange";
+        }
+
+        // Force a contrast shift for specific U groups
+        if (groupName.toLowerCase().startsWith("u5b")) num += 2;
+        if (groupName.toLowerCase().startsWith("u7")) num += 6;
+
+        // Generate a distinct shift for any nested subgroups (e.g., H1a, H1b) based on their suffix
+        let subOffset = 0;
+        for (let i = 0; i < sub.length; i++) {
+            subOffset += sub.charCodeAt(i) * (i + 1);
+        }
+        num += subOffset;
+
+        const scales = {
+            "H": ["#7f1d1d", "#991b1b", "#b91c1c", "#dc2626", "#ef4444", "#f87171", "#fca5a5"], // Reds
+            "H_orange": ["#7c2d12", "#9a3412", "#c2410c", "#ea580c", "#f97316", "#fb923c", "#fdba74"], // Oranges
+            "U": ["#7c2d12", "#9a3412", "#c2410c", "#ea580c", "#f97316", "#fb923c", "#fdba74"], // Oranges
+            "J": ["#0c4a6e", "#075985", "#0369a1", "#0284c7", "#0ea5e9", "#38bdf8", "#7dd3fc"], // Sky Blues
+            "T": ["#854d0e", "#a16207", "#ca8a04", "#eab308", "#facc15", "#fde047", "#fef08a"], // Yellows
+            "K": ["#064e3b", "#065f46", "#047857", "#059669", "#10b981", "#34d399", "#6ee7b7"], // Emeralds
+            "V": ["#312e81", "#3730a3", "#4338ca", "#4f46e5", "#6366f1", "#818cf8", "#a5b4fc"], // Indigos
+            "HV": ["#7c2d12", "#9a3412", "#c2410c", "#ea580c", "#f97316", "#fb923c", "#fdba74"], // Oranges
+            "W": ["#881337", "#9f1239", "#be123c", "#e11d48", "#f43f5e", "#fb7185", "#fda4af"], // Roses
+            "X": ["#164e63", "#155e75", "#0e7490", "#0891b2", "#06b6d4", "#22d3ee", "#67e8f9"], // Cyans
+            "L": ["#4a044e", "#701a75", "#86198f", "#a21caf", "#c026d3", "#d946ef", "#e879f9"], // Fuchsias
+            "I": ["#1e3a8a", "#1e40af", "#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd"], // Blues
+            "N": ["#3f6212", "#4d7c0f", "#65a30d", "#84cc16", "#a3e635", "#bef264", "#d9f99d"], // Lime Greens
+            "M": ["#4c1d95", "#5b21b6", "#6d28d9", "#7c3aed", "#8b5cf6", "#a78bfa", "#c4b5fd"], // Violets
+            "C": ["#831843", "#9d174d", "#be185d", "#db2777", "#f472b6", "#fbcfe8", "#fce7f3"], // Pinks
+            "D": ["#831843", "#9d174d", "#be185d", "#db2777", "#f472b6", "#fbcfe8", "#fce7f3"], // Pinks
+            "A": ["#1f2937", "#374151", "#4b5563", "#6b7280", "#9ca3af", "#d1d5db", "#e5e7eb"], // Grays
+            "B": ["#451a03", "#78350f", "#92400e", "#b45309", "#d97706", "#f59e0b", "#fbbf24"], // Browns
+            "E": ["#052e16", "#064e3b", "#065f46", "#047857", "#059669", "#10b981", "#34d399"], // Light Greens
+            "F": ["#042f2e", "#134e4a", "#115e59", "#0f766e", "#0d9488", "#14b8a6", "#2dd4bf"], // Teals
+            "G": ["#164e63", "#155e75", "#0e7490", "#0891b2", "#06b6d4", "#22d3ee", "#67e8f9"], // Cyans
+            "P": ["#3b0764", "#581c87", "#6b21a8", "#7e22ce", "#9333ea", "#a855f7", "#c084fc"], // Purples
+            "Q": ["#78350f", "#92400e", "#b45309", "#d97706", "#f59e0b", "#fbbf24", "#fcd34d"], // Ambers
+            "R": ["#4a044e", "#701a75", "#86198f", "#a21caf", "#c026d3", "#d946ef", "#e879f9"], // Fuchsias
+            "S": ["#7c2d12", "#9a3412", "#c2410c", "#ea580c", "#f97316", "#fb923c", "#fdba74"], // Oranges
+            "Y": ["#881337", "#9f1239", "#be123c", "#e11d48", "#f43f5e", "#fb7185", "#fda4af"], // Roses
+            "Z": ["#064e3b", "#065f46", "#047857", "#059669", "#10b981", "#34d399", "#6ee7b7"]  // Emeralds
+        };
+
+        if (scales[baseLetter]) {
+            return scales[baseLetter][num % scales[baseLetter].length];
+        }
     }
-    if (groupName.startsWith("U")) return "#f59e0b";
-    if (groupName.startsWith("J")) return "#0ea5e9";
-    if (groupName.startsWith("T")) return "#d97706";
-    if (groupName.startsWith("K")) return "#10b981";
-    if (groupName.startsWith("V") || groupName.startsWith("HV")) return "#6366f1";
-    if (groupName.startsWith("W")) return "#e11d48";
-    if (groupName.startsWith("X")) return "#06b6d4";
-    if (groupName.startsWith("L")) return "#d946ef";
-    if (groupName.startsWith("I")) return "#3b82f6";
-    if (groupName.startsWith("N")) return "#15803d";
-    if (groupName.startsWith("M")) return "#8b5cf6";
-    if (groupName.startsWith("R")) return "#be185d";
-    if (groupName.startsWith("A")) return "#4b5563";
-    if (groupName.startsWith("B")) return "#78350f";
-    if (groupName.startsWith("C")) return "#eab308";
-    if (groupName.startsWith("D")) return "#9333ea";
-    if (groupName.startsWith("E")) return "#4ade80";
-    if (groupName.startsWith("G")) return "#14b8a6";
-    if (groupName.startsWith("S")) return "#fb923c";
-    if (groupName.startsWith("Y")) return "#fb7185";
-    if (groupName.startsWith("Z")) return "#22d3ee";
 
     return haploColors["default"];
 }
