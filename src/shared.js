@@ -184,7 +184,8 @@ export const state = {
     searchQuery: new URLSearchParams(window.location.search).get("q") || "",
     ydnaSelectedGroups: new Set(),
     mtdnaSelectedGroups: new Set(),
-    lastZoomedGroup: new URLSearchParams(window.location.search).get("zoom") || null,
+    yzoom: new URLSearchParams(window.location.search).get("yzoom") || null,
+    mzoom: new URLSearchParams(window.location.search).get("mzoom") || null,
     ydnaAllSelected: true,
     mtdnaAllSelected: true
 };
@@ -217,7 +218,14 @@ export function updateURLState() {
     }
 
     params.delete("groups");
-    if (state.lastZoomedGroup) params.set("zoom", state.lastZoomedGroup);
+    params.delete("zoom"); // Clean up old zoom parameter
+
+    if (state.yzoom) params.set("yzoom", state.yzoom);
+    else params.delete("yzoom");
+
+    if (state.mzoom) params.set("mzoom", state.mzoom);
+    else params.delete("mzoom");
+
     if (state.showPassthrough) {
         params.set("showAllSNP", "true");
     } else {
@@ -439,7 +447,8 @@ export function initFilters() {
                     } else {
                         selectedGroups.delete(groupName);
                     }
-                    state.lastZoomedGroup = groupName;
+                    if (isMtDna) state.mzoom = groupName;
+                    else state.yzoom = groupName;
                     if (isMtDna) state.mtdnaAllSelected = selectedGroups.size === groups.length;
                     else state.ydnaAllSelected = selectedGroups.size === Object.keys(rootsMap).length;
                     updateURLState();
@@ -449,13 +458,14 @@ export function initFilters() {
 
         d3.select(toggleId).on("click", function () {
             let newState;
-            state.lastZoomedGroup = null;
             if (isMtDna) {
+                state.mzoom = null;
                 state.mtdnaAllSelected = !state.mtdnaAllSelected;
                 newState = state.mtdnaAllSelected;
                 if (newState) groups.forEach(k => state.mtdnaSelectedGroups.add(k));
                 else state.mtdnaSelectedGroups.clear();
             } else {
+                state.yzoom = null;
                 state.ydnaAllSelected = !state.ydnaAllSelected;
                 newState = state.ydnaAllSelected;
                 if (newState) Object.keys(rootsMap).forEach((k) => state.ydnaSelectedGroups.add(k));

@@ -148,8 +148,12 @@ window.resetView = function (e) {
     if (view === "map") {
         mapVis.resetZoom();
     } else if (view === "ydna") {
+        state.yzoom = null;
+        updateURLState();
         resetYDNATree();
     } else if (view === "mtdna") {
+        state.mzoom = null;
+        updateURLState();
         resetMTDNATree();
     }
 };

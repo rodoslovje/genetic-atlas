@@ -151,10 +151,11 @@ export class TreeVisualizer {
             zoomTargetNode = allNodes.find((d) => d.data.isPerson);
         }
 
+        let currentZoomGroup = this.isSquare ? state.yzoom : state.mzoom;
+
         if (!zoomTargetNode) {
-            let zoomTargetGroup = state.lastZoomedGroup;
-            if (zoomTargetGroup) {
-                const hg = groupRootsMap[zoomTargetGroup] || zoomTargetGroup;
+            if (currentZoomGroup) {
+                const hg = groupRootsMap[currentZoomGroup] || currentZoomGroup;
                 zoomTargetNode = allNodes.find((d) => d.data.haplogroup === hg);
             }
         }
@@ -170,10 +171,10 @@ export class TreeVisualizer {
                 curr = curr.parent;
             }
 
-            if (!state.searchQuery && state.lastZoomedGroup) {
-                const hg = groupRootsMap[state.lastZoomedGroup] || state.lastZoomedGroup;
+            if (!state.searchQuery && currentZoomGroup) {
+                const hg = groupRootsMap[currentZoomGroup] || currentZoomGroup;
                 if (zoomTargetNode.data.haplogroup === hg) {
-                    if (selectedGroups.has(state.lastZoomedGroup)) {
+                    if (selectedGroups.has(currentZoomGroup)) {
                         if (zoomTargetNode._children) {
                             zoomTargetNode.children = zoomTargetNode._children;
                             zoomTargetNode._children = null;
