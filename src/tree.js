@@ -365,15 +365,34 @@ export class TreeVisualizer {
             }
         });
 
-        nodeEnter.append("text").attr("dy", (d) => (d.data.isPerson ? ".35em" : "-0.4em")).attr("x", (d) => (d.data.isPerson ? 18 : 16)).style("text-anchor", "start").text((d) => {
-            if (d.data.isPerson) return d.data.ancestor || d.data.surname;
-            let notePart = d.data.note && d.data.note.trim() !== "" && d.data.note !== translations[state.currentLang].notePathMissing ? ` (${d.data.note})` : "";
-            if (!notePart) {
-                const rootGroupKey = Object.keys(groupRootsMap).find((k) => groupRootsMap[k] === d.data.haplogroup || k === d.data.haplogroup);
-                if (rootGroupKey) notePart = ` (${rootGroupKey})`;
-            }
-            return `${d.data.haplogroup}${notePart}`;
-        });
+        nodeEnter.append("text")
+            .attr("dy", (d) => {
+                if (d.data.isPerson) return d.data.location ? "-0.15em" : ".35em";
+                return "-0.4em";
+            })
+            .attr("x", (d) => (d.data.isPerson ? 18 : 16))
+            .style("text-anchor", "start")
+            .each(function (d) {
+                const el = d3.select(this);
+                if (d.data.isPerson) {
+                    el.append("tspan").text(d.data.ancestor || d.data.surname);
+                    if (d.data.location) {
+                        el.append("tspan")
+                            .attr("x", 18)
+                            .attr("dy", "1.2em")
+                            .style("font-size", "10px")
+                            .style("fill", "#718096")
+                            .text(d.data.location);
+                    }
+                } else {
+                    let notePart = d.data.note && d.data.note.trim() !== "" && d.data.note !== translations[state.currentLang].notePathMissing ? ` (${d.data.note})` : "";
+                    if (!notePart) {
+                        const rootGroupKey = Object.keys(groupRootsMap).find((k) => groupRootsMap[k] === d.data.haplogroup || k === d.data.haplogroup);
+                        if (rootGroupKey) notePart = ` (${rootGroupKey})`;
+                    }
+                    el.text(`${d.data.haplogroup}${notePart}`);
+                }
+            });
 
         const mergedNode = node.merge(nodeEnter);
 
