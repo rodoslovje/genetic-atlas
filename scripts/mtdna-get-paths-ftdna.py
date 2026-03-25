@@ -35,6 +35,9 @@ def main():
         hg = p.get("haplogroup")
         if hg and hg != "-":
             target_haplogroups.add(hg)
+        grp = p.get("group")
+        if grp and grp != "-":
+            target_haplogroups.add(grp)
 
     # Ensure all major mtDNA haplogroup roots are always included
     major_roots = [
