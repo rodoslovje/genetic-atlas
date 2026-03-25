@@ -55,13 +55,17 @@ def main():
 
     snp_cols = ["kit", "Haplogroup"]
     snp_cols = [c for c in snp_cols if c in df_snp.columns]
-    df_snp = df_snp[snp_cols]
+    df_snp = df_snp[snp_cols].copy()
+    if "Haplogroup" in df_snp.columns:
+        df_snp.rename(columns={"Haplogroup": "haplogroup_snp"}, inplace=True)
 
-    test_cols = ["kit", "surname", "test"]
+    test_cols = ["kit", "surname", "haplogroup", "test"]
     test_cols = [c for c in test_cols if c in df_test.columns]
     df_test = df_test[test_cols].copy()
     if "surname" in df_test.columns:
         df_test.rename(columns={"surname": "surname_test"}, inplace=True)
+    if "haplogroup" in df_test.columns:
+        df_test.rename(columns={"haplogroup": "haplogroup_test"}, inplace=True)
 
     # Merge dataframes on 'kit'
     df = df_ydna.merge(df_snp, on="kit", how="outer")
@@ -81,7 +85,6 @@ def main():
             "Country": "country",
             "Latitude": "latitude",
             "Longitude": "longitude",
-            "Haplogroup": "haplogroup",
         },
         inplace=True,
     )
@@ -116,6 +119,21 @@ def main():
         df.rename(columns={"surname_test": "surname"}, inplace=True)
     elif "surname_ydna" in df.columns:
         df["surname"] = df["surname_ydna"].apply(get_surname)
+
+    if "haplogroup_test" in df.columns and "haplogroup_snp" in df.columns:
+        df["haplogroup"] = df.apply(
+            lambda row: (
+                row["haplogroup_test"]
+                if row.get("haplogroup_test")
+                and str(row.get("haplogroup_test")).strip() != "-"
+                else row.get("haplogroup_snp", "")
+            ),
+            axis=1,
+        )
+    elif "haplogroup_test" in df.columns:
+        df.rename(columns={"haplogroup_test": "haplogroup"}, inplace=True)
+    elif "haplogroup_snp" in df.columns:
+        df.rename(columns={"haplogroup_snp": "haplogroup"}, inplace=True)
 
     # Convert lat/lon to float
     df["latitude"] = pd.to_numeric(df["latitude"], errors="coerce").fillna(0.0)
