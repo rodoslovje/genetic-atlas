@@ -379,7 +379,7 @@ export class TreeVisualizer {
         nodeEnter.append("text")
             .attr("dy", (d) => {
                 if (d.data.isPerson) return d.data.location ? "-0.15em" : ".35em";
-                return "-0.4em";
+                return ".35em";
             })
             .attr("x", (d) => (d.data.isPerson ? 18 : 16))
             .style("text-anchor", "start")
