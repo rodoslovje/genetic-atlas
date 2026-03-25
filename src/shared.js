@@ -12,13 +12,13 @@ export const translations = {
         infoDataFtdna: "Slovenian Origin project on FamilyTreeDNA", infoSloDnaPool: "Slovenian DNA Pool",
         infoSloGenSoc: "Slovenian Genealogical Society", searchTitle: "Search", searchPlaceholder: "Surname, haplogroup, kit...",
         exportTree: "Export Tree as SVG", exportMap: "Export Map as PNG", infoButton: "Additional Information", exporting: "Exporting...",
-        searchMatches: "Found: {0}", resetView: "Reset View", versionLabel: "Version: {0}",
+        searchMatches: "Found: {0}", resetView: "Reset View", versionLabel: "Version: {0}", dataUpdateLabel: "Data update: {0}",
         attributionHtml: "Source: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> and <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a> project."
     },
     sl: {
         brand: "Slovenska genetska dediščina", map: "Zemljevid", ydna: "Očetovsko drevo (Y-DNK)", mtdna: "Materinsko drevo (mtDNK)",
         comingSoon: "Pogled (Kmalu)", navTitle: "Navigacija", langTitle: "Jezik",
-        filterTitleYdna: "Rod (Y-DNK)", filterTitleMtdna: "Rod (mtDNK)", selectAll: "Izberi vse", deselectAll: "Počisti vse",
+        filterTitleYdna: "Linija (Y-DNK)", filterTitleMtdna: "Linija (mtDNK)", selectAll: "Izberi vse", deselectAll: "Počisti vse",
         showPassthrough: "Prikaži vse SNP", eraTitle: "Obdobja", eraStone: "Kamena doba",
         eraBronze: "Bronasta doba", eraIron: "Železna doba", eraAntiquity: "Antika",
         eraMiddle: "Srednji vek", eraModern: "Novi vek", kit: "Komplet", surname: "Priimek",
@@ -28,7 +28,7 @@ export const translations = {
         infoDataFtdna: "Projekt Slovensko poreklo na FamilyTreeDNA", infoSloDnaPool: "Slovenski DNK sklad",
         infoSloGenSoc: "Slovensko rodoslovno društvo", searchTitle: "Iskanje", searchPlaceholder: "Priimek, haploskupina, kit...",
         exportTree: "Izvozi drevo kot SVG", exportMap: "Izvozi zemljevid kot PNG", infoButton: "Dodatne informacije", exporting: "Izvažanje...",
-        searchMatches: "Najdeno: {0}", resetView: "Ponastavi pogled", versionLabel: "Verzija: {0}",
+        searchMatches: "Najdeno: {0}", resetView: "Ponastavi pogled", versionLabel: "Verzija: {0}", dataUpdateLabel: "Posodobitev podatkov: {0}",
         attributionHtml: "Vir: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> in projekt <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovensko poreklo</a>."
     }
 };

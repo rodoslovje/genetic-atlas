@@ -537,19 +537,30 @@ function loadVersionInfo() {
         })
         .then(data => {
             const versionEl = document.getElementById('version-info');
+            const dataEl = document.getElementById('data-info');
+            const formatOpts = {
+                year: 'numeric', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            };
+            const locale = state.currentLang.startsWith('sl') ? 'sl-SI' : 'en-US';
+
             if (versionEl && data.buildDate) {
                 const date = new Date(data.buildDate);
-                const formattedDate = date.toLocaleString(state.currentLang.startsWith('sl') ? 'sl-SI' : 'en-US', {
-                    year: 'numeric', month: 'short', day: 'numeric',
-                    hour: '2-digit', minute: '2-digit'
-                });
-                versionEl.innerText = translations[state.currentLang].versionLabel.replace('{0}', formattedDate);
+                versionEl.innerText = translations[state.currentLang].versionLabel.replace('{0}', date.toLocaleString(locale, formatOpts));
+                versionEl.style.display = 'block';
+            }
+            if (dataEl && data.dataDate) {
+                const date = new Date(data.dataDate);
+                dataEl.innerText = translations[state.currentLang].dataUpdateLabel.replace('{0}', date.toLocaleString(locale, formatOpts));
+                dataEl.style.display = 'block';
             }
         })
         .catch(error => {
             console.warn(error.message);
             const versionEl = document.getElementById('version-info');
+            const dataEl = document.getElementById('data-info');
             if (versionEl) versionEl.style.display = 'none';
+            if (dataEl) dataEl.style.display = 'none';
         });
 }
 
