@@ -125,8 +125,8 @@ export class TreeVisualizer {
         const newRoot = d3.hierarchy(processedData);
 
         newRoot.sort((a, b) => {
-            const nameA = a.data.isPerson ? a.data.surname : a.data.haplogroup;
-            const nameB = b.data.isPerson ? b.data.surname : b.data.haplogroup;
+            const nameA = a.data.isPerson ? (a.data.ancestor || a.data.surname) : a.data.haplogroup;
+            const nameB = b.data.isPerson ? (b.data.ancestor || b.data.surname) : b.data.haplogroup;
             return (nameA || "").localeCompare(nameB || "");
         });
 
@@ -314,7 +314,7 @@ export class TreeVisualizer {
                     let notePart = d.data.note && d.data.note.trim() !== "" && d.data.note !== translations[state.currentLang].notePathMissing ? ` (${d.data.note})` : "";
                     if (!notePart) {
                         const rootGroupKey = Object.keys(groupRootsMap).find((k) => groupRootsMap[k] === d.data.haplogroup || k === d.data.haplogroup);
-                        if (rootGroupKey) notePart = ` (${rootGroupKey})`;
+                        if (rootGroupKey && rootGroupKey !== d.data.haplogroup) notePart = ` (${rootGroupKey})`;
                     }
                     this.tooltip.html(`${translations[state.currentLang].snpLabel}: <b>${d.data.haplogroup}${notePart}</b>${error}<br>${translations[state.currentLang].ageEstimate}: ${formatAge(d.data.age)}`);
                 }
@@ -395,7 +395,7 @@ export class TreeVisualizer {
                     let notePart = d.data.note && d.data.note.trim() !== "" && d.data.note !== translations[state.currentLang].notePathMissing ? ` (${d.data.note})` : "";
                     if (!notePart) {
                         const rootGroupKey = Object.keys(groupRootsMap).find((k) => groupRootsMap[k] === d.data.haplogroup || k === d.data.haplogroup);
-                        if (rootGroupKey) notePart = ` (${rootGroupKey})`;
+                        if (rootGroupKey && rootGroupKey !== d.data.haplogroup) notePart = ` (${rootGroupKey})`;
                     }
                     el.text(`${d.data.haplogroup}${notePart}`);
                 }
