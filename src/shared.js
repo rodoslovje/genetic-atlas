@@ -44,7 +44,6 @@ export const mtdnaGroupRoots = {};
 
 // Configurable colors for each major haplogroup
 export const ydnaHaploColors = {
-    // --- Shared & Y-DNA ---
     "A": "#4b5563",    // Dark Grey
     "B": "#78350f",    // Brown
     "C": "#eab308",    // Gold / Yellow
