@@ -40,15 +40,7 @@ export const ydnaGroupRoots = {
     R1a: "R-M420", R1b: "R-M343", R2: "R-M479", T: "T-M184"
 };
 
-export const mtdnaGroupRoots = {
-    A: "A", B: "B", C: "C", D: "D", E: "E", F: "F", G: "G", H: "H", I: "I", J: "J", K: "K",
-    L0: "L0", L1: "L1", L2: "L2", L3: "L3", L4: "L4", L5: "L5", L6: "L6", M: "M", N: "N",
-    P: "P", Q: "Q", R: "R", S: "S", T: "T", U: "U", V: "V", W: "W", X: "X", Y: "Y", Z: "Z",
-    H1: "H1", H2: "H2", H3: "H3", H4: "H4", H5: "H5", H6: "H6", H7: "H7", H10: "H10", H11: "H11",
-    H15: "H15", H26: "H26", H27: "H27", H30: "H30", H33: "H33", H35: "H35", H40: "H40", H47: "H47", H65: "H65", H73: "H73", H85: "H85", "H-T152C!": "H",
-    T1: "T1", T2: "T2", J1: "J1", J2: "J2", K1: "K1", K2: "K2", W1: "W1", W5: "W5", X2: "X2",
-    HV: "HV", V7: "V7", V13: "V13", U1: "U1", U2: "U2", U3: "U3", U4: "U4", U5a: "U5a", U5b: "U5b", U7: "U7", N1: "N1"
-};
+export const mtdnaGroupRoots = {};
 
 // Configurable colors for each major haplogroup
 export const ydnaHaploColors = {
@@ -264,6 +256,16 @@ export function loadData() {
                         p.group = "R1a";
                     } else {
                         p.group = p.haplogroup.split("-")[0];
+                    }
+                }
+
+                // Autodetect group roots
+                if (p.group && !mtdnaGroupRoots[p.group]) {
+                    if (/[^a-zA-Z0-9]/.test(p.group)) {
+                        let rootMatch = p.group.match(/^[A-Z][0-9]?[a-z]?/);
+                        mtdnaGroupRoots[p.group] = rootMatch ? rootMatch[0] : p.group;
+                    } else {
+                        mtdnaGroupRoots[p.group] = p.group;
                     }
                 }
             });

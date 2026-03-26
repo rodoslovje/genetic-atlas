@@ -97,7 +97,9 @@ def main():
 
     df["haplogroup"] = df.apply(
         lambda row: (
-            row["mitotree"] if row.get("mitotree") else row.get("haplogroup", "")
+            row["mitotree"]
+            if row.get("mitotree") and str(row.get("mitotree")).strip() != "-"
+            else row.get("haplogroup", "")
         ),
         axis=1,
     )
