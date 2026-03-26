@@ -1,6 +1,6 @@
 export const translations = {
     en: {
-        brand: "Slovenian Genetic Heritage", map: "Map", ydna: "Paternal Tree (Y-DNA)", mtdna: "Maternal Tree (mtDNA)",
+        brand: "Slovenian Genetic Heritage", map: "Map", ydna: "Paternal Lineage (Y-DNA)", mtdna: "Maternal Lineage (mtDNA)",
         comingSoon: "View (Coming Soon)", navTitle: "Navigation", langTitle: "Language",
         filterTitleYdna: "Lineage (Y-DNA)", filterTitleMtdna: "Lineage (mtDNA)", selectAll: "Select All", deselectAll: "Deselect All",
         showPassthrough: "Show all SNPs", eraTitle: "Eras", eraStone: "Stone Age",
@@ -16,13 +16,13 @@ export const translations = {
         attributionHtml: "Source: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> and <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a> project."
     },
     sl: {
-        brand: "Slovenska genetska dediščina", map: "Zemljevid", ydna: "Očetovsko drevo (Y-DNK)", mtdna: "Materinsko drevo (mtDNK)",
+        brand: "Slovenska genetska dediščina", map: "Zemljevid", ydna: "Očetna linija (Y-DNK)", mtdna: "Materna linija (mtDNK)",
         comingSoon: "Pogled (Kmalu)", navTitle: "Navigacija", langTitle: "Jezik",
         filterTitleYdna: "Linija (Y-DNK)", filterTitleMtdna: "Linija (mtDNK)", selectAll: "Izberi vse", deselectAll: "Počisti vse",
         showPassthrough: "Prikaži vse SNP", eraTitle: "Obdobja", eraStone: "Kamena doba",
         eraBronze: "Bronasta doba", eraIron: "Železna doba", eraAntiquity: "Antika",
         eraMiddle: "Srednji vek", eraModern: "Novi vek", kit: "Komplet", surname: "Priimek",
-        testType: "Test", ancestor: "Prednik", lineage: "Rod", newestSnp: "Najnovejši SNP",
+        testType: "Test", ancestor: "Prednik", lineage: "Linija", newestSnp: "Najnovejši SNP",
         ageEstimate: "Ocena starosti", missingPath: "Pomanjkljivi podatki", notePathMissing: "V JSON manjka pot",
         bce: "pr. n. št.", ce: "n. št.", snpLabel: "SNP", haplogroup: "Haploskupina", haplotype: "Haplotip", location: "Lokacija",
         infoDataFtdna: "Projekt Slovensko poreklo na FamilyTreeDNA", infoSloDnaPool: "Slovenski DNK sklad",
@@ -415,7 +415,7 @@ export function initFilters() {
 
             listContainer.append("div").attr("class", "group-item")
                 .attr("style", indentStyle)
-                .html(`<input type="checkbox" id="chk-${isMtDna?'m':'y'}-${groupName}" ${isChecked ? "checked" : ""}><span style="width: 12px; height: 12px; ${shapeStyle} background: ${color}; margin-right: 6px; border: 1px solid rgba(0,0,0,0.15); flex-shrink: 0; display: inline-block;"></span><label for="chk-${isMtDna?'m':'y'}-${groupName}">${translations[state.currentLang].haplogroup} ${groupName} (${count})</label>`)
+                .html(`<input type="checkbox" id="chk-${isMtDna?'m':'y'}-${groupName}" ${isChecked ? "checked" : ""}><span style="width: 12px; height: 12px; ${shapeStyle} background: ${color}; margin-right: 6px; border: 1px solid rgba(0,0,0,0.15); flex-shrink: 0; display: inline-block;"></span><label for="chk-${isMtDna?'m':'y'}-${groupName}">${translations[state.currentLang].lineage} ${groupName} (${count})</label>`)
                 .on("change", function () {
                     const cb = this.querySelector("input");
                     if (cb.checked) {
