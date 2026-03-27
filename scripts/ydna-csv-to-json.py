@@ -4,6 +4,15 @@ import json
 import pandas as pd
 
 
+def get_surname(name):
+    words = str(name).strip().split()
+    if not words:
+        return ""
+    if len(words) > 1 and words[-1] in ["Jr.", "Sr.", "Jr", "Sr"]:
+        return words[-2]
+    return words[-1]
+
+
 def main():
     input_ydna = "input/slo-ydna.csv"
     input_snp = "input/slo-ydna-snp.csv"
@@ -14,7 +23,7 @@ def main():
     for file_path in [input_ydna, input_snp, input_test]:
         if not os.path.exists(file_path):
             print(f"Error: Required file {file_path} not found.")
-            return
+            sys.exit(1)
 
     # Read the CSV files
     # The test file is exported with semicolons
@@ -98,14 +107,6 @@ def main():
         .str.strip()
     )
     df["location"] = df["location"].replace("No Location Saved", "")
-
-    def get_surname(name):
-        words = str(name).strip().split()
-        if not words:
-            return ""
-        if len(words) > 1 and words[-1] in ["Jr.", "Sr.", "Jr", "Sr"]:
-            return words[-2]
-        return words[-1]
 
     if "surname_test" in df.columns and "surname_ydna" in df.columns:
         df["surname_ydna"] = df["surname_ydna"].apply(get_surname)

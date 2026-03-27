@@ -1,4 +1,4 @@
-import { state, translations, t, loadData, initFilters, updateURLState, getActiveData, getSelectedGroups, ydnaPeopleData, mtdnaPeopleData, ydnaGroupRoots, mtdnaGroupRoots } from "./shared.js";
+import { state, translations, t, loadData, initFilters, updateURLState, ydnaPeopleData, mtdnaPeopleData, ydnaGroupRoots, mtdnaGroupRoots } from "./shared.js";
 import { initYDNA, refreshYDNADisplay, ydnaInitialized, resetYDNATree } from "./ydna.js";
 import { initMTDNA, refreshMTDNADisplay, mtdnaInitialized, resetMTDNATree } from "./mtdna.js";
 import { mapVis } from "./map.js";

@@ -254,6 +254,7 @@ export class TreeVisualizer {
         const links = this.root.links();
         const isSquare = this.isSquare;
         const peopleData = this.peopleData;
+        const getGroupKey = (hg) => Object.keys(groupRootsMap).find(k => groupRootsMap[k] === hg || k === hg);
 
         let index = -1;
         this.root.eachBefore((n) => {
@@ -284,7 +285,6 @@ export class TreeVisualizer {
                 if (d.data.isPerson) return;
                 event.stopPropagation();
 
-                const getGroupKey = (hg) => Object.keys(groupRootsMap).find(k => groupRootsMap[k] === hg || k === hg);
                 const groupKey = getGroupKey(d.data.haplogroup);
 
                 if (groupKey) {
@@ -330,7 +330,6 @@ export class TreeVisualizer {
                 el.append("image").attr("xlink:href", `https://flagcdn.com/w40/${code}.png`).attr("x", -12).attr("y", -8).attr("width", 24).attr("height", 16);
             } else {
                 const radius = d3.select(this.parentNode).classed("node--prominent") ? 10.5 : 6.5;
-                const getGroupKey = (hg) => Object.keys(groupRootsMap).find(k => groupRootsMap[k] === hg || k === hg);
                 const groupKey = getGroupKey(d.data.haplogroup);
                 const color = d.data.isAutoPlaced ? "#e53e3e" : groupKey ? getHaploColor(groupKey) : "#cbd5e0";
 
@@ -411,7 +410,6 @@ export class TreeVisualizer {
 
         mergedNode.select(".shape").transition().duration(600)
             .style("fill", d => {
-                const getGroupKey = (hg) => Object.keys(groupRootsMap).find(k => groupRootsMap[k] === hg || k === hg);
                 const groupKey = getGroupKey(d.data.haplogroup);
                 const color = d.data.isAutoPlaced ? "#e53e3e" : groupKey ? getHaploColor(groupKey) : "#cbd5e0";
 
@@ -425,7 +423,6 @@ export class TreeVisualizer {
                 return isSolid ? color : "#ffffff";
             })
             .style("stroke", d => {
-                const getGroupKey = (hg) => Object.keys(groupRootsMap).find(k => groupRootsMap[k] === hg || k === hg);
                 const groupKey = getGroupKey(d.data.haplogroup);
                 return d.data.isAutoPlaced ? "#9b2c2c" : groupKey ? getHaploColor(groupKey) : "#cbd5e0";
             });
