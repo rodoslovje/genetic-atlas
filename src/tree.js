@@ -1,4 +1,4 @@
-import { state, translations, formatAge, getPersonTooltip, getHaploColor, eraColors, getSelectedGroups } from "./shared.js";
+import { state, t, formatAge, getPersonTooltip, getHaploColor, eraColors, getSelectedGroups } from "./shared.js";
 
 export class TreeVisualizer {
     constructor(containerSelector, isSquare = false) {
@@ -43,7 +43,7 @@ export class TreeVisualizer {
                     if (parentHg === hg) parentHg = rootNode.haplogroup; // Prevent self-referencing
                     dataMap[hg] = {
                         haplogroup: hg, parent: parentHg, age: null,
-                        note: translations[state.currentLang].notePathMissing, id: hg, children: [], isAutoPlaced: true
+                        note: t("notePathMissing"), id: hg, children: [], isAutoPlaced: true
                     };
                 }
             });
@@ -86,7 +86,7 @@ export class TreeVisualizer {
             }
 
             if (state.showPassthrough) return node;
-            const hasNote = node.note && node.note.trim() !== "" && node.note !== translations[state.currentLang].notePathMissing;
+            const hasNote = node.note && node.note.trim() !== "" && node.note !== t("notePathMissing");
             if (
                 node.parent === "" || node.isPerson || isGroupRoot ||
                 node.isAutoPlaced || hasNote || node.children.some((c) => c.isPerson) || node.children.length > 1
@@ -268,7 +268,7 @@ export class TreeVisualizer {
             if (d.data.isPerson) cls += " node--person";
             if (d.data.isAutoPlaced) cls += " node--autoplaced";
             if (d.data.isSearchMatch) cls += " node--search-match";
-            const hasNote = d.data.note && d.data.note.trim() !== "" && d.data.note !== translations[state.currentLang].notePathMissing;
+            const hasNote = d.data.note && d.data.note.trim() !== "" && d.data.note !== t("notePathMissing");
             if (hasNote || allRoots.has(d.data.haplogroup) || (d.data.isPerson && d.data.test && d.data.test.includes("Big Y"))) {
                 cls += " node--prominent";
             }
@@ -307,16 +307,16 @@ export class TreeVisualizer {
             })
             .on("mouseover", (event, d) => {
                 this.tooltip.transition().duration(100).style("opacity", 1);
-                const error = d.data.isAutoPlaced ? `<br><span class="error-tag">⚠ ${translations[state.currentLang].missingPath}</span>` : "";
+                const error = d.data.isAutoPlaced ? `<br><span class="error-tag">⚠ ${t("missingPath")}</span>` : "";
                 if (d.data.isPerson) {
                     this.tooltip.html(getPersonTooltip(d.data, error));
                 } else {
-                    let notePart = d.data.note && d.data.note.trim() !== "" && d.data.note !== translations[state.currentLang].notePathMissing ? ` (${d.data.note})` : "";
+                    let notePart = d.data.note && d.data.note.trim() !== "" && d.data.note !== t("notePathMissing") ? ` (${d.data.note})` : "";
                     if (!notePart) {
                         const rootGroupKey = Object.keys(groupRootsMap).find((k) => groupRootsMap[k] === d.data.haplogroup || k === d.data.haplogroup);
                         if (rootGroupKey && rootGroupKey !== d.data.haplogroup) notePart = ` (${rootGroupKey})`;
                     }
-                    this.tooltip.html(`${translations[state.currentLang].snpLabel}: <b>${d.data.haplogroup}${notePart}</b>${error}<br>${translations[state.currentLang].ageEstimate}: ${formatAge(d.data.age)}`);
+                    this.tooltip.html(`${t("snpLabel")}: <b>${d.data.haplogroup}${notePart}</b>${error}<br>${t("ageEstimate")}: ${formatAge(d.data.age)}`);
                 }
                 this.tooltip.style("left", event.pageX + 15 + "px").style("top", event.pageY - 20 + "px");
             })
@@ -392,7 +392,7 @@ export class TreeVisualizer {
                             .text(d.data.location);
                     }
                 } else {
-                    let notePart = d.data.note && d.data.note.trim() !== "" && d.data.note !== translations[state.currentLang].notePathMissing ? ` (${d.data.note})` : "";
+                    let notePart = d.data.note && d.data.note.trim() !== "" && d.data.note !== t("notePathMissing") ? ` (${d.data.note})` : "";
                     if (!notePart) {
                         const rootGroupKey = Object.keys(groupRootsMap).find((k) => groupRootsMap[k] === d.data.haplogroup || k === d.data.haplogroup);
                         if (rootGroupKey && rootGroupKey !== d.data.haplogroup) notePart = ` (${rootGroupKey})`;

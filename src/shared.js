@@ -157,6 +157,12 @@ export const state = {
     mtdnaAllSelected: true
 };
 
+export function t(key, ...args) {
+    let str = translations[state.currentLang][key] ?? key;
+    args.forEach((val, i) => { str = str.replace(`{${i}}`, val); });
+    return str;
+}
+
 export function getActiveData() {
     const view = (window.location.hash || "#map").substring(1);
     if (view === "mtdna") {
@@ -210,24 +216,23 @@ export function updateURLState() {
 
 export function formatAge(age) {
     if (age === null || age === undefined) return "Unknown";
-    const era = age < 0 ? translations[state.currentLang].bce : translations[state.currentLang].ce;
+    const era = age < 0 ? t("bce") : t("ce");
     return `<b>${Math.abs(age).toLocaleString()} ${era}</b>`;
 }
 
 export function getPersonTooltip(person, error = "") {
-    const lang = translations[state.currentLang];
     const majorGroup = person.majorGroup || person.group || "N/A";
     let haplo = person.originalHaplo ?? person.haplogroup ?? "";
     if (haplo === "-") haplo = "";
 
-    let html = `${lang.kit}: <b>${person.kit || "N/A"}</b><br>`;
-    if (person.test) html += `${lang.testType}: <b>${person.test}</b><br>`;
-    html += `${lang.lineage}: <b>${majorGroup}</b><br>`;
-    html += `${lang.haplogroup}: <b>${haplo || "N/A"}</b>${error}<br>`;
-    if (person.haplotype) html += `${lang.haplotype}: <b>${person.haplotype}</b><br>`;
-    html += `${lang.surname}: <b>${person.surname || "N/A"}</b><br>`;
-    html += `${lang.ancestor}: <b>${person.ancestor || "N/A"}</b><br>`;
-    if (person.location) html += `${lang.location}: <b>${person.location}</b>`;
+    let html = `${t("kit")}: <b>${person.kit || "N/A"}</b><br>`;
+    if (person.test) html += `${t("testType")}: <b>${person.test}</b><br>`;
+    html += `${t("lineage")}: <b>${majorGroup}</b><br>`;
+    html += `${t("haplogroup")}: <b>${haplo || "N/A"}</b>${error}<br>`;
+    if (person.haplotype) html += `${t("haplotype")}: <b>${person.haplotype}</b><br>`;
+    html += `${t("surname")}: <b>${person.surname || "N/A"}</b><br>`;
+    html += `${t("ancestor")}: <b>${person.ancestor || "N/A"}</b><br>`;
+    if (person.location) html += `${t("location")}: <b>${person.location}</b>`;
 
     return html;
 }
@@ -416,7 +421,7 @@ export function initFilters() {
 
             listContainer.append("div").attr("class", "group-item")
                 .attr("style", indentStyle)
-                .html(`<input type="checkbox" id="chk-${isMtDna?'m':'y'}-${groupName}" ${isChecked ? "checked" : ""}><span style="width: 12px; height: 12px; ${shapeStyle} background: ${color}; margin-right: 6px; border: 1px solid rgba(0,0,0,0.15); flex-shrink: 0; display: inline-block;"></span><label for="chk-${isMtDna?'m':'y'}-${groupName}">${translations[state.currentLang].lineage} ${groupName} (${count})</label>`)
+                .html(`<input type="checkbox" id="chk-${isMtDna?'m':'y'}-${groupName}" ${isChecked ? "checked" : ""}><span style="width: 12px; height: 12px; ${shapeStyle} background: ${color}; margin-right: 6px; border: 1px solid rgba(0,0,0,0.15); flex-shrink: 0; display: inline-block;"></span><label for="chk-${isMtDna?'m':'y'}-${groupName}">${t("lineage")} ${groupName} (${count})</label>`)
                 .on("change", function () {
                     const cb = this.querySelector("input");
                     if (cb.checked) {
@@ -449,7 +454,7 @@ export function initFilters() {
                 else state.ydnaSelectedGroups.clear();
             }
 
-            this.innerText = translations[state.currentLang][newState ? "deselectAll" : "selectAll"];
+            this.innerText = t(newState ? "deselectAll" : "selectAll");
             groups.forEach((groupName) => {
                 const chk = document.getElementById(`chk-${isMtDna?'m':'y'}-${groupName}`);
                 if (chk) chk.checked = newState;
@@ -461,7 +466,7 @@ export function initFilters() {
         const btnEl = document.getElementById(toggleId.substring(1));
         if (btnEl) {
             const allSel = isMtDna ? state.mtdnaAllSelected : state.ydnaAllSelected;
-            btnEl.innerText = translations[state.currentLang][allSel ? "deselectAll" : "selectAll"];
+            btnEl.innerText = t(allSel ? "deselectAll" : "selectAll");
         }
     };
 
@@ -472,7 +477,7 @@ export function initFilters() {
     if (!eraListContainer.empty() && eraListContainer.html() === "") {
         eraColors.forEach((era) => {
             eraListContainer.append("div").attr("class", "legend-item")
-                .html(`<div class="legend-color" style="background:${era.color};"></div><span data-i18n="${era.id}">${translations[state.currentLang][era.id]}</span>`);
+                .html(`<div class="legend-color" style="background:${era.color};"></div><span data-i18n="${era.id}">${t(era.id)}</span>`);
         });
     }
 }

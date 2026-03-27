@@ -1,4 +1,4 @@
-import { state, translations, loadData, initFilters, updateURLState, getActiveData, getSelectedGroups, ydnaPeopleData, mtdnaPeopleData, ydnaGroupRoots, mtdnaGroupRoots } from "./shared.js";
+import { state, translations, t, loadData, initFilters, updateURLState, getActiveData, getSelectedGroups, ydnaPeopleData, mtdnaPeopleData, ydnaGroupRoots, mtdnaGroupRoots } from "./shared.js";
 import { initYDNA, refreshYDNADisplay, ydnaInitialized, resetYDNATree } from "./ydna.js";
 import { initMTDNA, refreshMTDNADisplay, mtdnaInitialized, resetMTDNATree } from "./mtdna.js";
 import { mapVis } from "./map.js";
@@ -7,28 +7,28 @@ function applyTranslations() {
     document.querySelectorAll("[data-i18n]").forEach(el => {
         const key = el.getAttribute("data-i18n");
         if (translations[state.currentLang][key]) {
-            el.innerText = translations[state.currentLang][key];
+            el.innerText = t(key);
         }
     });
 
     document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
         const key = el.getAttribute("data-i18n-placeholder");
         if (translations[state.currentLang][key]) {
-            el.setAttribute("placeholder", translations[state.currentLang][key]);
+            el.setAttribute("placeholder", t(key));
         }
     });
 
     document.querySelectorAll("[data-i18n-html]").forEach(el => {
         const key = el.getAttribute("data-i18n-html");
         if (translations[state.currentLang][key]) {
-            el.innerHTML = translations[state.currentLang][key];
+            el.innerHTML = t(key);
         }
     });
 
     document.querySelectorAll("[data-i18n-title]").forEach(el => {
         const key = el.getAttribute("data-i18n-title");
         if (translations[state.currentLang][key]) {
-            el.setAttribute("title", translations[state.currentLang][key]);
+            el.setAttribute("title", t(key));
         }
     });
 
@@ -38,14 +38,13 @@ function applyTranslations() {
 
 function updatePageTitle() {
     const view = (window.location.hash || "#map").substring(1);
-    const lang = translations[state.currentLang];
-    const viewName = lang[view] || view;
+    const viewName = t(view);
     const domain = window.location.hostname;
 
     if (domain) {
-        document.title = `${viewName} - ${lang.brand} - ${domain}`;
+        document.title = `${viewName} - ${t("brand")} - ${domain}`;
     } else {
-        document.title = `${viewName} - ${lang.brand}`;
+        document.title = `${viewName} - ${t("brand")}`;
     }
 }
 
@@ -192,10 +191,10 @@ window.exportView = function (e) {
                 ctx.drawImage(canvas, 0, headerHeight);
 
                 const tempDiv = document.createElement("div");
-                tempDiv.innerHTML = translations[state.currentLang].attributionHtml;
+                tempDiv.innerHTML = t("attributionHtml");
                 const sourceText = tempDiv.textContent || tempDiv.innerText || "";
 
-                const titleText = `${translations[state.currentLang].brand} - ${translations[state.currentLang][view]}`;
+                const titleText = `${t("brand")} - ${t(view)}`;
                 const urlText = window.location.hostname;
 
                 ctx.textBaseline = "middle";
@@ -278,7 +277,7 @@ window.exportView = function (e) {
         titleLink.setAttribute("target", "_blank");
 
         const titleText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        titleText.textContent = `${translations[state.currentLang].brand} - ${translations[state.currentLang][view]}`;
+        titleText.textContent = `${t("brand")} - ${t(view)}`;
         titleText.setAttribute("x", bbox.x - 40);
         titleText.setAttribute("y", bbox.y - 55);
         titleText.setAttribute("font-size", "24px");
@@ -309,7 +308,7 @@ window.exportView = function (e) {
         sourceText.setAttribute("xml:space", "preserve");
 
         const tempDiv = document.createElement("div");
-        tempDiv.innerHTML = translations[state.currentLang].attributionHtml;
+        tempDiv.innerHTML = t("attributionHtml");
 
         Array.from(tempDiv.childNodes).forEach(node => {
             if (node.nodeType === 3) { // TEXT_NODE
@@ -372,7 +371,7 @@ function validateSearch() {
 
         hasResults = matchCount > 0;
         if (searchCounter) {
-            searchCounter.innerText = translations[state.currentLang].searchMatches.replace("{0}", matchCount);
+            searchCounter.innerText = t("searchMatches", matchCount);
             searchCounter.style.display = "block";
         }
     } else {
@@ -423,7 +422,7 @@ function handleHashChange() {
         exportBtn.style.display = (isMap || isTree) ? "flex" : "none";
         const titleKey = isMap ? "exportMap" : "exportTree";
         exportBtn.setAttribute("data-i18n-title", titleKey);
-        exportBtn.setAttribute("title", translations[state.currentLang][titleKey]);
+        exportBtn.setAttribute("title", t(titleKey));
     }
 
     if (resetBtn) {
@@ -550,12 +549,12 @@ function loadVersionInfo() {
 
             if (versionEl && data.buildDate) {
                 const date = new Date(data.buildDate);
-                versionEl.innerText = translations[state.currentLang].versionLabel.replace('{0}', date.toLocaleString(locale, formatOpts));
+                versionEl.innerText = t("versionLabel", date.toLocaleString(locale, formatOpts));
                 versionEl.style.display = 'block';
             }
             if (dataEl && data.dataDate) {
                 const date = new Date(data.dataDate);
-                dataEl.innerText = translations[state.currentLang].dataUpdateLabel.replace('{0}', date.toLocaleString(locale, formatOpts));
+                dataEl.innerText = t("dataUpdateLabel", date.toLocaleString(locale, formatOpts));
                 dataEl.style.display = 'block';
             }
         })
