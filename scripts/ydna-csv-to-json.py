@@ -4,7 +4,7 @@ import json
 import pandas as pd
 
 
-def get_surname(name):
+def get_surname(name: str) -> str:
     words = str(name).strip().split()
     if not words:
         return ""
@@ -182,7 +182,7 @@ def main():
         )
         sys.exit(1)
 
-    df["country"] = df["country"].apply(lambda x: country_map[x])
+    df["country"] = df["country"].map(country_map)
 
     # Enforce specific field order for JSON output
     field_order = [

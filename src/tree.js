@@ -1,5 +1,12 @@
 import { state, t, formatAge, getPersonTooltip, getHaploColor, eraColors, getSelectedGroups } from "./shared.js";
 
+const NODE_ROW_HEIGHT = 45;
+const NODE_DEPTH_WIDTH = 50;
+const TRANSITION_DURATION = 600;
+const ZOOM_DURATION = 750;
+const ZOOM_SCALE = 0.75;
+const ZOOM_TX = 30;
+
 export class TreeVisualizer {
     constructor(containerSelector, isSquare = false) {
         this.containerSelector = containerSelector;
@@ -13,6 +20,18 @@ export class TreeVisualizer {
             this.tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
         }
         this.root = null;
+    }
+
+    getNodeClass(d, allRoots) {
+        let cls = "node";
+        if (d.data.isPerson) cls += " node--person";
+        if (d.data.isAutoPlaced) cls += " node--autoplaced";
+        if (d.data.isSearchMatch) cls += " node--search-match";
+        const hasNote = d.data.note && d.data.note.trim() !== "" && d.data.note !== t("notePathMissing");
+        if (hasNote || allRoots.has(d.data.haplogroup) || (d.data.isPerson && d.data.test && d.data.test.includes("Big Y"))) {
+            cls += " node--prominent";
+        }
+        return cls;
     }
 
     render(haploData, peopleData, groupRootsMap) {
@@ -219,62 +238,45 @@ export class TreeVisualizer {
 
         this.update(this.root, allRoots, groupRootsMap);
 
-        if (zoomTargetNode) {
-            this.zoomToNode(zoomTargetNode, 750);
-        } else {
-            this.zoomToNode(this.root, 750);
-        }
+        this.zoomToNode(zoomTargetNode || this.root, ZOOM_DURATION);
     }
 
     resetZoom() {
         if (this.root) {
-            this.zoomToNode(this.root, 750);
+            this.zoomToNode(this.root, ZOOM_DURATION);
         }
     }
 
-    zoomToNode(d, duration = 750) {
-        const scale = 0.75;
-        const tx = 30;
+    zoomToNode(d, duration = ZOOM_DURATION) {
         let ty;
         if (!d.parent) {
-            ty = 30 - d.x * scale;
+            ty = ZOOM_TX - d.x * ZOOM_SCALE;
         } else {
-            ty = (window.innerHeight - 60) / 2 - d.x * scale;
+            ty = (window.innerHeight - ZOOM_TX * 2) / 2 - d.x * ZOOM_SCALE;
         }
 
         if (duration === 0) {
-            this.svg.call(this.zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+            this.svg.call(this.zoom.transform, d3.zoomIdentity.translate(ZOOM_TX, ty).scale(ZOOM_SCALE));
         } else {
-            this.svg.transition().duration(duration).call(this.zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+            this.svg.transition().duration(duration).call(this.zoom.transform, d3.zoomIdentity.translate(ZOOM_TX, ty).scale(ZOOM_SCALE));
         }
     }
 
-    update(source, allRoots, groupRootsMap) {
+    update(_source, allRoots, groupRootsMap) {
         const nodes = this.root.descendants();
         const links = this.root.links();
         const isSquare = this.isSquare;
         const peopleData = this.peopleData;
         const getGroupKey = (hg) => Object.keys(groupRootsMap).find(k => groupRootsMap[k] === hg || k === hg);
+        const getNodeClass = (d) => this.getNodeClass(d, allRoots);
 
         let index = -1;
         this.root.eachBefore((n) => {
-            n.x = ++index * 45;
-            n.y = n.depth * 50;
+            n.x = ++index * NODE_ROW_HEIGHT;
+            n.y = n.depth * NODE_DEPTH_WIDTH;
         });
 
         const node = this.g.selectAll(".node").data(nodes, (d) => d.data.id);
-
-        const getNodeClass = (d) => {
-            let cls = "node";
-            if (d.data.isPerson) cls += " node--person";
-            if (d.data.isAutoPlaced) cls += " node--autoplaced";
-            if (d.data.isSearchMatch) cls += " node--search-match";
-            const hasNote = d.data.note && d.data.note.trim() !== "" && d.data.note !== t("notePathMissing");
-            if (hasNote || allRoots.has(d.data.haplogroup) || (d.data.isPerson && d.data.test && d.data.test.includes("Big Y"))) {
-                cls += " node--prominent";
-            }
-            return cls;
-        };
 
         const nodeEnter = node.enter().append("g")
             .attr("class", getNodeClass)
@@ -404,11 +406,11 @@ export class TreeVisualizer {
 
         mergedNode
             .attr("class", getNodeClass)
-            .transition().duration(600)
+            .transition().duration(TRANSITION_DURATION)
             .attr("transform", (d) => `translate(${d.y},${d.x})`)
             .style("opacity", 1);
 
-        mergedNode.select(".shape").transition().duration(600)
+        mergedNode.select(".shape").transition().duration(TRANSITION_DURATION)
             .style("fill", d => {
                 const groupKey = getGroupKey(d.data.haplogroup);
                 const color = d.data.isAutoPlaced ? "#e53e3e" : groupKey ? getHaploColor(groupKey) : "#cbd5e0";
@@ -427,7 +429,7 @@ export class TreeVisualizer {
                 return d.data.isAutoPlaced ? "#9b2c2c" : groupKey ? getHaploColor(groupKey) : "#cbd5e0";
             });
 
-        node.exit().transition().duration(600)
+        node.exit().transition().duration(TRANSITION_DURATION)
             .style("opacity", 0)
             .remove();
 
@@ -452,12 +454,12 @@ export class TreeVisualizer {
             .style("opacity", 0)
             .attr("d", (d) => `M${d.source.y},${d.source.x} V${d.target.x - 12} Q${d.source.y},${d.target.x} ${d.source.y + 12},${d.target.x} H${d.target.y}`);
 
-        linkEnter.merge(link).transition().duration(600)
+        linkEnter.merge(link).transition().duration(TRANSITION_DURATION)
             .style("stroke", getLinkColor)
             .style("opacity", 0.8)
             .attr("d", (d) => `M${d.source.y},${d.source.x} V${d.target.x - 12} Q${d.source.y},${d.target.x} ${d.source.y + 12},${d.target.x} H${d.target.y}`);
 
-        link.exit().transition().duration(600)
+        link.exit().transition().duration(TRANSITION_DURATION)
             .style("opacity", 0)
             .remove();
 
