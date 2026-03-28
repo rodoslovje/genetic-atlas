@@ -15,44 +15,30 @@ def get_surname(name: str) -> str:
 
 def main():
     input_ydna = "input/slo-ydna.csv"
+    input_fetched = "input/slo-ydna-fetched.csv"
     input_snp = "input/slo-ydna-snp.csv"
-    input_test = "input/slo-ydna-test.csv"
     output_json = "data/slo-ydna.json"
 
     # Check if files exist
-    for file_path in [input_ydna, input_snp, input_test]:
+    for file_path in [input_ydna, input_fetched, input_snp]:
         if not os.path.exists(file_path):
             print(f"Error: Required file {file_path} not found.")
             sys.exit(1)
 
     # Read the CSV files
-    # The test file is exported with semicolons
     df_ydna = pd.read_csv(input_ydna, dtype=str)
+    df_fetched = pd.read_csv(input_fetched, dtype=str)
     df_snp = pd.read_csv(input_snp, dtype=str)
 
-    # Using usecols to drop empty unnamed columns at the end of the test csv
-    df_test = pd.read_csv(
-        input_test, sep=";", dtype=str, usecols=lambda c: not c.startswith("Unnamed:")
-    )
-
     # Strip BOM and whitespace from column names just in case
-    for df in [df_ydna, df_snp, df_test]:
+    for df in [df_ydna, df_fetched, df_snp]:
         df.rename(columns=lambda x: x.strip("\ufeff").strip(), inplace=True)
+        df.rename(columns={"Kit Number": "kit"}, inplace=True)
 
-    # Standardize the join key
-    df_ydna.rename(columns={"Kit Number": "kit"}, inplace=True)
-    df_snp.rename(columns={"Kit Number": "kit"}, inplace=True)
-
-    # Select necessary columns from each file
+    # Primary source: slo-ydna.csv
     ydna_cols = [
-        "kit",
-        "Name",
-        "Sub Group",
-        "Paternal Ancestor Name",
-        "Map Location",
-        "Country",
-        "Latitude",
-        "Longitude",
+        "kit", "Name", "Sub Group", "Paternal Ancestor Name",
+        "Map Location", "Country", "Latitude", "Longitude",
     ]
     ydna_cols = [c for c in ydna_cols if c in df_ydna.columns]
     df_ydna = df_ydna[ydna_cols].copy()
@@ -62,23 +48,27 @@ def main():
     # Preserve original order from the primary file
     df_ydna["sort_order"] = range(len(df_ydna))
 
+    # Fetched: augments group, haplogroup and surname
+    fetched_cols = ["kit", "Name", "Group", "Haplogroup", "Test"]
+    fetched_cols = [c for c in fetched_cols if c in df_fetched.columns]
+    df_fetched = df_fetched[fetched_cols].copy()
+    df_fetched.rename(columns={
+        "Name": "Name_fetched",
+        "Group": "group_fetched",
+        "Haplogroup": "haplogroup_fetched",
+        "Test": "test",
+    }, inplace=True)
+
+    # SNP haplogroup
     snp_cols = ["kit", "Haplogroup"]
     snp_cols = [c for c in snp_cols if c in df_snp.columns]
     df_snp = df_snp[snp_cols].copy()
     if "Haplogroup" in df_snp.columns:
         df_snp.rename(columns={"Haplogroup": "haplogroup_snp"}, inplace=True)
 
-    test_cols = ["kit", "surname", "haplogroup", "test"]
-    test_cols = [c for c in test_cols if c in df_test.columns]
-    df_test = df_test[test_cols].copy()
-    if "surname" in df_test.columns:
-        df_test.rename(columns={"surname": "surname_test"}, inplace=True)
-    if "haplogroup" in df_test.columns:
-        df_test.rename(columns={"haplogroup": "haplogroup_test"}, inplace=True)
-
-    # Merge dataframes on 'kit'
-    df = df_ydna.merge(df_snp, on="kit", how="outer")
-    df = df.merge(df_test, on="kit", how="outer")
+    # Merge: primary LEFT JOIN fetched LEFT JOIN snp
+    df = df_ydna.merge(df_fetched, on="kit", how="left")
+    df = df.merge(df_snp, on="kit", how="left")
 
     # Restore original order and drop the tracking column
     df = df.sort_values("sort_order", na_position="last")
@@ -88,7 +78,6 @@ def main():
     df.rename(
         columns={
             "Name_ydna": "surname_ydna",
-            "Sub Group": "group",
             "Paternal Ancestor Name": "ancestor",
             "Map Location": "location",
             "Country": "country",
@@ -100,39 +89,40 @@ def main():
 
     # Clean up data
     df = df.fillna("")
+    df["location"] = df["location"].replace("No Location Saved", "")
+
+    # Group: use Sub Group from primary, fall back to fetched if empty
+    df["group"] = df.apply(
+        lambda row: row.get("Sub Group", "") or row.get("group_fetched", ""),
+        axis=1,
+    )
     df["group"] = (
         df["group"]
         .str.replace(" haplogroup", "", regex=False)
         .str.replace(r"\s*\(.*?\)", "", regex=True)
         .str.strip()
     )
-    df["location"] = df["location"].replace("No Location Saved", "")
 
-    if "surname_test" in df.columns and "surname_ydna" in df.columns:
-        df["surname_ydna"] = df["surname_ydna"].apply(get_surname)
-        df["surname"] = df.apply(
-            lambda row: (
-                row["surname_test"] if row["surname_test"] else row["surname_ydna"]
-            ),
-            axis=1,
-        )
-    elif "surname_test" in df.columns:
-        df.rename(columns={"surname_test": "surname"}, inplace=True)
-    elif "surname_ydna" in df.columns:
-        df["surname"] = df["surname_ydna"].apply(get_surname)
+    df["surname"] = df.apply(
+        lambda row: (
+            get_surname(row["Name_fetched"]) if row.get("Name_fetched")
+            else get_surname(row.get("surname_ydna", ""))
+        ),
+        axis=1,
+    )
 
-    if "haplogroup_test" in df.columns and "haplogroup_snp" in df.columns:
+    if "haplogroup_fetched" in df.columns and "haplogroup_snp" in df.columns:
         df["haplogroup"] = df.apply(
             lambda row: (
-                row["haplogroup_test"]
-                if row.get("haplogroup_test")
-                and str(row.get("haplogroup_test")).strip() != "-"
+                row["haplogroup_fetched"]
+                if row.get("haplogroup_fetched")
+                and str(row.get("haplogroup_fetched")).strip() != "-"
                 else row.get("haplogroup_snp", "")
             ),
             axis=1,
         )
-    elif "haplogroup_test" in df.columns:
-        df.rename(columns={"haplogroup_test": "haplogroup"}, inplace=True)
+    elif "haplogroup_fetched" in df.columns:
+        df.rename(columns={"haplogroup_fetched": "haplogroup"}, inplace=True)
     elif "haplogroup_snp" in df.columns:
         df.rename(columns={"haplogroup_snp": "haplogroup"}, inplace=True)
 

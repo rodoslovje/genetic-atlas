@@ -6,41 +6,30 @@ import pandas as pd
 
 def main():
     input_mtdna = "input/slo-mtdna.csv"
+    input_fetched = "input/slo-mtdna-fetched.csv"
     input_snp = "input/slo-mtdna-snp.csv"
-    input_test = "input/slo-mtdna-test.csv"
     output_json = "data/slo-mtdna.json"
 
     # Check if files exist
-    for file_path in [input_mtdna, input_snp, input_test]:
+    for file_path in [input_mtdna, input_fetched, input_snp]:
         if not os.path.exists(file_path):
             print(f"Error: Required file {file_path} not found.")
             sys.exit(1)
 
     # Read the CSV files
     df_mtdna = pd.read_csv(input_mtdna, dtype=str)
+    df_fetched = pd.read_csv(input_fetched, dtype=str)
     df_snp = pd.read_csv(input_snp, dtype=str)
 
-    # The mtDNA test file is exported with semicolons
-    df_test = pd.read_csv(
-        input_test, sep=";", dtype=str, usecols=lambda c: not c.startswith("Unnamed:")
-    )
-
     # Strip BOM and whitespace from column names just in case
-    for df in [df_mtdna, df_snp, df_test]:
+    for df in [df_mtdna, df_fetched, df_snp]:
         df.rename(columns=lambda x: x.strip("\ufeff").strip(), inplace=True)
-        # Standardize the join key
         df.rename(columns={"Kit Number": "kit"}, inplace=True)
 
-    # Select necessary columns from each file
+    # Primary source: slo-mtdna.csv
     mtdna_cols = [
-        "kit",
-        "Name",
-        "Sub Group",
-        "Maternal Ancestor Name",
-        "Map Location",
-        "Country",
-        "Latitude",
-        "Longitude",
+        "kit", "Name", "Sub Group", "Maternal Ancestor Name",
+        "Map Location", "Country", "Latitude", "Longitude",
     ]
     mtdna_cols = [c for c in mtdna_cols if c in df_mtdna.columns]
     df_mtdna = df_mtdna[mtdna_cols].copy()
@@ -50,19 +39,30 @@ def main():
     # Preserve original order from the primary file
     df_mtdna["sort_order"] = range(len(df_mtdna))
 
+    # Fetched: augments group, haplogroup, mitotree and surname
+    fetched_cols = ["kit", "Name", "Group", "Haplogroup", "Mitotree Haplogroup"]
+    fetched_cols = [c for c in fetched_cols if c in df_fetched.columns]
+    df_fetched = df_fetched[fetched_cols].copy()
+    df_fetched.rename(columns={
+        "Name": "Name_fetched",
+        "Group": "group_fetched",
+        "Haplogroup": "haplogroup_fetched",
+        "Mitotree Haplogroup": "mitotree",
+    }, inplace=True)
+
+    # SNP file: Haplogroup, Mitotree Haplogroup, Haplotype (primary source for haplotype)
     snp_cols = ["kit", "Haplogroup", "Mitotree Haplogroup", "Haplotype"]
     snp_cols = [c for c in snp_cols if c in df_snp.columns]
     df_snp = df_snp[snp_cols].copy()
+    df_snp.rename(columns={
+        "Haplogroup": "haplogroup_snp",
+        "Mitotree Haplogroup": "mitotree_snp",
+        "Haplotype": "haplotype",
+    }, inplace=True)
 
-    test_cols = ["kit", "Name"]
-    test_cols = [c for c in test_cols if c in df_test.columns]
-    df_test = df_test[test_cols].copy()
-    if "Name" in df_test.columns:
-        df_test.rename(columns={"Name": "surname_test"}, inplace=True)
-
-    # Merge dataframes on 'kit'
-    df = df_mtdna.merge(df_snp, on="kit", how="outer")
-    df = df.merge(df_test, on="kit", how="outer")
+    # Merge: primary LEFT JOIN fetched LEFT JOIN snp
+    df = df_mtdna.merge(df_fetched, on="kit", how="left")
+    df = df.merge(df_snp, on="kit", how="left")
 
     # Restore original order and drop the tracking column
     df = df.sort_values("sort_order", na_position="last")
@@ -72,34 +72,45 @@ def main():
     df.rename(
         columns={
             "Name_mtdna": "surname_mtdna",
-            "Sub Group": "group",
             "Maternal Ancestor Name": "ancestor",
             "Map Location": "location",
             "Country": "country",
             "Latitude": "latitude",
             "Longitude": "longitude",
-            "Haplogroup": "haplogroup",
-            "Mitotree Haplogroup": "mitotree",
-            "Haplotype": "haplotype",
         },
         inplace=True,
     )
 
     # Clean up data
     df = df.fillna("")
+    df["location"] = df["location"].replace("No Location Saved", "")
+
+    # Group: use Sub Group from primary, fall back to fetched if empty
+    df["group"] = df.apply(
+        lambda row: row.get("Sub Group", "") or row.get("group_fetched", ""),
+        axis=1,
+    )
     df["group"] = (
         df["group"]
         .str.replace(" haplogroup", "", regex=False)
         .str.replace(r"\s*\(.*?\)", "", regex=True)
         .str.strip()
     )
-    df["location"] = df["location"].replace("No Location Saved", "")
+
+    # Mitotree: fetched wins over snp
+    if "mitotree" in df.columns and "mitotree_snp" in df.columns:
+        df["mitotree"] = df.apply(
+            lambda row: row["mitotree"] if row["mitotree"] else row["mitotree_snp"],
+            axis=1,
+        )
+    elif "mitotree_snp" in df.columns:
+        df.rename(columns={"mitotree_snp": "mitotree"}, inplace=True)
 
     df["haplogroup"] = df.apply(
         lambda row: (
-            row["mitotree"]
+            row.get("mitotree", "")
             if row.get("mitotree") and str(row.get("mitotree")).strip() != "-"
-            else row.get("haplogroup", "")
+            else row.get("haplogroup_fetched", "") or row.get("haplogroup_snp", "")
         ),
         axis=1,
     )
@@ -112,20 +123,13 @@ def main():
             return words[-2]
         return words[-1]
 
-    if "surname_test" in df.columns and "surname_mtdna" in df.columns:
-        df["surname_mtdna"] = df["surname_mtdna"].apply(get_surname)
-        df["surname"] = df.apply(
-            lambda row: (
-                row["surname_test"]
-                if row.get("surname_test")
-                else row.get("surname_mtdna", "")
-            ),
-            axis=1,
-        )
-    elif "surname_test" in df.columns:
-        df.rename(columns={"surname_test": "surname"}, inplace=True)
-    elif "surname_mtdna" in df.columns:
-        df["surname"] = df["surname_mtdna"].apply(get_surname)
+    df["surname"] = df.apply(
+        lambda row: (
+            get_surname(row["Name_fetched"]) if row.get("Name_fetched")
+            else get_surname(row.get("surname_mtdna", ""))
+        ),
+        axis=1,
+    )
 
     # Convert lat/lon to float
     df["latitude"] = pd.to_numeric(df["latitude"], errors="coerce").fillna(0.0)
