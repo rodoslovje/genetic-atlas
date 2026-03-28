@@ -1,5 +1,5 @@
 """
-Fetches the Y-DNA results overview table from the FamilyTreeDNA public project page
+Fetches the mtDNA results table from the FamilyTreeDNA public project page
 and saves it as a CSV file. Iterates through all pages.
 
 Requirements:
@@ -12,10 +12,8 @@ import re
 import sys
 from playwright.sync_api import sync_playwright
 
-URL = (
-    "https://www.familytreedna.com/public/Slovenianorigin?iframe=ydna-results-overview"
-)
-OUTPUT = "input/slo-ydna-fetched.csv"
+URL = "https://www.familytreedna.com/public/Slovenianorigin?iframe=mtresults"
+OUTPUT = "input/slo-mtdna-fetched.csv"
 TIMEOUT = 60_000  # ms
 PAGE_SETTLE_MS = 4000  # wait after clicking a page button
 
@@ -39,7 +37,7 @@ def extract_rows(page):
         for (const tr of document.querySelectorAll('table tbody tr')) {
             const tds = tr.querySelectorAll('td');
             if (tds.length === 0) continue;  // column header rows (<th> only)
-            // Group header: single <td> with colspan (e.g. "R1a haplogroup")
+            // Group header: single <td> with colspan (e.g. "H haplogroup")
             if (tds.length === 1 && tds[0].getAttribute('colspan')) {
                 const text = tds[0].textContent.trim();
                 if (text) currentGroup = text.split(/\\s+/)[0];
@@ -75,10 +73,12 @@ def click_page(page, num):
 
 def dismiss_cookie_banner(page):
     """Remove cookie consent overlay so it doesn't intercept clicks."""
-    page.evaluate("""() => {
+    page.evaluate(
+        """() => {
         const banner = document.querySelector('.cky-consent-container');
         if (banner) banner.remove();
-    }""")
+    }"""
+    )
 
 
 def fetch_all(headless=True):
@@ -96,13 +96,14 @@ def fetch_all(headless=True):
         print(f"Total pages: {total}")
 
         headers = extract_headers(pg)
-        # Insert "Group" before "Haplogroup" to match ydna-csv-to-json.py expectations
-        group_idx = headers.index("Haplogroup") if "Haplogroup" in headers else len(headers)
+        # Insert "Group" before "Haplogroup"
+        group_idx = (
+            headers.index("Haplogroup") if "Haplogroup" in headers else len(headers)
+        )
         headers.insert(group_idx, "Group")
         print(f"Columns: {len(headers)}")
 
         def reorder(rows):
-            # group is appended last by JS — move it to group_idx
             result = []
             for row in rows:
                 group = row.pop()
