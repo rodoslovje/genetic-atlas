@@ -95,6 +95,7 @@ def main():
         .str.replace(" haplogroup", "", regex=False)
         .str.replace(r"\s*\(.*?\)", "", regex=True)
         .str.strip()
+        .replace("Ungrouped", "???")
     )
 
     # Mitotree: fetched wins over snp
