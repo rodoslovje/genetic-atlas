@@ -353,6 +353,8 @@ export function loadData() {
             mtdnaPeopleData = mtPeople;
 
             Object.keys(ydnaGroupRoots).forEach(k => state.ydnaSelectedGroups.add(k));
+            const yGroups = [...new Set(yPeople.map(p => p.group))].filter(Boolean);
+            yGroups.forEach(k => state.ydnaSelectedGroups.add(k));
             const mtGroups = [...new Set(mtPeople.map(p => p.group))].filter(Boolean);
             mtGroups.forEach(k => state.mtdnaSelectedGroups.add(k));
 
