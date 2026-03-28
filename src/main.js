@@ -531,40 +531,18 @@ function initApp() {
 }
 
 function loadVersionInfo() {
-    fetch('/version.json', { cache: "no-store" })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('version.json not found');
-            }
-            return response.json();
-        })
-        .then(data => {
-            const versionEl = document.getElementById('version-info');
-            const dataEl = document.getElementById('data-info');
-            const formatOpts = {
-                year: 'numeric', month: 'short', day: 'numeric',
-                hour: '2-digit', minute: '2-digit'
-            };
-            const locale = state.currentLang.startsWith('sl') ? 'sl-SI' : 'en-US';
+    const versionEl = document.getElementById('version-info');
+    const dataEl = document.getElementById('data-info');
+    const formatDate = (iso) => iso.slice(0, 10);
 
-            if (versionEl && data.buildDate) {
-                const date = new Date(data.buildDate);
-                versionEl.innerText = t("versionLabel", date.toLocaleString(locale, formatOpts));
-                versionEl.style.display = 'block';
-            }
-            if (dataEl && data.dataDate) {
-                const date = new Date(data.dataDate);
-                dataEl.innerText = t("dataUpdateLabel", date.toLocaleString(locale, formatOpts));
-                dataEl.style.display = 'block';
-            }
-        })
-        .catch(error => {
-            console.warn(error.message);
-            const versionEl = document.getElementById('version-info');
-            const dataEl = document.getElementById('data-info');
-            if (versionEl) versionEl.style.display = 'none';
-            if (dataEl) dataEl.style.display = 'none';
-        });
+    if (versionEl) {
+        versionEl.innerText = t("versionLabel", formatDate(__BUILD_DATE__));
+        versionEl.style.display = 'block';
+    }
+    if (dataEl) {
+        dataEl.innerText = t("dataUpdateLabel", formatDate(__DATA_DATE__));
+        dataEl.style.display = 'block';
+    }
 }
 
 if (document.readyState === "loading") {

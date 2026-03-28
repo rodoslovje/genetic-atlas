@@ -95,7 +95,7 @@ export const translations = {
         exporting: "Izvažanje...",
         searchMatches: "Najdeno: {0}",
         resetView: "Ponastavi pogled",
-        versionLabel: "Verzija: {0}",
+        versionLabel: "Različica: {0}",
         dataUpdateLabel: "Posodobitev podatkov: {0}",
         attributionHtml: "Vir: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> in projekt <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovensko poreklo</a>."
     }
