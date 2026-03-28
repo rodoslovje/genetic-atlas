@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "node -e \"const fs=require('fs'); const files=fs.readdirSync('./data').filter(f=>f.endsWith('.json')); const mtimes=files.map(f=>fs.statSync('./data/'+f).mtime.getTime()); const dataDate=files.length ? new Date(Math.max(...mtimes)).toISOString() : null; fs.writeFileSync('./public/version.json', JSON.stringify({ buildDate: new Date().toISOString(), dataDate }));\" && vite build && cp -r data dist/",
+    "build": "vite build && cp -r data dist/",
     "preview": "vite preview",
     "format": "prettier --write \"src/**/*.js\""
   },
