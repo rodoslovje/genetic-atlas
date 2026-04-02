@@ -50,4 +50,4 @@ Thumbs.db
 *.swp
 
 # Input data - not saved, always collected from FTDNA
-input/
+input
