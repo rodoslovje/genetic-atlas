@@ -26,14 +26,14 @@ yarn build
 
 ## 🛠️ Data Conversion Tools
 
-These Python scripts process FamilyTreeDNA exported data for the web application.
+These Python tools are used to process FamilyTreeDNA exported data for the web application.
 
 ### 1. Setup Virtual Environment
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r scripts/requirements.txt
+pip install -r tools/requirements.txt
 playwright install chromium
 ```
 
@@ -44,29 +44,29 @@ playwright install chromium
 **2. Fetch public results from FamilyTreeDNA:**
 
 ```bash
-python scripts/ydna-fetch-results.py
-python scripts/mtdna-fetch-results.py
+python tools/ydna-fetch-results.py
+python tools/mtdna-fetch-results.py
 ```
 
 **2. Convert and merge exported CSV into JSON:**
 
 ```bash
-python scripts/ydna-csv-to-json.py
-python scripts/mtdna-csv-to-json.py
+python tools/ydna-csv-to-json.py
+python tools/mtdna-csv-to-json.py
 ```
 
 **Collect full SNP path for all haplogroups used (Incremental Update):**
 
 ```bash
-python scripts/ydna-get-paths-ftdna.py
-python scripts/mtdna-get-paths-ftdna.py
+python tools/ydna-get-paths-ftdna.py
+python tools/mtdna-get-paths-ftdna.py
 ```
 
 **Collect full SNP path for all haplogroups used (Full Rebuild):**
 
 ```bash
-python scripts/ydna-get-paths-ftdna.py --mode full
-python scripts/mtdna-get-paths-ftdna.py --mode full
+python tools/ydna-get-paths-ftdna.py --mode full
+python tools/mtdna-get-paths-ftdna.py --mode full
 ```
 
 ## 📄 License
