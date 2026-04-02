@@ -34,11 +34,21 @@ These Python scripts process FamilyTreeDNA exported data for the web application
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r scripts/requirements.txt
+playwright install chromium
 ```
 
 ### 2. Process Data
 
-**Convert and merge exported CSV into JSON:**
+**1. Download latest data from Slovenian Origin admin interface on FamilyTreeDNA and put it into `input/` folder.**
+
+**2. Fetch public results from FamilyTreeDNA:**
+
+```bash
+python scripts/ydna-fetch-results.py
+python scripts/mtdna-fetch-results.py
+```
+
+**2. Convert and merge exported CSV into JSON:**
 
 ```bash
 python scripts/ydna-csv-to-json.py
