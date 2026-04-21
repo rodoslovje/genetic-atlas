@@ -304,18 +304,21 @@ export function getSelectedGroups() {
     return view === "mtdna" ? state.mtdnaSelectedGroups : state.ydnaSelectedGroups;
 }
 
+const serializeGroups = (set) => Array.from(set).map(g => g === "" ? "_" : g).join(",");
+const deserializeGroups = (str) => new Set(str ? str.split(",").map(g => g === "_" ? "" : g) : []);
+
 export function updateURLState() {
     const params = new URLSearchParams(window.location.search);
 
     if (state.ydnaAllSelected) {
         params.delete("ygroups");
     } else {
-        params.set("ygroups", Array.from(state.ydnaSelectedGroups).join(","));
+        params.set("ygroups", serializeGroups(state.ydnaSelectedGroups));
     }
     if (state.mtdnaAllSelected) {
         params.delete("mgroups");
     } else {
-        params.set("mgroups", Array.from(state.mtdnaSelectedGroups).join(","));
+        params.set("mgroups", serializeGroups(state.mtdnaSelectedGroups));
     }
 
     params.delete("groups");
@@ -429,22 +432,18 @@ export function loadData() {
             const view = (window.location.hash || "#map").substring(1);
 
             if (urlParams.has("ygroups")) {
-                const groupsParam = urlParams.get("ygroups");
-                state.ydnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
+                state.ydnaSelectedGroups = deserializeGroups(urlParams.get("ygroups"));
                 state.ydnaAllSelected = state.ydnaSelectedGroups.size === Object.keys(ydnaGroupRoots).length;
             } else if (urlParams.has("groups") && view !== "mtdna") {
-                const groupsParam = urlParams.get("groups");
-                state.ydnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
+                state.ydnaSelectedGroups = deserializeGroups(urlParams.get("groups"));
                 state.ydnaAllSelected = state.ydnaSelectedGroups.size === Object.keys(ydnaGroupRoots).length;
             }
 
             if (urlParams.has("mgroups")) {
-                const groupsParam = urlParams.get("mgroups");
-                state.mtdnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
+                state.mtdnaSelectedGroups = deserializeGroups(urlParams.get("mgroups"));
                 state.mtdnaAllSelected = state.mtdnaSelectedGroups.size === mtGroups.length;
             } else if (urlParams.has("groups") && view === "mtdna") {
-                const groupsParam = urlParams.get("groups");
-                state.mtdnaSelectedGroups = new Set(groupsParam ? groupsParam.split(",") : []);
+                state.mtdnaSelectedGroups = deserializeGroups(urlParams.get("groups"));
                 state.mtdnaAllSelected = state.mtdnaSelectedGroups.size === mtGroups.length;
             }
         });
