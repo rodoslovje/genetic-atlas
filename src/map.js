@@ -1,5 +1,13 @@
 import { state, ydnaPeopleData, mtdnaPeopleData, getPersonTooltip, getHaploColor } from "./shared.js";
 
+function bindNameLabel(marker, dir) {
+    const offset = { right: [6, 0], left: [-6, 0], top: [0, -6], bottom: [0, 6] }[dir] ?? [6, 0];
+    marker.bindTooltip(marker._labelName, {
+        permanent: true, direction: dir, offset,
+        className: "marker-name-label", interactive: false,
+    });
+}
+
 export class MapVisualizer {
     constructor(containerId) {
         this.containerId = containerId;
@@ -28,6 +36,29 @@ export class MapVisualizer {
             maxClusterRadius: 40,
             spiderfyDistanceMultiplier: 1.5
         }).addTo(this.map);
+
+        this.markers.on("spiderfied", (e) => {
+            const center = e.cluster.getLatLng();
+            e.markers.forEach(marker => {
+                if (!marker._labelName) return;
+                const mll = marker.getLatLng();
+                const dx = mll.lng - center.lng;
+                const dy = mll.lat - center.lat;
+                const dir = Math.abs(dx) >= Math.abs(dy)
+                    ? (dx >= 0 ? "right" : "left")
+                    : (dy >= 0 ? "top" : "bottom");
+                marker.unbindTooltip();
+                bindNameLabel(marker, dir);
+            });
+        });
+
+        this.markers.on("unspiderfied", (e) => {
+            e.markers.forEach(marker => {
+                if (!marker._labelName) return;
+                marker.unbindTooltip();
+                bindNameLabel(marker, "right");
+            });
+        });
 
         this.refreshMap();
     }
@@ -93,6 +124,13 @@ export class MapVisualizer {
 
             const popupContent = `<div style="font-size: 13px; line-height: 1.5;">${getPersonTooltip(p)}</div>`;
             marker.bindPopup(popupContent);
+
+            const name = p.ancestor || p.surname;
+            if (name) {
+                marker._labelName = name;
+                if (state.showLabels) bindNameLabel(marker, "right");
+            }
+
             this.markers.addLayer(marker);
             bounds.extend([lat, lon]);
             hasResults = true;

@@ -45,6 +45,7 @@ export const translations = {
         exporting: "Exporting...",
         searchMatches: "Found: {0}",
         selectionCount: "Shown: {0} of {1}",
+        showLabels: "Show labels",
         ungrouped: "Ungrouped",
         resetView: "Reset View",
         versionLabel: "Version: {0}",
@@ -97,6 +98,7 @@ export const translations = {
         exporting: "Izvažanje...",
         searchMatches: "Najdeno: {0}",
         selectionCount: "Prikazano: {0} od {1}",
+        showLabels: "Prikaži oznake",
         ungrouped: "Nerazvrščeni",
         resetView: "Ponastavi pogled",
         versionLabel: "Različica: {0}",
@@ -149,6 +151,7 @@ export const translations = {
         exporting: "Esportazione...",
         searchMatches: "Trovati: {0}",
         selectionCount: "Mostrati: {0} di {1}",
+        showLabels: "Mostra etichette",
         ungrouped: "Non raggruppati",
         resetView: "Ripristina vista",
         versionLabel: "Versione: {0}",
@@ -271,7 +274,8 @@ export const eraColors = [
 
 export const state = {
     currentLang: localStorage.getItem("preferredLang") || (navigator.language && navigator.language.toLowerCase().startsWith("sl") ? "sl" : "en"),
-    showPassthrough: new URLSearchParams(window.location.search).get("showAllSNP") === "true",
+    showPassthrough: new URLSearchParams(window.location.search).get("snp") === "1",
+    showLabels: new URLSearchParams(window.location.search).get("lbl") === "1",
     searchQuery: new URLSearchParams(window.location.search).get("q") || "",
     ydnaSelectedGroups: new Set(),
     mtdnaSelectedGroups: new Set(),
@@ -324,9 +328,14 @@ export function updateURLState() {
     else params.delete("mzoom");
 
     if (state.showPassthrough) {
-        params.set("showAllSNP", "true");
+        params.set("snp", "1");
     } else {
-        params.delete("showAllSNP");
+        params.delete("snp");
+    }
+    if (state.showLabels) {
+        params.set("lbl", "1");
+    } else {
+        params.delete("lbl");
     }
     if (state.searchQuery) {
         params.set("q", state.searchQuery);

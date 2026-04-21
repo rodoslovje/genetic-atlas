@@ -415,6 +415,7 @@ function handleHashChange() {
     const lineageYdna = document.getElementById("lineage-controls-ydna");
     const lineageMtdna = document.getElementById("lineage-controls-mtdna");
     const treeOptions = document.getElementById("tree-options");
+    const mapOptions = document.getElementById("map-options");
     const ydnaEras = document.getElementById("ydna-eras");
     const exportBtn = document.getElementById("export-btn");
     const resetBtn = document.getElementById("reset-btn");
@@ -437,6 +438,7 @@ function handleHashChange() {
         if (lineageYdna) lineageYdna.style.display = (isMap || view === "ydna") ? "block" : "none";
         if (lineageMtdna) lineageMtdna.style.display = (isMap || view === "mtdna") ? "block" : "none";
         if (treeOptions) treeOptions.style.display = isTree ? "block" : "none";
+        if (mapOptions) mapOptions.style.display = isMap ? "block" : "none";
 
         if (isTree && ydnaEras) ydnaEras.style.display = "block";
         else if (ydnaEras) ydnaEras.style.display = "none";
@@ -489,6 +491,16 @@ function initApp() {
             const view = (window.location.hash || "#map").substring(1);
             if (view === "ydna") refreshYDNADisplay();
             else if (view === "mtdna") refreshMTDNADisplay();
+        });
+    }
+
+    const chkShowLabels = document.getElementById("chk-show-labels");
+    if (chkShowLabels) {
+        chkShowLabels.checked = state.showLabels;
+        chkShowLabels.addEventListener("change", (e) => {
+            state.showLabels = e.target.checked;
+            updateURLState();
+            if (mapVis.mapInitialized) mapVis.refreshMap();
         });
     }
 
