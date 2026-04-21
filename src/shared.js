@@ -44,6 +44,8 @@ export const translations = {
         infoButton: "Additional Information",
         exporting: "Exporting...",
         searchMatches: "Found: {0}",
+        selectionCount: "Shown: {0} of {1}",
+        ungrouped: "Ungrouped",
         resetView: "Reset View",
         versionLabel: "Version: {0}",
         dataUpdateLabel: "Data update: {0}",
@@ -94,6 +96,8 @@ export const translations = {
         infoButton: "Dodatne informacije",
         exporting: "Izvažanje...",
         searchMatches: "Najdeno: {0}",
+        selectionCount: "Prikazano: {0} od {1}",
+        ungrouped: "Nerazvrščeni",
         resetView: "Ponastavi pogled",
         versionLabel: "Različica: {0}",
         dataUpdateLabel: "Posodobitev podatkov: {0}",
@@ -144,6 +148,8 @@ export const translations = {
         infoButton: "Informazioni aggiuntive",
         exporting: "Esportazione...",
         searchMatches: "Trovati: {0}",
+        selectionCount: "Mostrati: {0} di {1}",
+        ungrouped: "Non raggruppati",
         resetView: "Ripristina vista",
         versionLabel: "Versione: {0}",
         dataUpdateLabel: "Aggiornamento dati: {0}",
@@ -405,8 +411,10 @@ export function loadData() {
             Object.keys(ydnaGroupRoots).forEach(k => state.ydnaSelectedGroups.add(k));
             const yGroups = [...new Set(yPeople.map(p => p.group))].filter(Boolean);
             yGroups.forEach(k => state.ydnaSelectedGroups.add(k));
+            if (yPeople.some(p => !p.group)) state.ydnaSelectedGroups.add("");
             const mtGroups = [...new Set(mtPeople.map(p => p.group))].filter(Boolean);
             mtGroups.forEach(k => state.mtdnaSelectedGroups.add(k));
+            if (mtPeople.some(p => !p.group)) state.mtdnaSelectedGroups.add("");
 
             const urlParams = new URLSearchParams(window.location.search);
             const view = (window.location.hash || "#map").substring(1);
@@ -524,14 +532,32 @@ export function initFilters() {
         };
         rootGroups.forEach(root => traverse(root, 0));
 
+        const hasUngrouped = people.some(p => !p.group);
+        const currentView = (window.location.hash || "#map").substring(1);
+        if (hasUngrouped && currentView === "map") orderedGroups.push("");
+
+        const counterId = isMtDna ? "lineage-count-mtdna" : "lineage-count-ydna";
+        const listedPeople = people.filter(p => p.group === "" ? (hasUngrouped && currentView === "map") : groups.includes(p.group));
+        const updateCounter = () => {
+            const el = document.getElementById(counterId);
+            if (el) {
+                const selected = listedPeople.filter(p => selectedGroups.has(p.group)).length;
+                el.innerText = t("selectionCount", selected, listedPeople.length);
+            }
+        };
+
         const listContainer = d3.select(listId);
         listContainer.html("");
 
+        const prefix = isMtDna ? "m" : "y";
         orderedGroups.forEach((groupName) => {
-            const count = people.filter((p) => p.group === groupName).length;
+            const isUngrouped = groupName === "";
+            const count = people.filter((p) => isUngrouped ? !p.group : p.group === groupName).length;
             const isChecked = selectedGroups.has(groupName);
-            const color = getHaploColor(groupName);
+            const color = isUngrouped ? ydnaHaploColors["default"] : getHaploColor(groupName);
             const shapeStyle = isMtDna ? "border-radius: 50%;" : "border-radius: 0%;";
+            const chkId = `chk-${prefix}-${isUngrouped ? "_ungrouped" : groupName}`;
+            const label = isUngrouped ? t("ungrouped") : `${t("lineage")} ${groupName}`;
 
             let indentStyle = null;
             const depth = groupDepths[groupName];
@@ -541,7 +567,7 @@ export function initFilters() {
 
             listContainer.append("div").attr("class", "group-item")
                 .attr("style", indentStyle)
-                .html(`<input type="checkbox" id="chk-${isMtDna ? 'm' : 'y'}-${groupName}" ${isChecked ? "checked" : ""}><span style="width: 12px; height: 12px; ${shapeStyle} background: ${color}; margin-right: 6px; border: 1px solid rgba(0,0,0,0.15); flex-shrink: 0; display: inline-block;"></span><label for="chk-${isMtDna ? 'm' : 'y'}-${groupName}">${t("lineage")} ${groupName} (${count})</label>`)
+                .html(`<input type="checkbox" id="${chkId}" ${isChecked ? "checked" : ""}><span style="width: 12px; height: 12px; ${shapeStyle} background: ${color}; margin-right: 6px; border: 1px solid rgba(0,0,0,0.15); flex-shrink: 0; display: inline-block;"></span><label for="${chkId}">${label} (${count})</label>`)
                 .on("change", function () {
                     const cb = this.querySelector("input");
                     if (cb.checked) {
@@ -549,10 +575,11 @@ export function initFilters() {
                     } else {
                         selectedGroups.delete(groupName);
                     }
-                    if (isMtDna) state.mzoom = groupName;
-                    else state.yzoom = groupName;
-                    if (isMtDna) state.mtdnaAllSelected = selectedGroups.size === groups.length;
-                    else state.ydnaAllSelected = selectedGroups.size === Object.keys(rootsMap).length;
+                    if (isMtDna) state.mzoom = isUngrouped ? null : groupName;
+                    else state.yzoom = isUngrouped ? null : groupName;
+                    if (isMtDna) state.mtdnaAllSelected = selectedGroups.size === orderedGroups.length;
+                    else state.ydnaAllSelected = selectedGroups.size === orderedGroups.length;
+                    updateCounter();
                     updateURLState();
                     window.dispatchEvent(new CustomEvent("filterChanged"));
                 });
@@ -564,21 +591,24 @@ export function initFilters() {
                 state.mzoom = null;
                 state.mtdnaAllSelected = !state.mtdnaAllSelected;
                 newState = state.mtdnaAllSelected;
-                if (newState) groups.forEach(k => state.mtdnaSelectedGroups.add(k));
+                if (newState) orderedGroups.forEach(k => state.mtdnaSelectedGroups.add(k));
                 else state.mtdnaSelectedGroups.clear();
             } else {
                 state.yzoom = null;
                 state.ydnaAllSelected = !state.ydnaAllSelected;
                 newState = state.ydnaAllSelected;
-                if (newState) Object.keys(rootsMap).forEach((k) => state.ydnaSelectedGroups.add(k));
+                if (newState) orderedGroups.forEach(k => state.ydnaSelectedGroups.add(k));
                 else state.ydnaSelectedGroups.clear();
             }
 
             this.innerText = t(newState ? "deselectAll" : "selectAll");
-            groups.forEach((groupName) => {
-                const chk = document.getElementById(`chk-${isMtDna ? 'm' : 'y'}-${groupName}`);
+            orderedGroups.forEach((groupName) => {
+                const isUngrouped = groupName === "";
+                const chkId = `chk-${prefix}-${isUngrouped ? "_ungrouped" : groupName}`;
+                const chk = document.getElementById(chkId);
                 if (chk) chk.checked = newState;
             });
+            updateCounter();
             updateURLState();
             window.dispatchEvent(new CustomEvent("filterChanged"));
         });
@@ -588,6 +618,8 @@ export function initFilters() {
             const allSel = isMtDna ? state.mtdnaAllSelected : state.ydnaAllSelected;
             btnEl.innerText = t(allSel ? "deselectAll" : "selectAll");
         }
+
+        updateCounter();
     };
 
     buildList(ydnaPeopleData, ydnaHaploData, ydnaGroupRoots, state.ydnaSelectedGroups, "#group-list-ydna", "#toggle-all-ydna", false);
