@@ -9,19 +9,19 @@ The frontend is built using Vite, D3.js, and Leaflet.
 ### Installation
 
 ```bash
-yarn install
+npm install
 ```
 
 ### Development Server
 
 ```bash
-yarn dev
+npm run dev
 ```
 
 ### Production Build
 
 ```bash
-yarn build
+npm run build
 ```
 
 ## 🛠️ Data Conversion Tools
