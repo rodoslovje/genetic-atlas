@@ -1,17 +1,27 @@
+import glob
 import os
 import sys
 import json
 import pandas as pd
 
 
+def find_newest(pattern: str) -> str | None:
+    matches = sorted(glob.glob(pattern))
+    return matches[-1] if matches else None
+
+
 def main():
-    input_mtdna = "input/slo-mtdna.csv"
+    mtdna_path = find_newest("input/Slovenianorigin_Maternal_Ancestry_*.csv")
+    if not mtdna_path:
+        print("Error: No file matching input/Slovenianorigin_Maternal_Ancestry_*.csv found.")
+        sys.exit(1)
+    input_mtdna = mtdna_path
     input_fetched = "input/slo-mtdna-fetched.csv"
-    input_snp = "input/slo-mtdna-snp.csv"
+    input_snp = "input/Slovenianorigin_MTDNA_Results.csv"
     output_json = "data/slo-mtdna.json"
 
     # Check if files exist
-    for file_path in [input_mtdna, input_fetched, input_snp]:
+    for file_path in [input_fetched, input_snp]:
         if not os.path.exists(file_path):
             print(f"Error: Required file {file_path} not found.")
             sys.exit(1)

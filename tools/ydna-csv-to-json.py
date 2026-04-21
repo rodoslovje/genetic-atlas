@@ -13,14 +13,24 @@ def get_surname(name: str) -> str:
     return words[-1]
 
 
+def find_newest(pattern: str) -> str | None:
+    import glob
+    matches = sorted(glob.glob(pattern))
+    return matches[-1] if matches else None
+
+
 def main():
-    input_ydna = "input/slo-ydna.csv"
+    ydna_path = find_newest("input/Slovenianorigin_Paternal_Ancestry_*.csv")
+    if not ydna_path:
+        print("Error: No file matching input/Slovenianorigin_Paternal_Ancestry_*.csv found.")
+        sys.exit(1)
+    input_ydna = ydna_path
     input_fetched = "input/slo-ydna-fetched.csv"
-    input_snp = "input/slo-ydna-snp.csv"
+    input_snp = "input/Slovenianorigin_YDNA_Haplogroups_Report.csv"
     output_json = "data/slo-ydna.json"
 
     # Check if files exist
-    for file_path in [input_ydna, input_fetched, input_snp]:
+    for file_path in [input_fetched, input_snp]:
         if not os.path.exists(file_path):
             print(f"Error: Required file {file_path} not found.")
             sys.exit(1)
