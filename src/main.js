@@ -101,10 +101,14 @@ window.setLanguage = function (e, lang) {
 };
 
 function updateLangIcon() {
-    const isSl = state.currentLang === "sl";
-    const imgSrc = isSl ? "https://flagcdn.com/w20/si.png" : "https://flagcdn.com/w20/gb.png";
-    const textVal = isSl ? "SL" : "EN";
-    const fullTextVal = isSl ? "Slovenščina (SL)" : "English (EN)";
+    const lang = state.currentLang;
+    const imgSrc = lang === "sl" ? "https://flagcdn.com/w20/si.png"
+        : lang === "it" ? "https://flagcdn.com/w20/it.png"
+        : "https://flagcdn.com/w20/gb.png";
+    const textVal = lang === "sl" ? "SL" : lang === "it" ? "IT" : "EN";
+    const fullTextVal = lang === "sl" ? "Slovenščina (SL)"
+        : lang === "it" ? "Italiano (IT)"
+        : "English (EN)";
 
     const flag = document.getElementById("lang-btn-flag");
     const text = document.getElementById("lang-btn-text");
