@@ -266,15 +266,35 @@ window.exportView = function (e) {
 
         const originalG = svgContainer.querySelector("g");
         const bbox = originalG.getBBox();
-        clone.setAttribute("viewBox", `${bbox.x - 60} ${bbox.y - 100} ${bbox.width + 120} ${bbox.height + 180}`);
-        clone.setAttribute("width", bbox.width + 120);
-        clone.setAttribute("height", bbox.height + 180);
 
-        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        rect.setAttribute("x", bbox.x - 60); rect.setAttribute("y", bbox.y - 100);
-        rect.setAttribute("width", bbox.width + 120); rect.setAttribute("height", bbox.height + 180);
-        rect.setAttribute("fill", "#f1f5f9");
-        clone.insertBefore(rect, clone.firstChild);
+        const minWidth = 1000;
+        const paddingY = 40;
+        const contentWidth = bbox.width + 120;
+        const extraWidth = Math.max(0, minWidth - contentWidth);
+        const exportX = bbox.x - 60 - extraWidth / 2;
+        const exportWidth = contentWidth + extraWidth;
+        const exportY = bbox.y - 60 - paddingY;
+        const exportHeight = bbox.height + 110 + (paddingY * 2);
+
+        clone.setAttribute("viewBox", `${exportX} ${exportY} ${exportWidth} ${exportHeight}`);
+        clone.setAttribute("width", exportWidth);
+        clone.setAttribute("height", exportHeight);
+
+        const footerBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        footerBg.setAttribute("x", exportX);
+        footerBg.setAttribute("y", bbox.y + bbox.height + paddingY);
+        footerBg.setAttribute("width", exportWidth);
+        footerBg.setAttribute("height", 50);
+        footerBg.setAttribute("fill", "#f1f5f9");
+        clone.insertBefore(footerBg, clone.firstChild);
+
+        const headerBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        headerBg.setAttribute("x", exportX);
+        headerBg.setAttribute("y", exportY);
+        headerBg.setAttribute("width", exportWidth);
+        headerBg.setAttribute("height", 60);
+        headerBg.setAttribute("fill", "#f1f5f9");
+        clone.insertBefore(headerBg, clone.firstChild);
 
         const titleLink = document.createElementNS("http://www.w3.org/2000/svg", "a");
         titleLink.setAttribute("href", window.location.origin);
@@ -282,8 +302,8 @@ window.exportView = function (e) {
 
         const titleText = document.createElementNS("http://www.w3.org/2000/svg", "text");
         titleText.textContent = `${t("brand")} - ${t(view)}`;
-        titleText.setAttribute("x", bbox.x - 40);
-        titleText.setAttribute("y", bbox.y - 55);
+        titleText.setAttribute("x", exportX + 20);
+        titleText.setAttribute("y", exportY + 38);
         titleText.setAttribute("font-size", "24px");
         titleText.setAttribute("font-weight", "bold");
         titleText.setAttribute("fill", "#1a365d");
@@ -296,8 +316,8 @@ window.exportView = function (e) {
 
         const urlText = document.createElementNS("http://www.w3.org/2000/svg", "text");
         urlText.textContent = window.location.hostname;
-        urlText.setAttribute("x", bbox.x + bbox.width + 40);
-        urlText.setAttribute("y", bbox.y - 55);
+        urlText.setAttribute("x", exportX + exportWidth - 20);
+        urlText.setAttribute("y", exportY + 38);
         urlText.setAttribute("font-size", "18px");
         urlText.setAttribute("text-anchor", "end");
         urlText.setAttribute("fill", "#2b6cb0");
@@ -305,8 +325,8 @@ window.exportView = function (e) {
         clone.appendChild(urlLink);
 
         const sourceText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        sourceText.setAttribute("x", bbox.x - 40);
-        sourceText.setAttribute("y", bbox.y + bbox.height + 50);
+        sourceText.setAttribute("x", exportX + 20);
+        sourceText.setAttribute("y", bbox.y + bbox.height + paddingY + 30);
         sourceText.setAttribute("font-size", "14px");
         sourceText.setAttribute("fill", "#4a5568");
         sourceText.setAttribute("xml:space", "preserve");
