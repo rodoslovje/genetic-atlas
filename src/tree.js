@@ -13,7 +13,19 @@ export class TreeVisualizer {
         this.isSquare = isSquare;
         this.svg = d3.select(containerSelector).append("svg").attr("width", "100%").attr("height", "100%");
         this.g = this.svg.append("g");
-        this.zoom = d3.zoom().scaleExtent([0.05, 5]).on("zoom", (e) => this.g.attr("transform", e.transform));
+        this.zoom = d3.zoom()
+            .scaleExtent([0.05, 5])
+            .constrain((transform, extent, translateExtent) => {
+                const dx0 = transform.invertX(extent[0][0]) - translateExtent[0][0];
+                const dx1 = transform.invertX(extent[1][0]) - translateExtent[1][0];
+                const dy0 = transform.invertY(extent[0][1]) - translateExtent[0][1];
+                const dy1 = transform.invertY(extent[1][1]) - translateExtent[1][1];
+                return transform.translate(
+                    dx1 > dx0 ? dx0 : Math.min(0, dx0) || Math.max(0, dx1),
+                    dy1 > dy0 ? dy0 : Math.min(0, dy0) || Math.max(0, dy1)
+                );
+            })
+            .on("zoom", (e) => this.g.attr("transform", e.transform));
         this.svg.call(this.zoom);
         this.tooltip = d3.select("body").select(".tooltip");
         if (this.tooltip.empty()) {
@@ -464,5 +476,32 @@ export class TreeVisualizer {
             .remove();
 
         nodes.forEach((d) => { d.x0 = d.x; d.y0 = d.y; });
+
+        // Limit zoom out to boundaries of the tree
+        const svgNode = this.svg.node();
+        const cw = svgNode.clientWidth || window.innerWidth || 800;
+        const ch = svgNode.clientHeight || window.innerHeight || 600;
+
+        let maxX = 0;
+        let maxY = 0;
+        nodes.forEach((n) => {
+            if (n.x > maxX) maxX = n.x;
+            if (n.y > maxY) maxY = n.y;
+        });
+
+        const treeW = maxY + 400; // Account for labels (d.y is horizontal)
+        const treeH = maxX + NODE_ROW_HEIGHT + 100; // d.x is vertical
+
+        const minScale = Math.min(cw / treeW, ch / treeH);
+        const zoomOutLimit = Math.max(0.01, Math.min(ZOOM_SCALE, minScale * 0.8));
+
+        this.zoom.scaleExtent([zoomOutLimit, 5]);
+
+        const padding = 50;
+
+        this.zoom.translateExtent([
+            [-padding, -padding],
+            [treeW + padding, treeH + padding]
+        ]);
     }
 }
