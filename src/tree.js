@@ -7,6 +7,12 @@ const ZOOM_DURATION = 750;
 const ZOOM_SCALE = 0.75;
 const ZOOM_TX = 30;
 
+function decodeHtmlEntities(text) {
+    const textArea = document.createElement("textarea");
+    textArea.innerHTML = text || "";
+    return textArea.value;
+}
+
 export class TreeVisualizer {
     constructor(containerSelector, isSquare = false) {
         this.containerSelector = containerSelector;
@@ -395,14 +401,14 @@ export class TreeVisualizer {
             .each(function (d) {
                 const el = d3.select(this);
                 if (d.data.isPerson) {
-                    el.append("tspan").text(d.data.ancestor || d.data.surname);
+                    el.append("tspan").text(decodeHtmlEntities(d.data.ancestor || d.data.surname));
                     if (d.data.location) {
                         el.append("tspan")
                             .attr("x", 18)
                             .attr("dy", "1.2em")
                             .style("font-size", "10px")
                             .style("fill", "#718096")
-                            .text(d.data.location);
+                            .text(decodeHtmlEntities(d.data.location));
                     }
                 } else {
                     let notePart = d.data.note && d.data.note.trim() !== "" && d.data.note !== t("notePathMissing") ? ` (${d.data.note})` : "";
@@ -410,7 +416,7 @@ export class TreeVisualizer {
                         const rootGroupKey = Object.keys(groupRootsMap).find((k) => groupRootsMap[k] === d.data.haplogroup || k === d.data.haplogroup);
                         if (rootGroupKey && rootGroupKey !== d.data.haplogroup) notePart = ` (${rootGroupKey})`;
                     }
-                    el.text(`${d.data.haplogroup}${notePart}`);
+                    el.text(`${d.data.haplogroup}${decodeHtmlEntities(notePart)}`);
                 }
             });
 

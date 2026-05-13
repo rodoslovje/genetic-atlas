@@ -353,7 +353,8 @@ window.exportView = function (e) {
 
         clone.appendChild(sourceText);
 
-        const blob = new Blob([new XMLSerializer().serializeToString(clone)], { type: "image/svg+xml;charset=utf-8" });
+        const svgString = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone);
+        const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         link.download = `Slovenian_${view.toUpperCase()}_Tree.svg`;
