@@ -1,4 +1,4 @@
-import { state, t, formatAge, getPersonTooltip, getHaploColor, eraColors, getSelectedGroups } from "./shared.js";
+import { state, t, formatAge, getPersonTooltip, getHaploColor, eraColors, getSelectedGroups, translations } from "./shared.js";
 
 const NODE_ROW_HEIGHT = 45;
 const NODE_DEPTH_WIDTH = 50;
@@ -62,15 +62,25 @@ export class TreeVisualizer {
             if (p.group) allRoots.add(groupRootsMap[p.group] || p.group);
         });
 
+        const getCustomNote = (hg, defaultNote) => {
+            if (!this.isSquare && translations[state.currentLang].mtdnaNotes && translations[state.currentLang].mtdnaNotes[hg]) {
+                return translations[state.currentLang].mtdnaNotes[hg];
+            }
+            return defaultNote;
+        };
+
         const buildHierarchy = (nodes, leaves) => {
-            const dataMap = nodes.reduce((m, d) => ((m[d.haplogroup] = { ...d, id: d.haplogroup, children: [] }), m), {});
+            const dataMap = nodes.reduce((m, d) => {
+                m[d.haplogroup] = { ...d, note: getCustomNote(d.haplogroup, d.note), id: d.haplogroup, children: [] };
+                return m;
+            }, {});
 
             let rootNode = nodes.find((d) => !d.parent || d.parent === "");
             if (!rootNode && nodes.length > 0) rootNode = nodes[0];
             if (!rootNode) rootNode = { haplogroup: "root", parent: "" };
 
             if (!dataMap[rootNode.haplogroup]) {
-                dataMap[rootNode.haplogroup] = { ...rootNode, id: rootNode.haplogroup, children: [] };
+                dataMap[rootNode.haplogroup] = { ...rootNode, note: getCustomNote(rootNode.haplogroup, rootNode.note), id: rootNode.haplogroup, children: [] };
             }
 
             leaves.forEach((p) => {
@@ -80,7 +90,7 @@ export class TreeVisualizer {
                     if (parentHg === hg) parentHg = rootNode.haplogroup; // Prevent self-referencing
                     dataMap[hg] = {
                         haplogroup: hg, parent: parentHg, age: null,
-                        note: t("notePathMissing"), id: hg, children: [], isAutoPlaced: true
+                        note: getCustomNote(hg, t("notePathMissing")), id: hg, children: [], isAutoPlaced: true
                     };
                 }
             });
@@ -397,7 +407,12 @@ export class TreeVisualizer {
                 return ".35em";
             })
             .attr("x", (d) => (d.data.isPerson ? 18 : 16))
-            .style("text-anchor", "start")
+            .style("text-anchor", "start");
+
+        const mergedNode = node.merge(nodeEnter);
+
+        mergedNode.select("text")
+            .text("")
             .each(function (d) {
                 const el = d3.select(this);
                 if (d.data.isPerson) {
@@ -416,11 +431,14 @@ export class TreeVisualizer {
                         const rootGroupKey = Object.keys(groupRootsMap).find((k) => groupRootsMap[k] === d.data.haplogroup || k === d.data.haplogroup);
                         if (rootGroupKey && rootGroupKey !== d.data.haplogroup) notePart = ` (${rootGroupKey})`;
                     }
-                    el.text(`${d.data.haplogroup}${decodeHtmlEntities(notePart)}`);
+                    let agePart = "";
+                    if (d.data.age !== null && d.data.age !== undefined) {
+                        const yearsAgo = Math.round((new Date().getFullYear() - d.data.age) / 100) * 100;
+                        agePart = ` ${t("yearsAgo", yearsAgo.toLocaleString(state.currentLang))}`;
+                    }
+                    el.text(`${d.data.haplogroup}${decodeHtmlEntities(notePart)}${agePart}`);
                 }
             });
-
-        const mergedNode = node.merge(nodeEnter);
 
         mergedNode
             .attr("class", getNodeClass)

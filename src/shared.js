@@ -50,7 +50,27 @@ export const translations = {
         resetView: "Reset View",
         versionLabel: "Version: {0}",
         dataUpdateLabel: "Data update: {0}",
-        attributionHtml: "Source: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> and <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a> project."
+        attributionHtml: "Source: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> and <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a> project.",
+        yearsAgo: "{0} years ago",
+        mtdnaNotes: {
+            "L'AA'AB": "Denisovan divergence - common ancestor of Denisovans and modern humans",
+            "L'AA": "Neanderthal divergence - common ancestor of Neanderthals and modern humans",
+            "L": "Eve - common ancestor of the mother of modern humans and mitochondrial Eve",
+            "E": "Elizabeth",
+            "G": "Gabriella",
+            "N": "Nika",
+            "I": "Irene",
+            "HV": "Helen Vera",
+            "H": "Helen",
+            "V": "Victoria",
+            "JT": "Jane Theresa",
+            "J": "Jane",
+            "T": "Theresa",
+            "U": "Ursula",
+            "K": "Katherine",
+            "W": "Wendy",
+            "X": "Xenia"
+        }
     },
     sl: {
         brand: "Slovenska genetska dediščina",
@@ -103,7 +123,27 @@ export const translations = {
         resetView: "Ponastavi pogled",
         versionLabel: "Različica: {0}",
         dataUpdateLabel: "Posodobitev podatkov: {0}",
-        attributionHtml: "Vir: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> in projekt <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovensko poreklo</a>."
+        attributionHtml: "Vir: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> in projekt <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovensko poreklo</a>.",
+        yearsAgo: "pred {0} leti",
+        mtdnaNotes: {
+            "L'AA'AB": "Denisovanska divergenca - skupna prednica Denisovanca in sodobnega človeka",
+            "L'AA": "Neandertalska divergenca - skupna prednica Neandertalca in sodobnega človeka",
+            "L": "Eva - skupna prednica matere sodobnega človeka in mitohondrijske Eve",
+            "E": "Elizabeta",
+            "G": "Gabrijela",
+            "N": "Nika",
+            "I": "Irena",
+            "HV": "Helena Vera",
+            "H": "Helena",
+            "V": "Vesna",
+            "JT": "Jožefa Tončka",
+            "J": "Jera",
+            "T": "Terezija",
+            "U": "Uršula",
+            "K": "Katja",
+            "W": "Wendi",
+            "X": "Ksenja"
+        }
     },
     it: {
         brand: "Patrimonio Genetico Sloveno",
@@ -156,7 +196,27 @@ export const translations = {
         resetView: "Ripristina vista",
         versionLabel: "Versione: {0}",
         dataUpdateLabel: "Aggiornamento dati: {0}",
-        attributionHtml: "Fonte: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> e progetto <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a>."
+        attributionHtml: "Fonte: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> e progetto <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a>.",
+        yearsAgo: "{0} anni fa",
+        mtdnaNotes: {
+            "L'AA'AB": "Divergenza Denisoviana - antenato comune dell'uomo di Denisova e dell'uomo moderno",
+            "L'AA": "Divergenza di Neanderthal - antenato comune dell'uomo di Neanderthal e dell'uomo moderno",
+            "L": "Eva - antenato comune della madre degli esseri umani moderni e dell'Eva mitocondriale",
+            "E": "Elisabetta",
+            "G": "Gabriella",
+            "N": "Nika",
+            "I": "Irene",
+            "HV": "Elena Vera",
+            "H": "Elena",
+            "V": "Valeria",
+            "JT": "Giovanna Teresa",
+            "J": "Giovanna",
+            "T": "Teresa",
+            "U": "Orsola",
+            "K": "Katia",
+            "W": "Wanda",
+            "X": "Xenia"
+        }
     }
 };
 
@@ -353,7 +413,7 @@ export function updateURLState() {
 export function formatAge(age) {
     if (age === null || age === undefined) return "Unknown";
     const era = age < 0 ? t("bce") : t("ce");
-    return `<b>${Math.abs(age).toLocaleString()} ${era}</b>`;
+    return `<b>${Math.abs(age).toLocaleString(state.currentLang)} ${era}</b>`;
 }
 
 export function getPersonTooltip(person, error = "") {

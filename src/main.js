@@ -91,6 +91,7 @@ window.setLanguage = function (e, lang) {
     updateLangIcon();
     applyTranslations();
     initFilters();
+    validateSearch();
     refreshYDNADisplay();
     refreshMTDNADisplay();
     document.getElementById("lang-menu").classList.remove("open");
