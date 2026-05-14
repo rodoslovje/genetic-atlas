@@ -773,6 +773,15 @@ export function loadData() {
                         p.group = p.haplogroup.split("-")[0];
                     }
                 }
+            });
+            ydnaPeopleData = yPeople;
+
+            mtdnaHaploData = mtHaplo;
+            mtPeople.forEach((p) => {
+                if (!p.group && p.haplogroup) {
+                    let match = p.haplogroup.match(/^[A-Z][0-9]?/);
+                    if (match) p.group = match[0];
+                }
 
                 // Autodetect group roots
                 if (p.group && !mtdnaGroupRoots[p.group]) {
@@ -782,15 +791,6 @@ export function loadData() {
                     } else {
                         mtdnaGroupRoots[p.group] = p.group;
                     }
-                }
-            });
-            ydnaPeopleData = yPeople;
-
-            mtdnaHaploData = mtHaplo;
-            mtPeople.forEach((p) => {
-                if (!p.group && p.haplogroup) {
-                    let match = p.haplogroup.match(/^[A-Z][0-9]?/);
-                    if (match) p.group = match[0];
                 }
             });
             mtdnaPeopleData = mtPeople;

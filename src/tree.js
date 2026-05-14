@@ -124,19 +124,22 @@ export class TreeVisualizer {
 
         const pruneTree = (node) => {
             const isGroupRoot = allRoots.has(node.haplogroup);
+            const hasNote = node.note && node.note.trim() !== "" && node.note !== t("notePathMissing");
+
+            const isMtDnaExplicitNote = !this.isSquare && hasNote && !["L'AA'AB", "L'AA", "L"].includes(node.haplogroup);
+            const keepIfEmpty = isGroupRoot || isMtDnaExplicitNote;
 
             if (!node.children || node.children.length === 0) {
-                return node.isPerson || isGroupRoot ? node : null;
+                return node.isPerson || keepIfEmpty ? node : null;
             }
 
             node.children = node.children.map(pruneTree).filter((n) => n !== null);
 
             if (node.children.length === 0) {
-                return isGroupRoot ? node : null;
+                return keepIfEmpty ? node : null;
             }
 
             if (state.showPassthrough) return node;
-            const hasNote = node.note && node.note.trim() !== "" && node.note !== t("notePathMissing");
             if (
                 node.parent === "" || node.isPerson || isGroupRoot ||
                 node.isAutoPlaced || hasNote || node.children.some((c) => c.isPerson) || node.children.length > 1
