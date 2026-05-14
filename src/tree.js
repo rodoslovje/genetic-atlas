@@ -66,6 +66,9 @@ export class TreeVisualizer {
             if (!this.isSquare && translations[state.currentLang].mtdnaNotes && translations[state.currentLang].mtdnaNotes[hg]) {
                 return translations[state.currentLang].mtdnaNotes[hg];
             }
+            if (this.isSquare && translations[state.currentLang].ydnaNotes && translations[state.currentLang].ydnaNotes[hg]) {
+                return translations[state.currentLang].ydnaNotes[hg];
+            }
             return defaultNote;
         };
 

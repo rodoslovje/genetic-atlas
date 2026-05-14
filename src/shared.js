@@ -71,6 +71,21 @@ export const translations = {
             "K": "Katherine",
             "W": "Wendy",
             "X": "Xenia"
+        },
+        ydnaNotes: {
+            "A0000": "Denisovan divergence - common ancestor of Denisovans and modern humans",
+            "A000-T": "Neanderthal divergence - common ancestor of Neanderthals and modern humans",
+            "A-PR2921": "Adam - common ancestor of the father of modern humans and Y-chromosomal Adam",
+            "E-M96": "Edward",
+            "F-M89": "Francis",
+            "G-M201": "Gregory",
+            "H-L901": "Henry",
+            "I-M170": "Isidore",
+            "J-M304": "John",
+            "L-M20": "Luke",
+            "N-M231": "Nicholas",
+            "R-M207": "Rupert",
+            "T-M184": "Thomas"
         }
     },
     sl: {
@@ -145,6 +160,21 @@ export const translations = {
             "K": "Katja",
             "W": "Wendi",
             "X": "Ksenja"
+        },
+        ydnaNotes: {
+            "A0000": "Denisovanska divergenca - skupni prednik Denisovanca in sodobnega človeka",
+            "A000-T": "Neandertalska divergenca - skupni prednik Neandertalca in sodobnega človeka",
+            "A-PR2921": "Adam - skupni prednik očeta sodobnega človeka in Y Adama",
+            "E-M96": "Edvard",
+            "F-M89": "Frančišek",
+            "G-M201": "Gregor",
+            "H-L901": "Henrik",
+            "I-M170": "Izidor",
+            "J-M304": "Janez",
+            "L-M20": "Luka",
+            "N-M231": "Nikolaj",
+            "R-M207": "Rupert",
+            "T-M184": "Tomaž"
         }
     },
     it: {
@@ -219,6 +249,21 @@ export const translations = {
             "K": "Katia",
             "W": "Wanda",
             "X": "Xenia"
+        },
+        ydnaNotes: {
+            "A0000": "Divergenza Denisoviana - antenato comune dell'uomo di Denisova e dell'uomo moderno",
+            "A000-T": "Divergenza di Neanderthal - antenato comune dell'uomo di Neanderthal e dell'uomo moderno",
+            "A-PR2921": "Adamo - antenato comune del padre degli esseri umani moderni e dell'Adamo cromosomiale Y",
+            "E-M96": "Edoardo",
+            "F-M89": "Francesco",
+            "G-M201": "Gregorio",
+            "H-L901": "Enrico",
+            "I-M170": "Isidoro",
+            "J-M304": "Giovanni",
+            "L-M20": "Luca",
+            "N-M231": "Nicola",
+            "R-M207": "Roberto",
+            "T-M184": "Tommaso"
         }
     },
     de: {
@@ -293,6 +338,21 @@ export const translations = {
             "K": "Katharina",
             "W": "Wanda",
             "X": "Xenia"
+        },
+        ydnaNotes: {
+            "A0000": "Denisova-Divergenz - gemeinsamer Vorfahre von Denisova-Menschen und modernen Menschen",
+            "A000-T": "Neandertaler-Divergenz - gemeinsamer Vorfahre von Neandertalern und modernen Menschen",
+            "A-PR2921": "Adam - gemeinsamer Vorfahre des Vaters der modernen Menschen und des Y-chromosomalen Adam",
+            "E-M96": "Eduard",
+            "F-M89": "Franz",
+            "G-M201": "Gregor",
+            "H-L901": "Heinrich",
+            "I-M170": "Isidor",
+            "J-M304": "Johann",
+            "L-M20": "Lukas",
+            "N-M231": "Nikolaus",
+            "R-M207": "Rupert",
+            "T-M184": "Thomas"
         }
     },
     hr: {
@@ -367,6 +427,21 @@ export const translations = {
             "K": "Katarina",
             "W": "Vanda",
             "X": "Ksenija"
+        },
+        ydnaNotes: {
+            "A0000": "Denisovanska divergencija - zajednički predak Denisovanca i modernog čovjeka",
+            "A000-T": "Neandertalska divergencija - zajednički predak Neandertalca i modernog čovjeka",
+            "A-PR2921": "Adam - zajednički predak oca modernog čovjeka i Y-kromosomskog Adama",
+            "E-M96": "Eduard",
+            "F-M89": "Franjo",
+            "G-M201": "Grgur",
+            "H-L901": "Henrik",
+            "I-M170": "Izidor",
+            "J-M304": "Ivan",
+            "L-M20": "Luka",
+            "N-M231": "Nikola",
+            "R-M207": "Rupert",
+            "T-M184": "Toma"
         }
     },
     hu: {
@@ -441,13 +516,28 @@ export const translations = {
             "K": "Katalin",
             "W": "Vanda",
             "X": "Xénia"
+        },
+        ydnaNotes: {
+            "A0000": "Gyenyiszovai divergencia - a gyenyiszovaiak és a modern ember közös őse",
+            "A000-T": "Neandervölgyi divergencia - a neandervölgyiek és a modern ember közös őse",
+            "A-PR2921": "Ádám - a modern ember apjának és az Y-kromoszomális Ádámnak a közös őse",
+            "E-M96": "Eduárd",
+            "F-M89": "Ferenc",
+            "G-M201": "Gergely",
+            "H-L901": "Henrik",
+            "I-M170": "Izidor",
+            "J-M304": "János",
+            "L-M20": "Lukács",
+            "N-M231": "Miklós",
+            "R-M207": "Rupert",
+            "T-M184": "Tamás"
         }
     }
 };
 
 export const ydnaGroupRoots = {
     A: "A-M91", B: "B-M60", C: "C-M130", D: "D-M174", E: "E-M96",
-    G: "G-M201", H: "H-L901", I: "I-M170", I1: "I-M253", I2: "I-P215",
+    F: "F-M89", G: "G-M201", H: "H-L901", I: "I-M170", I1: "I-M253", I2: "I-P215",
     J: "J-M304", L: "L-M20", N: "N-M231", O: "O-M175", Q: "Q-M242",
     R1a: "R-M420", R1b: "R-M343", R2: "R-M479", T: "T-M184"
 };
