@@ -647,15 +647,35 @@ export const eraColors = [
     { start: 1500, color: "#38a169", id: "eraModern" }
 ];
 
+function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has(param)) return urlParams.get(param);
+
+    const hash = window.location.hash;
+    let hashQuery = "";
+    if (hash.includes("?")) {
+        hashQuery = hash.substring(hash.indexOf("?"));
+    } else if (hash.includes("&")) {
+        hashQuery = "?" + hash.substring(hash.indexOf("&") + 1);
+    }
+
+    if (hashQuery) {
+        const hashParams = new URLSearchParams(hashQuery);
+        if (hashParams.has(param)) return hashParams.get(param);
+    }
+    return null;
+}
+
 export const state = {
     currentLang: localStorage.getItem("preferredLang") || (navigator.language && navigator.language.toLowerCase().startsWith("sl") ? "sl" : "en"),
-    showPassthrough: new URLSearchParams(window.location.search).get("snp") === "1",
-    showLabels: new URLSearchParams(window.location.search).get("lbl") === "1",
-    searchQuery: new URLSearchParams(window.location.search).get("q") || "",
+    showPassthrough: getQueryParam("snp") === "1",
+    showLabels: getQueryParam("lbl") === "1",
+    searchQuery: getQueryParam("q") || "",
+    startgroup: getQueryParam("startgroup") || null,
     ydnaSelectedGroups: new Set(),
     mtdnaSelectedGroups: new Set(),
-    yzoom: new URLSearchParams(window.location.search).get("yzoom") || null,
-    mzoom: new URLSearchParams(window.location.search).get("mzoom") || null,
+    yzoom: getQueryParam("yzoom") || null,
+    mzoom: getQueryParam("mzoom") || null,
     ydnaAllSelected: true,
     mtdnaAllSelected: true
 };
@@ -705,6 +725,12 @@ export function updateURLState() {
     if (state.mzoom) params.set("mzoom", state.mzoom);
     else params.delete("mzoom");
 
+    if (state.startgroup) {
+        params.set("startgroup", state.startgroup);
+    } else {
+        params.delete("startgroup");
+    }
+
     if (state.showPassthrough) {
         params.set("snp", "1");
     } else {
@@ -721,7 +747,11 @@ export function updateURLState() {
         params.delete("q");
     }
 
-    const newUrl = window.location.pathname + "?" + params.toString().replace(/%2C/g, ",") + (window.location.hash || "#map");
+    let hash = window.location.hash || "#map";
+    if (hash.includes("?")) hash = hash.split("?")[0];
+    if (hash.includes("&")) hash = hash.split("&")[0];
+
+    const newUrl = window.location.pathname + "?" + params.toString().replace(/%2C/g, ",") + hash;
     window.history.replaceState(null, "", newUrl);
 }
 
@@ -779,7 +809,7 @@ export function loadData() {
             mtdnaHaploData = mtHaplo;
             mtPeople.forEach((p) => {
                 if (!p.group && p.haplogroup) {
-                    let match = p.haplogroup.match(/^[A-Z][0-9]?/);
+                    let match = p.haplogroup.match(/^(HV|JT|[A-Z])[0-9]?/);
                     if (match) p.group = match[0];
                 }
 
@@ -795,31 +825,95 @@ export function loadData() {
             });
             mtdnaPeopleData = mtPeople;
 
-            Object.keys(ydnaGroupRoots).forEach(k => state.ydnaSelectedGroups.add(k));
+            if (state.startgroup) {
+                const getDescendantsAndSelf = (haploData, startNodeId) => {
+                    const childrenMap = {};
+                    haploData.forEach(d => {
+                        if (d.parent) {
+                            if (!childrenMap[d.parent]) childrenMap[d.parent] = [];
+                            childrenMap[d.parent].push(d.haplogroup);
+                        }
+                    });
+                    const descendants = new Set([startNodeId]);
+                    const queue = [startNodeId];
+                    while (queue.length > 0) {
+                        const curr = queue.shift();
+                        if (childrenMap[curr]) {
+                            childrenMap[curr].forEach(child => {
+                                descendants.add(child);
+                                queue.push(child);
+                            });
+                        }
+                    }
+                    return descendants;
+                };
+
+                const filterTree = (haplo, people, rootsMap, startGroupRaw) => {
+                    const startGroupAlias = rootsMap[startGroupRaw] || startGroupRaw;
+                    const descendants = getDescendantsAndSelf(haplo, startGroupAlias);
+                    const filteredHaplo = haplo.filter(h => descendants.has(h.haplogroup));
+                    const startNodeIdx = filteredHaplo.findIndex(h => h.haplogroup === startGroupAlias);
+                    if (startNodeIdx !== -1) {
+                        filteredHaplo[startNodeIdx] = { ...filteredHaplo[startNodeIdx], parent: "" };
+                    }
+                    const filteredPeople = people.filter(p => {
+                        let hg = p.haplogroup === "" ? (rootsMap[p.group] || p.group) : p.haplogroup;
+                        let rootHg = rootsMap[p.group] || p.group;
+                        return descendants.has(hg) || descendants.has(rootHg);
+                    });
+                    return { haplo: filteredHaplo, people: filteredPeople };
+                };
+
+                const yAlias = ydnaGroupRoots[state.startgroup] || state.startgroup;
+                if (yHaplo.some(h => h.haplogroup === yAlias)) {
+                    const filtered = filterTree(yHaplo, yPeople, ydnaGroupRoots, state.startgroup);
+                    yHaplo = filtered.haplo;
+                    yPeople = filtered.people;
+                }
+                const mtAlias = mtdnaGroupRoots[state.startgroup] || state.startgroup;
+                if (mtHaplo.some(h => h.haplogroup === mtAlias)) {
+                    const filtered = filterTree(mtHaplo, mtPeople, mtdnaGroupRoots, state.startgroup);
+                    mtHaplo = filtered.haplo;
+                    mtPeople = filtered.people;
+                }
+            }
+
+            ydnaHaploData = yHaplo;
+            ydnaPeopleData = yPeople;
+            mtdnaHaploData = mtHaplo;
+            mtdnaPeopleData = mtPeople;
+
             const yGroups = [...new Set(yPeople.map(p => p.group))].filter(Boolean);
             yGroups.forEach(k => state.ydnaSelectedGroups.add(k));
             if (yPeople.some(p => !p.group)) state.ydnaSelectedGroups.add("");
+
             const mtGroups = [...new Set(mtPeople.map(p => p.group))].filter(Boolean);
             mtGroups.forEach(k => state.mtdnaSelectedGroups.add(k));
             if (mtPeople.some(p => !p.group)) state.mtdnaSelectedGroups.add("");
 
-            const urlParams = new URLSearchParams(window.location.search);
-            const view = (window.location.hash || "#map").substring(1);
+            const view = (window.location.hash || "#map").substring(1).replace(/[?&].*/, "");
+            const ygroupsStr = getQueryParam("ygroups");
+            const mgroupsStr = getQueryParam("mgroups");
+            const legacyGroupsStr = getQueryParam("groups");
 
-            if (urlParams.has("ygroups")) {
-                state.ydnaSelectedGroups = deserializeGroups(urlParams.get("ygroups"));
-                state.ydnaAllSelected = state.ydnaSelectedGroups.size === Object.keys(ydnaGroupRoots).length;
-            } else if (urlParams.has("groups") && view !== "mtdna") {
-                state.ydnaSelectedGroups = deserializeGroups(urlParams.get("groups"));
-                state.ydnaAllSelected = state.ydnaSelectedGroups.size === Object.keys(ydnaGroupRoots).length;
+            if (ygroupsStr !== null) {
+                state.ydnaSelectedGroups = deserializeGroups(ygroupsStr);
+                state.ydnaAllSelected = state.ydnaSelectedGroups.size === yGroups.length;
+            } else if (legacyGroupsStr !== null && view !== "mtdna") {
+                state.ydnaSelectedGroups = deserializeGroups(legacyGroupsStr);
+                state.ydnaAllSelected = state.ydnaSelectedGroups.size === yGroups.length;
+            } else {
+                state.ydnaAllSelected = true;
             }
 
-            if (urlParams.has("mgroups")) {
-                state.mtdnaSelectedGroups = deserializeGroups(urlParams.get("mgroups"));
+            if (mgroupsStr !== null) {
+                state.mtdnaSelectedGroups = deserializeGroups(mgroupsStr);
                 state.mtdnaAllSelected = state.mtdnaSelectedGroups.size === mtGroups.length;
-            } else if (urlParams.has("groups") && view === "mtdna") {
-                state.mtdnaSelectedGroups = deserializeGroups(urlParams.get("groups"));
+            } else if (legacyGroupsStr !== null && view === "mtdna") {
+                state.mtdnaSelectedGroups = deserializeGroups(legacyGroupsStr);
                 state.mtdnaAllSelected = state.mtdnaSelectedGroups.size === mtGroups.length;
+            } else {
+                state.mtdnaAllSelected = true;
             }
         });
     }
