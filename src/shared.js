@@ -647,35 +647,16 @@ export const eraColors = [
     { start: 1500, color: "#38a169", id: "eraModern" }
 ];
 
-function getQueryParam(param) {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has(param)) return urlParams.get(param);
-
-    const hash = window.location.hash;
-    let hashQuery = "";
-    if (hash.includes("?")) {
-        hashQuery = hash.substring(hash.indexOf("?"));
-    } else if (hash.includes("&")) {
-        hashQuery = "?" + hash.substring(hash.indexOf("&") + 1);
-    }
-
-    if (hashQuery) {
-        const hashParams = new URLSearchParams(hashQuery);
-        if (hashParams.has(param)) return hashParams.get(param);
-    }
-    return null;
-}
-
 export const state = {
     currentLang: localStorage.getItem("preferredLang") || (navigator.language && navigator.language.toLowerCase().startsWith("sl") ? "sl" : "en"),
-    showPassthrough: getQueryParam("snp") === "1",
-    showLabels: getQueryParam("lbl") === "1",
-    searchQuery: getQueryParam("q") || "",
-    startgroup: getQueryParam("startgroup") || null,
+    showPassthrough: new URLSearchParams(window.location.search).get("snp") === "1",
+    showLabels: new URLSearchParams(window.location.search).get("lbl") === "1",
+    searchQuery: new URLSearchParams(window.location.search).get("q") || "",
+    startgroup: new URLSearchParams(window.location.search).get("startgroup") || null,
     ydnaSelectedGroups: new Set(),
     mtdnaSelectedGroups: new Set(),
-    yzoom: getQueryParam("yzoom") || null,
-    mzoom: getQueryParam("mzoom") || null,
+    yzoom: new URLSearchParams(window.location.search).get("yzoom") || null,
+    mzoom: new URLSearchParams(window.location.search).get("mzoom") || null,
     ydnaAllSelected: true,
     mtdnaAllSelected: true
 };
@@ -747,11 +728,7 @@ export function updateURLState() {
         params.delete("q");
     }
 
-    let hash = window.location.hash || "#map";
-    if (hash.includes("?")) hash = hash.split("?")[0];
-    if (hash.includes("&")) hash = hash.split("&")[0];
-
-    const newUrl = window.location.pathname + "?" + params.toString().replace(/%2C/g, ",") + hash;
+    const newUrl = window.location.pathname + "?" + params.toString().replace(/%2C/g, ",") + (window.location.hash || "#map");
     window.history.replaceState(null, "", newUrl);
 }
 
@@ -891,26 +868,24 @@ export function loadData() {
             mtGroups.forEach(k => state.mtdnaSelectedGroups.add(k));
             if (mtPeople.some(p => !p.group)) state.mtdnaSelectedGroups.add("");
 
-            const view = (window.location.hash || "#map").substring(1).replace(/[?&].*/, "");
-            const ygroupsStr = getQueryParam("ygroups");
-            const mgroupsStr = getQueryParam("mgroups");
-            const legacyGroupsStr = getQueryParam("groups");
+            const urlParams = new URLSearchParams(window.location.search);
+            const view = (window.location.hash || "#map").substring(1);
 
-            if (ygroupsStr !== null) {
-                state.ydnaSelectedGroups = deserializeGroups(ygroupsStr);
+            if (urlParams.has("ygroups")) {
+                state.ydnaSelectedGroups = deserializeGroups(urlParams.get("ygroups"));
                 state.ydnaAllSelected = state.ydnaSelectedGroups.size === yGroups.length;
-            } else if (legacyGroupsStr !== null && view !== "mtdna") {
-                state.ydnaSelectedGroups = deserializeGroups(legacyGroupsStr);
+            } else if (urlParams.has("groups") && view !== "mtdna") {
+                state.ydnaSelectedGroups = deserializeGroups(urlParams.get("groups"));
                 state.ydnaAllSelected = state.ydnaSelectedGroups.size === yGroups.length;
             } else {
                 state.ydnaAllSelected = true;
             }
 
-            if (mgroupsStr !== null) {
-                state.mtdnaSelectedGroups = deserializeGroups(mgroupsStr);
+            if (urlParams.has("mgroups")) {
+                state.mtdnaSelectedGroups = deserializeGroups(urlParams.get("mgroups"));
                 state.mtdnaAllSelected = state.mtdnaSelectedGroups.size === mtGroups.length;
-            } else if (legacyGroupsStr !== null && view === "mtdna") {
-                state.mtdnaSelectedGroups = deserializeGroups(legacyGroupsStr);
+            } else if (urlParams.has("groups") && view === "mtdna") {
+                state.mtdnaSelectedGroups = deserializeGroups(urlParams.get("groups"));
                 state.mtdnaAllSelected = state.mtdnaSelectedGroups.size === mtGroups.length;
             } else {
                 state.mtdnaAllSelected = true;

@@ -421,14 +421,6 @@ function handleHashChange() {
     let hash = window.location.hash;
     if (!hash || hash === "#ymap" || hash === "#mmap") hash = "#map";
 
-    // Sanitize hash if it illegally contained query parameters
-    if (hash.includes("?")) hash = hash.split("?")[0];
-    if (hash.includes("&")) hash = hash.split("&")[0];
-
-    if (window.location.hash !== hash) {
-        window.history.replaceState(null, "", window.location.pathname + window.location.search + hash);
-    }
-
     updatePageTitle();
     document.querySelectorAll(".page-view").forEach(el => el.classList.remove("active"));
 
