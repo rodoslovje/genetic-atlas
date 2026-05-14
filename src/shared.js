@@ -355,10 +355,10 @@ export const translations = {
             "HV": "Helena Vera",
             "H": "Helena",
             "V": "Viktorija",
-            "JT": "Ivana Tereza",
-            "J": "Ivana",
+            "JT": "Josipa Tereza",
+            "J": "Josipa",
             "T": "Tereza",
-            "U": "Uršula",
+            "U": "Ursula",
             "K": "Katarina",
             "W": "Vanda",
             "X": "Ksenija"
