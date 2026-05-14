@@ -3,6 +3,15 @@ import { initYDNA, refreshYDNADisplay, ydnaInitialized, resetYDNATree } from "./
 import { initMTDNA, refreshMTDNADisplay, mtdnaInitialized, resetMTDNATree } from "./mtdna.js";
 import { mapVis } from "./map.js";
 
+const languageConfig = {
+    de: { flag: "de", text: "DE", fullText: "Deutsch (DE)" },
+    en: { flag: "gb", text: "EN", fullText: "English (EN)" },
+    hr: { flag: "hr", text: "HR", fullText: "Hrvatski (HR)" },
+    hu: { flag: "hu", text: "HU", fullText: "Magyar (HU)" },
+    it: { flag: "it", text: "IT", fullText: "Italiano (IT)" },
+    sl: { flag: "si", text: "SL", fullText: "Slovenščina (SL)" }
+};
+
 function applyTranslations() {
     document.querySelectorAll("[data-i18n]").forEach(el => {
         const key = el.getAttribute("data-i18n");
@@ -103,26 +112,21 @@ window.setLanguage = function (e, lang) {
 
 function updateLangIcon() {
     const lang = state.currentLang;
-    const imgSrc = lang === "sl" ? "https://flagcdn.com/w20/si.png"
-        : lang === "it" ? "https://flagcdn.com/w20/it.png"
-        : "https://flagcdn.com/w20/gb.png";
-    const textVal = lang === "sl" ? "SL" : lang === "it" ? "IT" : "EN";
-    const fullTextVal = lang === "sl" ? "Slovenščina (SL)"
-        : lang === "it" ? "Italiano (IT)"
-        : "English (EN)";
+    const config = languageConfig[lang] || languageConfig["en"];
+    const imgSrc = `https://flagcdn.com/w20/${config.flag}.png`;
 
     const flag = document.getElementById("lang-btn-flag");
     const text = document.getElementById("lang-btn-text");
     if (flag && text) {
         flag.src = imgSrc;
-        text.innerText = textVal;
+        text.innerText = config.text;
     }
 
     const flagSidebar = document.getElementById("lang-btn-flag-sidebar");
     const textSidebar = document.getElementById("lang-btn-text-sidebar");
     if (flagSidebar && textSidebar) {
         flagSidebar.src = imgSrc;
-        textSidebar.innerText = fullTextVal;
+        textSidebar.innerText = config.fullText;
     }
 }
 
@@ -492,6 +496,26 @@ function handleHashChange() {
 
 window.addEventListener("hashchange", handleHashChange);
 
+function renderLanguageMenus() {
+    const menus = [document.getElementById("lang-menu"), document.getElementById("lang-menu-sidebar")];
+
+    const sortedLangs = Object.entries(languageConfig)
+        .map(([code, config]) => ({ code, ...config }))
+        .sort((a, b) => a.fullText.localeCompare(b.fullText));
+
+    menus.forEach(menu => {
+        if (!menu) return;
+        menu.innerHTML = "";
+        sortedLangs.forEach(lang => {
+            const a = document.createElement("a");
+            a.href = "#";
+            a.onclick = (e) => setLanguage(e, lang.code);
+            a.innerHTML = `<img src="https://flagcdn.com/w20/${lang.flag}.png" alt="${lang.text}"> ${lang.fullText}`;
+            menu.appendChild(a);
+        });
+    });
+}
+
 function initApp() {
     if (window.innerWidth <= 768) {
         const sidebar = document.getElementById("sidebar");
@@ -502,6 +526,7 @@ function initApp() {
         window.location.hash = "#map";
     }
 
+    renderLanguageMenus();
     updateLangIcon();
 
     const chkPassthrough = document.getElementById("chk-passthrough");
