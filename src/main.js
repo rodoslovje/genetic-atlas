@@ -550,6 +550,41 @@ function initApp() {
         });
     }
 
+    const chkShowAllMajor = document.getElementById("chk-show-all-major");
+    if (chkShowAllMajor) {
+        chkShowAllMajor.checked = state.showAllMajorGroups;
+        chkShowAllMajor.addEventListener("change", (e) => {
+            state.showAllMajorGroups = e.target.checked;
+            updateURLState();
+
+            if (state.ydnaAllSelected) {
+                if (state.showAllMajorGroups) {
+                    Object.keys(ydnaGroupRoots).forEach(k => state.ydnaSelectedGroups.add(k));
+                } else {
+                    const validYGroups = new Set(ydnaPeopleData.map(p => p.group));
+                    for (let k of state.ydnaSelectedGroups) {
+                        if (k !== "" && !validYGroups.has(k)) state.ydnaSelectedGroups.delete(k);
+                    }
+                }
+            }
+            if (state.mtdnaAllSelected) {
+                if (state.showAllMajorGroups) {
+                    Object.keys(mtdnaGroupRoots).forEach(k => state.mtdnaSelectedGroups.add(k));
+                } else {
+                    const validMtGroups = new Set(mtdnaPeopleData.map(p => p.group));
+                    for (let k of state.mtdnaSelectedGroups) {
+                        if (k !== "" && !validMtGroups.has(k)) state.mtdnaSelectedGroups.delete(k);
+                    }
+                }
+            }
+
+            initFilters();
+            const view = (window.location.hash || "#map").substring(1);
+            if (view === "ydna") refreshYDNADisplay();
+            else if (view === "mtdna") refreshMTDNADisplay();
+        });
+    }
+
     let searchTimeout;
     const searchInput = document.getElementById("search-input");
     const searchClear = document.getElementById("search-clear");

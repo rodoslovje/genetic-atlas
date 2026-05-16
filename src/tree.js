@@ -87,7 +87,10 @@ export class TreeVisualizer {
 
         this.peopleData = peopleData;
 
-        const allRoots = new Set(Object.values(groupRootsMap));
+        const allRoots = new Set();
+        if (state.showAllMajorGroups) {
+            Object.values(groupRootsMap).forEach(hg => allRoots.add(hg));
+        }
         peopleData.forEach(p => {
             if (p.group) allRoots.add(groupRootsMap[p.group] || p.group);
         });
@@ -175,7 +178,7 @@ export class TreeVisualizer {
             const hasNote = node.note && node.note.trim() !== "" && node.note !== t("notePathMissing");
 
             const isMtDnaExplicitNote = !this.isSquare && hasNote && !["L'AA'AB", "L'AA", "L"].includes(node.haplogroup);
-            const keepIfEmpty = isGroupRoot || isMtDnaExplicitNote;
+            const keepIfEmpty = isGroupRoot || (state.showAllMajorGroups && isMtDnaExplicitNote);
 
             if (!node.children || node.children.length === 0) {
                 return node.isPerson || keepIfEmpty ? node : null;

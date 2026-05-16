@@ -46,6 +46,7 @@ export const translations = {
         searchMatches: "Found: {0}",
         selectionCount: "Shown: {0} of {1}",
         showLabels: "Show labels",
+        showAllMajorGroups: "Show all major lineages",
         ungrouped: "Ungrouped",
         resetView: "Reset View",
         versionLabel: "Version: {0}",
@@ -198,6 +199,7 @@ export const translations = {
         searchMatches: "Najdeno: {0}",
         selectionCount: "Prikazano: {0} od {1}",
         showLabels: "Prikaži oznake",
+        showAllMajorGroups: "Prikaži vse glavne linije",
         ungrouped: "Nerazvrščeni",
         resetView: "Ponastavi pogled",
         versionLabel: "Različica: {0}",
@@ -350,6 +352,7 @@ export const translations = {
         searchMatches: "Trovati: {0}",
         selectionCount: "Mostrati: {0} di {1}",
         showLabels: "Mostra etichette",
+        showAllMajorGroups: "Mostra tutti i principali lignaggi",
         ungrouped: "Non raggruppati",
         resetView: "Ripristina vista",
         versionLabel: "Versione: {0}",
@@ -502,6 +505,7 @@ export const translations = {
         searchMatches: "Gefunden: {0}",
         selectionCount: "Angezeigt: {0} von {1}",
         showLabels: "Beschriftungen anzeigen",
+        showAllMajorGroups: "Alle Hauptlinien anzeigen",
         ungrouped: "Nicht gruppiert",
         resetView: "Ansicht zurücksetzen",
         versionLabel: "Version: {0}",
@@ -654,6 +658,7 @@ export const translations = {
         searchMatches: "Pronađeno: {0}",
         selectionCount: "Prikazano: {0} od {1}",
         showLabels: "Prikaži oznake",
+        showAllMajorGroups: "Prikaži sve glavne linije",
         ungrouped: "Negrupirano",
         resetView: "Poništi prikaz",
         versionLabel: "Verzija: {0}",
@@ -806,6 +811,7 @@ export const translations = {
         searchMatches: "Találatok: {0}",
         selectionCount: "Megjelenítve: {0} / {1}",
         showLabels: "Címkék megjelenítése",
+        showAllMajorGroups: "Minden fő vonal megjelenítése",
         ungrouped: "Nem csoportosított",
         resetView: "Nézet visszaállítása",
         versionLabel: "Verzió: {0}",
@@ -1031,6 +1037,7 @@ export const state = {
     currentLang: localStorage.getItem("preferredLang") || (navigator.language && navigator.language.toLowerCase().startsWith("sl") ? "sl" : "en"),
     showPassthrough: new URLSearchParams(window.location.search).get("snp") === "1",
     showLabels: new URLSearchParams(window.location.search).get("lbl") === "1",
+    showAllMajorGroups: new URLSearchParams(window.location.search).get("linea") === "1",
     searchQuery: new URLSearchParams(window.location.search).get("q") || "",
     startgroup: new URLSearchParams(window.location.search).get("startgroup") || null,
     ydnaSelectedGroups: new Set(),
@@ -1101,6 +1108,11 @@ export function updateURLState() {
         params.set("lbl", "1");
     } else {
         params.delete("lbl");
+    }
+    if (state.showAllMajorGroups) {
+        params.set("linea", "1");
+    } else {
+        params.delete("linea");
     }
     if (state.searchQuery) {
         params.set("q", state.searchQuery);
