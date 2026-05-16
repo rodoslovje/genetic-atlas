@@ -17,8 +17,11 @@ export class TreeVisualizer {
     constructor(containerSelector, isSquare = false) {
         this.containerSelector = containerSelector;
         this.isSquare = isSquare;
-        this.svg = d3.select(containerSelector).append("svg").attr("width", "100%").attr("height", "100%");
+        const container = d3.select(containerSelector);
+        this.svg = container.append("svg").attr("width", "100%").attr("height", "100%");
         this.g = this.svg.append("g");
+        this.minimap = container.append("div").attr("class", "tree-minimap");
+        this.minimapSvg = this.minimap.append("svg");
         this.zoom = d3.zoom()
             .scaleExtent([0.05, 5])
             .constrain((transform, extent, translateExtent) => {
@@ -31,7 +34,10 @@ export class TreeVisualizer {
                     dy1 > dy0 ? dy0 : Math.min(0, dy0) || Math.max(0, dy1)
                 );
             })
-            .on("zoom", (e) => this.g.attr("transform", e.transform));
+            .on("zoom", (e) => {
+                this.g.attr("transform", e.transform);
+                this._updateMinimapViewport();
+            });
         this.svg.call(this.zoom);
         this.tooltip = d3.select("body").select(".tooltip");
         if (this.tooltip.empty()) {
@@ -546,5 +552,67 @@ export class TreeVisualizer {
             [-padding, -padding],
             [treeW + padding, treeH + padding]
         ]);
+
+        this._renderMinimap(nodes, links, treeW, treeH);
+    }
+
+    _renderMinimap(nodes, links, treeW, treeH) {
+        const mmNode = this.minimap.node();
+        const contentH = mmNode.clientHeight - 8; // 4px padding top+bottom
+        if (contentH > 0 && treeH > 0) {
+            const contentW = contentH * (treeW / treeH);
+            this.minimap.style("width", `${contentW + 10}px`); // padding + border
+        }
+
+        const mm = this.minimapSvg;
+        mm.selectAll("*").remove();
+        mm.attr("viewBox", `0 0 ${treeW} ${treeH}`)
+            .attr("preserveAspectRatio", "xMidYMid meet");
+
+        mm.selectAll("line.mm-link").data(links).enter().append("line")
+            .attr("x1", d => d.source.y).attr("y1", d => d.source.x)
+            .attr("x2", d => d.target.y).attr("y2", d => d.target.x)
+            .attr("stroke", "#cbd5e0")
+            .attr("stroke-width", 1)
+            .attr("vector-effect", "non-scaling-stroke");
+
+        mm.append("rect")
+            .attr("x", 0).attr("y", 0)
+            .attr("width", treeW).attr("height", treeH)
+            .attr("fill", "none")
+            .attr("stroke", "#94a3b8")
+            .attr("stroke-width", 1)
+            .attr("vector-effect", "non-scaling-stroke");
+
+        mm.append("rect").attr("class", "minimap-viewport")
+            .attr("fill", "rgba(49, 130, 206, 0.18)")
+            .attr("stroke", "#3182ce")
+            .attr("stroke-width", 1.5)
+            .attr("vector-effect", "non-scaling-stroke")
+            .attr("pointer-events", "none");
+
+        this._minimapTreeBounds = { treeW, treeH };
+        this._updateMinimapViewport();
+    }
+
+    _updateMinimapViewport() {
+        if (!this._minimapTreeBounds || !this.minimapSvg) return;
+        const svgNode = this.svg.node();
+        if (!svgNode) return;
+        const cw = svgNode.clientWidth;
+        const ch = svgNode.clientHeight;
+        if (!cw || !ch) return;
+        const { treeW, treeH } = this._minimapTreeBounds;
+        const t = d3.zoomTransform(svgNode);
+        const left = Math.max(0, -t.x / t.k);
+        const top = Math.max(0, -t.y / t.k);
+        const right = Math.min(treeW, (cw - t.x) / t.k);
+        const bottom = Math.min(treeH, (ch - t.y) / t.k);
+        const width = Math.max(0, right - left);
+        const height = Math.max(0, bottom - top);
+
+        this.minimapSvg.select(".minimap-viewport")
+            .attr("x", left).attr("y", top)
+            .attr("width", width).attr("height", height);
     }
 }
