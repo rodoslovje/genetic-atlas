@@ -93,11 +93,29 @@ export class TreeVisualizer {
         });
 
         const getCustomNote = (hg, defaultNote) => {
-            if (!this.isSquare && translations[state.currentLang].mtdnaNotes && translations[state.currentLang].mtdnaNotes[hg]) {
-                return translations[state.currentLang].mtdnaNotes[hg];
+            const groupKey = Object.keys(groupRootsMap).find(k => groupRootsMap[k] === hg);
+            let customNote = null;
+
+            if (!this.isSquare && translations[state.currentLang].mtdnaNotes) {
+                if (translations[state.currentLang].mtdnaNotes[hg]) {
+                    customNote = translations[state.currentLang].mtdnaNotes[hg];
+                } else if (groupKey && translations[state.currentLang].mtdnaNotes[groupKey]) {
+                    customNote = translations[state.currentLang].mtdnaNotes[groupKey];
+                }
             }
-            if (this.isSquare && translations[state.currentLang].ydnaNotes && translations[state.currentLang].ydnaNotes[hg]) {
-                return translations[state.currentLang].ydnaNotes[hg];
+            if (this.isSquare && translations[state.currentLang].ydnaNotes) {
+                if (translations[state.currentLang].ydnaNotes[hg]) {
+                    customNote = translations[state.currentLang].ydnaNotes[hg];
+                } else if (groupKey && translations[state.currentLang].ydnaNotes[groupKey]) {
+                    customNote = translations[state.currentLang].ydnaNotes[groupKey];
+                }
+            }
+
+            if (customNote) {
+                if (groupKey && groupKey !== hg) {
+                    return `${customNote} - ${groupKey}`;
+                }
+                return customNote;
             }
             return defaultNote;
         };
@@ -236,69 +254,94 @@ export class TreeVisualizer {
         this.root = newRoot;
 
         let zoomTargetNode = null;
-        if (state.searchQuery) {
-            zoomTargetNode = allNodes.find((d) => d.data.isPerson);
-        }
-
         let currentZoomGroup = this.isSquare ? state.yzoom : state.mzoom;
 
-        if (!zoomTargetNode) {
+        if (state.searchQuery) {
+            zoomTargetNode = allNodes.find((d) => d.data.isSearchMatch);
+
+            const markMatches = (node) => {
+                let hasMatch = !!node.data.isSearchMatch;
+                const kids = node.children || node._children;
+                if (kids) {
+                    kids.forEach(c => {
+                        if (markMatches(c)) hasMatch = true;
+                    });
+                }
+                node.hasMatch = hasMatch;
+                return hasMatch;
+            };
+            markMatches(newRoot);
+
+            allNodes.forEach(d => {
+                if (d.hasMatch) {
+                    if (d._children) {
+                        d.children = d._children;
+                        d._children = null;
+                    }
+                } else {
+                    if (d.children) {
+                        d._children = d.children;
+                        d.children = null;
+                    }
+                }
+            });
+        } else {
             if (currentZoomGroup) {
                 const hg = groupRootsMap[currentZoomGroup] || currentZoomGroup;
                 zoomTargetNode = allNodes.find((d) => d.data.haplogroup === hg);
             }
-        }
 
-        // Expand ancestors of the target node to ensure it is visible for zooming
-        if (zoomTargetNode) {
-            let curr = zoomTargetNode.parent;
-            while (curr) {
-                if (curr._children) {
-                    curr.children = curr._children;
-                    curr._children = null;
+            // Expand ancestors of the target node to ensure it is visible for zooming
+            if (zoomTargetNode) {
+                let curr = zoomTargetNode.parent;
+                while (curr) {
+                    if (curr._children) {
+                        curr.children = curr._children;
+                        curr._children = null;
+                    }
+                    curr = curr.parent;
                 }
-                curr = curr.parent;
-            }
 
-            if (!state.searchQuery && currentZoomGroup) {
-                const hg = groupRootsMap[currentZoomGroup] || currentZoomGroup;
-                if (zoomTargetNode.data.haplogroup === hg) {
-                    if (selectedGroups.has(currentZoomGroup)) {
-                        if (zoomTargetNode._children) {
-                            zoomTargetNode.children = zoomTargetNode._children;
-                            zoomTargetNode._children = null;
-                        }
-                    } else {
-                        if (zoomTargetNode.children) {
-                            zoomTargetNode._children = zoomTargetNode.children;
-                            zoomTargetNode.children = null;
+                if (currentZoomGroup) {
+                    const hg = groupRootsMap[currentZoomGroup] || currentZoomGroup;
+                    if (zoomTargetNode.data.haplogroup === hg) {
+                        if (selectedGroups.has(currentZoomGroup)) {
+                            if (zoomTargetNode._children) {
+                                zoomTargetNode.children = zoomTargetNode._children;
+                                zoomTargetNode._children = null;
+                            }
+                        } else {
+                            if (zoomTargetNode.children) {
+                                zoomTargetNode._children = zoomTargetNode.children;
+                                zoomTargetNode.children = null;
+                            }
                         }
                     }
                 }
             }
-        }
 
-        // Ensure all selected groups remain visible and expanded, preventing nested hides
-        const nodeByHg = new Map();
-        allNodes.forEach(d => nodeByHg.set(d.data.haplogroup, d));
+            // Ensure all selected groups remain visible and expanded, preventing nested hides
+            const nodeByHg = new Map();
+            allNodes.forEach(d => nodeByHg.set(d.data.haplogroup, d));
 
-        const groups = [...new Set(peopleData.map((p) => p.group))].filter(Boolean);
-        groups.forEach((groupName) => {
-            if (selectedGroups.has(groupName)) {
-                const targetRoot = groupRootsMap[groupName] || groupName;
-                const target = nodeByHg.get(targetRoot);
-                if (target) {
-                    let curr = target;
-                    while (curr) {
-                        if (curr._children) {
-                            curr.children = curr._children;
-                            curr._children = null;
+            const groups = [...new Set(peopleData.map((p) => p.group))].filter(Boolean);
+            groups.forEach((groupName) => {
+                if (selectedGroups.has(groupName)) {
+                    const targetRoot = groupRootsMap[groupName] || groupName;
+                    const target = nodeByHg.get(targetRoot);
+                    if (target) {
+                        let curr = target;
+                        while (curr) {
+                            if (curr._children) {
+                                curr.children = curr._children;
+                                curr._children = null;
+                            }
+                            curr = curr.parent;
                         }
-                        curr = curr.parent;
                     }
                 }
-            }
-        });
+            });
+        }
 
         this.update(this.root, allRoots, groupRootsMap);
 
