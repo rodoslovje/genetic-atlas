@@ -22,6 +22,30 @@ export class TreeVisualizer {
         this.g = this.svg.append("g");
         this.minimap = container.append("div").attr("class", "tree-minimap");
         this.minimapSvg = this.minimap.append("svg");
+
+        const goToPoint = (event) => {
+            if (!this._minimapTreeBounds) return;
+            const src = event.sourceEvent || event;
+            const mmRect = this.minimapSvg.node().getBoundingClientRect();
+            const { treeW, treeH } = this._minimapTreeBounds;
+            const sx = mmRect.width / treeW;
+            const sy = mmRect.height / treeH;
+            const mmScale = Math.min(sx, sy);
+            const offX = (mmRect.width - treeW * mmScale) / 2;
+            const offY = (mmRect.height - treeH * mmScale) / 2;
+            const treeX = (src.clientX - mmRect.left - offX) / mmScale;
+            const treeY = (src.clientY - mmRect.top - offY) / mmScale;
+
+            const svgNode = this.svg.node();
+            const cw = svgNode.clientWidth;
+            const ch = svgNode.clientHeight;
+            const t = d3.zoomTransform(svgNode);
+            const newTx = cw / 2 - t.k * treeX;
+            const newTy = ch / 2 - t.k * treeY;
+            this.svg.call(this.zoom.transform, d3.zoomIdentity.translate(newTx, newTy).scale(t.k));
+        };
+
+        this.minimapSvg.call(d3.drag().on("start", goToPoint).on("drag", goToPoint));
         this.zoom = d3.zoom()
             .scaleExtent([0.05, 5])
             .constrain((transform, extent, translateExtent) => {
@@ -553,10 +577,10 @@ export class TreeVisualizer {
             [treeW + padding, treeH + padding]
         ]);
 
-        this._renderMinimap(nodes, links, treeW, treeH);
+        this._renderMinimap(nodes, links, treeW, treeH, getGroupKey);
     }
 
-    _renderMinimap(nodes, links, treeW, treeH) {
+    _renderMinimap(nodes, links, treeW, treeH, getGroupKey) {
         const mmNode = this.minimap.node();
         const contentH = mmNode.clientHeight - 8; // 4px padding top+bottom
         if (contentH > 0 && treeH > 0) {
@@ -583,6 +607,14 @@ export class TreeVisualizer {
             .attr("stroke", "#94a3b8")
             .attr("stroke-width", 1)
             .attr("vector-effect", "non-scaling-stroke");
+
+        const scale = contentH > 0 && treeH > 0 ? contentH / treeH : 1;
+        const dotR = 3.5 / scale;
+        const majorNodes = nodes.filter(d => !d.data.isPerson && getGroupKey(d.data.haplogroup));
+        mm.selectAll("circle.mm-node").data(majorNodes).enter().append("circle")
+            .attr("cx", d => d.y).attr("cy", d => d.x)
+            .attr("r", dotR)
+            .attr("fill", d => getHaploColor(getGroupKey(d.data.haplogroup)));
 
         mm.append("rect").attr("class", "minimap-viewport")
             .attr("fill", "rgba(49, 130, 206, 0.18)")
