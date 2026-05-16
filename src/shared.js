@@ -54,8 +54,8 @@ export const translations = {
         attributionHtml: "Source: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> and <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a> project.",
         yearsAgo: "{0} years ago",
         mtdnaNotes: {
-            "L'AA'AB": "Denisovan evolution - common ancestor of Denisovans and modern humans",
-            "L'AA": "Neanderthal evolution - common ancestor of Neanderthals and modern humans",
+            "L'AA'AB": "Denisovan divergence - common ancestor of Denisovans and modern humans",
+            "L'AA": "Neanderthal divergence - common ancestor of Neanderthals and modern humans",
             "E": "Elizabeth the Islander",
             "E1": "Emma the Polynesian",
             "E2": "Erica the Taiwanese",
@@ -148,8 +148,8 @@ export const translations = {
             "Z2": "Zita the Eastern"
         },
         ydnaNotes: {
-            "A0000": "Denisovan evolution - common ancestor of Denisovans and modern humans",
-            "A000-T": "Neanderthal evolution - common ancestor of Neanderthals and modern humans",
+            "A0000": "Denisovan divergence - common ancestor of Denisovans and modern humans",
+            "A000-T": "Neanderthal divergence - common ancestor of Neanderthals and modern humans",
             "A-PR2921": "Adam - genetic forefather of all humans",
             "A-M91": "Anthony the African",
             "A-L1086": "Albert the Ancient",
@@ -281,8 +281,8 @@ export const translations = {
         attributionHtml: "Vir: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> in projekt <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovensko poreklo</a>.",
         yearsAgo: "pred {0} leti",
         mtdnaNotes: {
-            "L'AA'AB": "Denisovski razvoj - skupna prednica denisovskega in sodobnega človeka",
-            "L'AA": "Neandertalski razvoj - skupna prednica neandertalskega in sodobnega človeka",
+            "L'AA'AB": "Denisovski razcep - skupna prednica denisovskega in sodobnega človeka",
+            "L'AA": "Neandertalski razcep - skupna prednica neandertalskega in sodobnega človeka",
             "E": "Elizabeta Otoška",
             "E1": "Ema Polinezijska",
             "E2": "Erika Tajvanska",
@@ -375,8 +375,8 @@ export const translations = {
             "Z2": "Zita Vzhodna"
         },
         ydnaNotes: {
-            "A0000": "Denisovski razvoj - skupni prednik denisovskega in sodobnega človeka",
-            "A000-T": "Neandertalski razvoj - skupni prednik neandertalskega in sodobnega človeka",
+            "A0000": "Denisovski razcep - skupni prednik denisovskega in sodobnega človeka",
+            "A000-T": "Neandertalski razcep - skupni prednik neandertalskega in sodobnega človeka",
             "A-PR2921": "Adam - genetski praoče vseh ljudi",
             "A-M91": "Anton Afriški",
             "A-L1086": "Albert Starodavni",
@@ -508,8 +508,8 @@ export const translations = {
         attributionHtml: "Fonte: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> e progetto <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a>.",
         yearsAgo: "{0} anni fa",
         mtdnaNotes: {
-            "L'AA'AB": "Evoluzione denisoviana - antenato comune dell'uomo di Denisova e dell'uomo moderno",
-            "L'AA": "Evoluzione di Neanderthal - antenato comune dell'uomo di Neanderthal e dell'uomo moderno",
+            "L'AA'AB": "Divergenza denisoviana - antenato comune dell'uomo di Denisova e dell'uomo moderno",
+            "L'AA": "Divergenza di Neanderthal - antenato comune dell'uomo di Neanderthal e dell'uomo moderno",
             "E": "Elisabetta l'Isolana",
             "E1": "Emma la Polinesiana",
             "E2": "Erica la Taiwanese",
@@ -602,8 +602,8 @@ export const translations = {
             "Z2": "Zita l'Orientale"
         },
         ydnaNotes: {
-            "A0000": "Evoluzione denisoviana - antenato comune dell'uomo di Denisova e dell'uomo moderno",
-            "A000-T": "Evoluzione di Neanderthal - antenato comune dell'uomo di Neanderthal e dell'uomo moderno",
+            "A0000": "Divergenza denisoviana - antenato comune dell'uomo di Denisova e dell'uomo moderno",
+            "A000-T": "Divergenza di Neanderthal - antenato comune dell'uomo di Neanderthal e dell'uomo moderno",
             "A-PR2921": "Adamo - antenato genetico di tutti gli esseri umani",
             "A-M91": "Antonio l'Africano",
             "A-L1086": "Alberto l'Antico",
@@ -735,8 +735,8 @@ export const translations = {
         attributionHtml: "Quelle: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> und <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a> Projekt.",
         yearsAgo: "vor {0} Jahren",
         mtdnaNotes: {
-            "L'AA'AB": "Denisova-Entwicklung - gemeinsamer Vorfahre von Denisova-Menschen und modernen Menschen",
-            "L'AA": "Neandertaler-Entwicklung - gemeinsamer Vorfahre von Neandertalern und modernen Menschen",
+            "L'AA'AB": "Denisova-Divergenz - gemeinsamer Vorfahre von Denisova-Menschen und modernen Menschen",
+            "L'AA": "Neandertaler-Divergenz - gemeinsamer Vorfahre von Neandertalern und modernen Menschen",
             "E": "Elisabeth die Inselbewohnerin",
             "E1": "Emma die Polynesierin",
             "E2": "Erika die Taiwanesin",
@@ -829,8 +829,8 @@ export const translations = {
             "Z2": "Zita die Östliche"
         },
         ydnaNotes: {
-            "A0000": "Denisova-Entwicklung - gemeinsamer Vorfahre von Denisova-Menschen und modernen Menschen",
-            "A000-T": "Neandertaler-Entwicklung - gemeinsamer Vorfahre von Neandertalern und modernen Menschen",
+            "A0000": "Denisova-Divergenz - gemeinsamer Vorfahre von Denisova-Menschen und modernen Menschen",
+            "A000-T": "Neandertaler-Divergenz - gemeinsamer Vorfahre von Neandertalern und modernen Menschen",
             "A-PR2921": "Adam - genetischer Urvater aller Menschen",
             "A-M91": "Anton der Afrikaner",
             "A-L1086": "Albert der Uralte",
@@ -962,8 +962,8 @@ export const translations = {
         attributionHtml: "Izvor: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> i projekt <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a>.",
         yearsAgo: "prije {0} godina",
         mtdnaNotes: {
-            "L'AA'AB": "Denisovski razvoj - zajednički predak denisovskog i modernog čovjeka",
-            "L'AA": "Neandertalski razvoj - zajednički predak neandertalskog i modernog čovjeka",
+            "L'AA'AB": "Denisovska divergencija - zajednički predak denisovskog i modernog čovjeka",
+            "L'AA": "Neandertalska divergencija - zajednički predak neandertalskog i modernog čovjeka",
             "E": "Elizabeta Otočna",
             "E1": "Ema Polinezijska",
             "E2": "Erika Tajvanska",
@@ -1056,8 +1056,8 @@ export const translations = {
             "Z2": "Zita Istočna"
         },
         ydnaNotes: {
-            "A0000": "Denisovski razvoj - zajednički predak denisovskog i modernog čovjeka",
-            "A000-T": "Neandertalski razvoj - zajednički predak neandertalskog i modernog čovjeka",
+            "A0000": "Denisovska divergencija - zajednički predak denisovskog i modernog čovjeka",
+            "A000-T": "Neandertalska divergencija - zajednički predak neandertalskog i modernog čovjeka",
             "A-PR2921": "Adam - genetski praotac svih ljudi",
             "A-M91": "Antun Afrički",
             "A-L1086": "Albert Drevni",
@@ -1189,8 +1189,8 @@ export const translations = {
         attributionHtml: "Forrás: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> és <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a> projekt.",
         yearsAgo: "{0} évvel ezelőtt",
         mtdnaNotes: {
-            "L'AA'AB": "Gyenyiszovai fejlődés - a gyenyiszovaiak és a modern ember közös őse",
-            "L'AA": "Neandervölgyi fejlődés - a neandervölgyiek és a modern ember közös őse",
+            "L'AA'AB": "Gyenyiszovai divergencia - a gyenyiszovaiak és a modern ember közös őse",
+            "L'AA": "Neandervölgyi divergencia - a neandervölgyiek és a modern ember közös őse",
             "E": "Erzsébet a Szigetlakó",
             "E1": "Emma a Polinéz",
             "E2": "Erika a Tajvani",
@@ -1283,8 +1283,8 @@ export const translations = {
             "Z2": "Zita a Keleti"
         },
         ydnaNotes: {
-            "A0000": "Gyenyiszovai fejlődés - a gyenyiszovaiak és a modern ember közös őse",
-            "A000-T": "Neandervölgyi fejlődés - a neandervölgyiek és a modern ember közös őse",
+            "A0000": "Gyenyiszovai divergencia - a gyenyiszovaiak és a modern ember közös őse",
+            "A000-T": "Neandervölgyi divergencia - a neandervölgyiek és a modern ember közös őse",
             "A-PR2921": "Ádám - minden ember genetikai ősapja",
             "A-M91": "Antal az Afrikai",
             "A-L1086": "Albert az Ősi",
