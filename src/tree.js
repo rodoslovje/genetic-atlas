@@ -307,7 +307,13 @@ export class TreeVisualizer {
         let index = -1;
         this.root.eachBefore((n) => {
             n.x = ++index * NODE_ROW_HEIGHT;
-            n.y = n.depth * NODE_DEPTH_WIDTH;
+            if (!n.parent) {
+                n.column = 0;
+            } else {
+                const parentBranches = n.parent.children && n.parent.children.length > 1;
+                n.column = parentBranches ? n.parent.column + 1 : n.parent.column;
+            }
+            n.y = n.column * NODE_DEPTH_WIDTH;
         });
 
         const node = this.g.selectAll(".node").data(nodes, (d) => d.data.id);
@@ -490,16 +496,23 @@ export class TreeVisualizer {
             return color;
         };
 
+        const getLinkPath = (d) => {
+            if (d.source.y === d.target.y) {
+                return `M${d.source.y},${d.source.x} V${d.target.x}`;
+            }
+            return `M${d.source.y},${d.source.x} V${d.target.x - 12} Q${d.source.y},${d.target.x} ${d.source.y + 12},${d.target.x} H${d.target.y}`;
+        };
+
         const linkEnter = link.enter().insert("path", "g").attr("class", "link")
             .style("stroke", getLinkColor)
             .style("stroke-width", "2.5px")
             .style("opacity", 0)
-            .attr("d", (d) => `M${d.source.y},${d.source.x} V${d.target.x - 12} Q${d.source.y},${d.target.x} ${d.source.y + 12},${d.target.x} H${d.target.y}`);
+            .attr("d", getLinkPath);
 
         linkEnter.merge(link).transition().duration(TRANSITION_DURATION)
             .style("stroke", getLinkColor)
             .style("opacity", 0.8)
-            .attr("d", (d) => `M${d.source.y},${d.source.x} V${d.target.x - 12} Q${d.source.y},${d.target.x} ${d.source.y + 12},${d.target.x} H${d.target.y}`);
+            .attr("d", getLinkPath);
 
         link.exit().transition().duration(TRANSITION_DURATION)
             .style("opacity", 0)
