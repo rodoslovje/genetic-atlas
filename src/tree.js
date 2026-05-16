@@ -583,9 +583,12 @@ export class TreeVisualizer {
     _renderMinimap(nodes, links, treeW, treeH, getGroupKey) {
         const mmNode = this.minimap.node();
         const contentH = mmNode.clientHeight - 8; // 4px padding top+bottom
+        let scale = 1;
         if (contentH > 0 && treeH > 0) {
-            const contentW = contentH * (treeW / treeH);
+            let contentW = contentH * (treeW / treeH);
+            if (contentW > 150) contentW = 150;
             this.minimap.style("width", `${contentW + 10}px`); // padding + border
+            scale = Math.min(contentW / treeW, contentH / treeH);
         }
 
         const mm = this.minimapSvg;
@@ -608,7 +611,6 @@ export class TreeVisualizer {
             .attr("stroke-width", 1)
             .attr("vector-effect", "non-scaling-stroke");
 
-        const scale = contentH > 0 && treeH > 0 ? contentH / treeH : 1;
         const dotR = 3.5 / scale;
         const majorNodes = nodes.filter(d => !d.data.isPerson && getGroupKey(d.data.haplogroup));
         mm.selectAll("circle.mm-node").data(majorNodes).enter().append("circle")
