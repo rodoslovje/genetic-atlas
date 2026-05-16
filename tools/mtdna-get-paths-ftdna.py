@@ -42,9 +42,15 @@ def main():
     # Ensure all major mtDNA haplogroup roots are always included
     major_roots = [
         "A",
+        "A2",
         "B",
+        "B2",
+        "B4",
         "C",
+        "C1",
         "D",
+        "D1",
+        "D4",
         "E",
         "E1",
         "E2",

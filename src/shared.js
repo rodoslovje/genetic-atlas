@@ -56,6 +56,16 @@ export const translations = {
         mtdnaNotes: {
             "L'AA'AB": "Denisovan divergence - common ancestor of Denisovans and modern humans",
             "L'AA": "Neanderthal divergence - common ancestor of Neanderthals and modern humans",
+            "A": "Anna the Asian",
+            "A2": "Anna the Native American",
+            "B": "Barbara the Pacific",
+            "B2": "Barbara the Native American",
+            "B4": "Barbara the Asian",
+            "C": "Cecilia the Siberian",
+            "C1": "Cecilia the Native American",
+            "D": "Daria the East Asian",
+            "D1": "Daria the Native American",
+            "D4": "Daria the Siberian",
             "E": "Elizabeth the Islander",
             "E1": "Emma the Polynesian",
             "E2": "Erica the Taiwanese",
@@ -173,7 +183,7 @@ export const translations = {
             "E-M2": "Erasmus the Sub-Saharan",
             "E-M215": "Emanuel the Mediterranean",
             "E-V13": "Emil the Balkan",
-            "F-M89": "Francis the Patriarch",
+            "F-M89": "Francis the First Settler",
             "F-F15527": "Philip the Eastern",
             "F-M427": "Florian the Asian",
             "F-M481": "Felix the Southern",
@@ -222,7 +232,7 @@ export const translations = {
             "R-M479": "Raj the Indian",
             "S-B254": "Simon the Oceanian",
             "S-B255": "Samuel the Highlander",
-            "S-P378": "Sebastian the Islander",
+            "S-P378": "Sebastian the Celtic",
             "T-M184": "Thomas the Phoenician"
         }
     },
@@ -283,6 +293,16 @@ export const translations = {
         mtdnaNotes: {
             "L'AA'AB": "Denisovski razcep - skupna prednica denisovskega in sodobnega človeka",
             "L'AA": "Neandertalski razcep - skupna prednica neandertalskega in sodobnega človeka",
+            "A": "Ana Azijska",
+            "A2": "Ana Ameriška",
+            "B": "Barbara Pacifiška",
+            "B2": "Barbara Ameriška",
+            "B4": "Barbara Azijska",
+            "C": "Cilka Sibirska",
+            "C1": "Cilka Ameriška",
+            "D": "Darja Vzhodnoazijska",
+            "D1": "Darja Ameriška",
+            "D4": "Darja Sibirska",
             "E": "Elizabeta Otoška",
             "E1": "Ema Polinezijska",
             "E2": "Erika Tajvanska",
@@ -400,7 +420,7 @@ export const translations = {
             "E-M2": "Erazem Podsaharski",
             "E-M215": "Emanuel Sredozemski",
             "E-V13": "Emil Balkanski",
-            "F-M89": "Frančišek Patriarh",
+            "F-M89": "Frančišek Prvoselec",
             "F-F15527": "Filip Vzhodni",
             "F-M427": "Florijan Azijski",
             "F-M481": "Feliks Južni",
@@ -449,7 +469,7 @@ export const translations = {
             "R-M479": "Radž Indijski",
             "S-B254": "Simon Oceanijski",
             "S-B255": "Samo Višinski",
-            "S-P378": "Sebastijan Otoški",
+            "S-P378": "Sebastijan Keltski",
             "T-M184": "Tomaž Feničanski"
         }
     },
@@ -510,6 +530,16 @@ export const translations = {
         mtdnaNotes: {
             "L'AA'AB": "Divergenza denisoviana - antenato comune dell'uomo di Denisova e dell'uomo moderno",
             "L'AA": "Divergenza di Neanderthal - antenato comune dell'uomo di Neanderthal e dell'uomo moderno",
+            "A": "Anna l'Asiatica",
+            "A2": "Anna la Nativa Americana",
+            "B": "Barbara la Pacifica",
+            "B2": "Barbara la Nativa Americana",
+            "B4": "Barbara l'Asiatica",
+            "C": "Cecilia la Siberiana",
+            "C1": "Cecilia la Nativa Americana",
+            "D": "Daria l'Asiatica dell'Est",
+            "D1": "Daria la Nativa Americana",
+            "D4": "Daria la Siberiana",
             "E": "Elisabetta l'Isolana",
             "E1": "Emma la Polinesiana",
             "E2": "Erica la Taiwanese",
@@ -627,7 +657,7 @@ export const translations = {
             "E-M2": "Erasmo il Subsahariano",
             "E-M215": "Emanuele il Mediterraneo",
             "E-V13": "Emilio il Balcanico",
-            "F-M89": "Francesco il Patriarca",
+            "F-M89": "Francesco il Primo Colono",
             "F-F15527": "Filippo l'Orientale",
             "F-M427": "Floriano l'Asiatico",
             "F-M481": "Felice il Meridionale",
@@ -676,7 +706,7 @@ export const translations = {
             "R-M479": "Raj l'Indiano",
             "S-B254": "Simone l'Oceaniano",
             "S-B255": "Samuele il Montanaro",
-            "S-P378": "Sebastiano l'Isolano",
+            "S-P378": "Sebastiano il Celtico",
             "T-M184": "Tommaso il Fenicio"
         }
     },
@@ -737,6 +767,16 @@ export const translations = {
         mtdnaNotes: {
             "L'AA'AB": "Denisova-Divergenz - gemeinsamer Vorfahre von Denisova-Menschen und modernen Menschen",
             "L'AA": "Neandertaler-Divergenz - gemeinsamer Vorfahre von Neandertalern und modernen Menschen",
+            "A": "Anna die Asiatin",
+            "A2": "Anna die amerikanische Ureinwohnerin",
+            "B": "Barbara die Pazifische",
+            "B2": "Barbara die amerikanische Ureinwohnerin",
+            "B4": "Barbara die Asiatin",
+            "C": "Cäcilia die Sibirierin",
+            "C1": "Cäcilia die amerikanische Ureinwohnerin",
+            "D": "Daria die Ostasiatin",
+            "D1": "Daria die amerikanische Ureinwohnerin",
+            "D4": "Daria die Sibirierin",
             "E": "Elisabeth die Inselbewohnerin",
             "E1": "Emma die Polynesierin",
             "E2": "Erika die Taiwanesin",
@@ -854,7 +894,7 @@ export const translations = {
             "E-M2": "Erasmus der Subsaharier",
             "E-M215": "Emanuel der Mediterrane",
             "E-V13": "Emil der Balkaner",
-            "F-M89": "Franz der Patriarch",
+            "F-M89": "Franz der Erste Siedler",
             "F-F15527": "Philipp der Östliche",
             "F-M427": "Florian der Asiate",
             "F-M481": "Felix der Südliche",
@@ -903,7 +943,7 @@ export const translations = {
             "R-M479": "Raj der Inder",
             "S-B254": "Simon der Ozeanier",
             "S-B255": "Samuel der Hochländer",
-            "S-P378": "Sebastian der Inselbewohner",
+            "S-P378": "Sebastian der Keltische",
             "T-M184": "Thomas der Phönizier"
         }
     },
@@ -964,6 +1004,16 @@ export const translations = {
         mtdnaNotes: {
             "L'AA'AB": "Denisovska divergencija - zajednički predak denisovskog i modernog čovjeka",
             "L'AA": "Neandertalska divergencija - zajednički predak neandertalskog i modernog čovjeka",
+            "A": "Ana Azijska",
+            "A2": "Ana Američka",
+            "B": "Barbara Pacifička",
+            "B2": "Barbara Američka",
+            "B4": "Barbara Azijska",
+            "C": "Cecilija Sibirska",
+            "C1": "Cecilija Američka",
+            "D": "Darija Istočnoazijska",
+            "D1": "Darija Američka",
+            "D4": "Darija Sibirska",
             "E": "Elizabeta Otočna",
             "E1": "Ema Polinezijska",
             "E2": "Erika Tajvanska",
@@ -1081,7 +1131,7 @@ export const translations = {
             "E-M2": "Erazmo Podsaharski",
             "E-M215": "Emanuel Sredozemni",
             "E-V13": "Emil Balkanski",
-            "F-M89": "Franjo Patrijarh",
+            "F-M89": "Franjo Prvonaseljenik",
             "F-F15527": "Filip Istočni",
             "F-M427": "Florijan Azijski",
             "F-M481": "Feliks Južni",
@@ -1130,7 +1180,7 @@ export const translations = {
             "R-M479": "Radž Indijski",
             "S-B254": "Simon Oceanijski",
             "S-B255": "Samuel Gorštak",
-            "S-P378": "Sebastijan Otočni",
+            "S-P378": "Sebastijan Keltski",
             "T-M184": "Toma Feničanski"
         }
     },
@@ -1191,6 +1241,16 @@ export const translations = {
         mtdnaNotes: {
             "L'AA'AB": "Gyenyiszovai divergencia - a gyenyiszovaiak és a modern ember közös őse",
             "L'AA": "Neandervölgyi divergencia - a neandervölgyiek és a modern ember közös őse",
+            "A": "Anna az Ázsiai",
+            "A2": "Anna az Amerikai Őslakos",
+            "B": "Borbála a Csendes-óceáni",
+            "B2": "Borbála az Amerikai Őslakos",
+            "B4": "Borbála az Ázsiai",
+            "C": "Cecília a Szibériai",
+            "C1": "Cecília az Amerikai Őslakos",
+            "D": "Dária a Kelet-Ázsiai",
+            "D1": "Dária az Amerikai Őslakos",
+            "D4": "Dária a Szibériai",
             "E": "Erzsébet a Szigetlakó",
             "E1": "Emma a Polinéz",
             "E2": "Erika a Tajvani",
@@ -1308,7 +1368,7 @@ export const translations = {
             "E-M2": "Erazmus a Szubszaharai",
             "E-M215": "Emanuel a Mediterrán",
             "E-V13": "Emil a Balkáni",
-            "F-M89": "Ferenc a Pátriárka",
+            "F-M89": "Ferenc az Első Telepes",
             "F-F15527": "Fülöp a Keleti",
             "F-M427": "Flórián az Ázsiai",
             "F-M481": "Félix a Déli",
@@ -1357,7 +1417,7 @@ export const translations = {
             "R-M479": "Raj az Indiai",
             "S-B254": "Simon az Óceániai",
             "S-B255": "Sámuel a Hegylakó",
-            "S-P378": "Sebestyén a Szigetlakó",
+            "S-P378": "Sebestyén a Kelta",
             "T-M184": "Tamás a Föníciai"
         }
     }
@@ -1373,7 +1433,7 @@ export const ydnaGroupRoots = {
 };
 
 export const mtdnaGroupRoots = {
-    E: "E", E1: "E1", E2: "E2", F: "F", F1: "F1", F2: "F2", G: "G", G1: "G1", G2: "G2", H: "H", H1: "H1", H10: "H10", H2: "H2", H3: "H3", H4: "H4", H5: "H5", H6: "H6", H7: "H7", HV: "HV", I: "I", I1: "I1", I2: "I2", I3: "I3", I4: "I4", J: "J", J1: "J1", J2: "J2", JT: "JT", K: "K", K1: "K1", K2: "K2", L: "L", L0: "L0", L1: "L1", L2: "L2", L3: "L3", M: "M", M1: "M1", N: "N", N1: "N1", N1a: "N1a", N1b: "N1b", O: "O", O1: "O1", O2: "O2", P: "P", P1: "P1", P2: "P2", Q: "Q", Q1: "Q1", Q2: "Q2", R: "R", R0: "R0", R2: "R2", S: "S", S1: "S1", S2: "S2", T: "T", T1: "T1", T2: "T2", U: "U", U1: "U1", U2: "U2", U3: "U3", U4: "U4", U5: "U5", U5a: "U5a", U5b: "U5b", U7: "U7", V: "V", V1: "V1", V13: "V13", V2: "V2", V3: "V3", V7: "V7", W: "W", W1: "W1", W3: "W3", W4: "W4", W5: "W5", X: "X", X1: "X1", X2: "X2", Y: "Y", Y1: "Y1", Y2: "Y2", Z: "Z", Z1: "Z1", Z2: "Z2"
+    A: "A", A2: "A2", B: "B", B2: "B2", B4: "B4", C: "C", C1: "C1", D: "D", D1: "D1", D4: "D4", E: "E", E1: "E1", E2: "E2", F: "F", F1: "F1", F2: "F2", G: "G", G1: "G1", G2: "G2", H: "H", H1: "H1", H10: "H10", H2: "H2", H3: "H3", H4: "H4", H5: "H5", H6: "H6", H7: "H7", HV: "HV", I: "I", I1: "I1", I2: "I2", I3: "I3", I4: "I4", J: "J", J1: "J1", J2: "J2", JT: "JT", K: "K", K1: "K1", K2: "K2", L: "L", L0: "L0", L1: "L1", L2: "L2", L3: "L3", M: "M", M1: "M1", N: "N", N1: "N1", N1a: "N1a", N1b: "N1b", O: "O", O1: "O1", O2: "O2", P: "P", P1: "P1", P2: "P2", Q: "Q", Q1: "Q1", Q2: "Q2", R: "R", R0: "R0", R2: "R2", S: "S", S1: "S1", S2: "S2", T: "T", T1: "T1", T2: "T2", U: "U", U1: "U1", U2: "U2", U3: "U3", U4: "U4", U5: "U5", U5a: "U5a", U5b: "U5b", U7: "U7", V: "V", V1: "V1", V13: "V13", V2: "V2", V3: "V3", V7: "V7", W: "W", W1: "W1", W3: "W3", W4: "W4", W5: "W5", X: "X", X1: "X1", X2: "X2", Y: "Y", Y1: "Y1", Y2: "Y2", Z: "Z", Z1: "Z1", Z2: "Z2"
     // Temporarily disabled due to FTDNA 403: R1: "R1"
 };
 
