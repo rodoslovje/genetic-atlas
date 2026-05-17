@@ -264,7 +264,7 @@ window.exportView = function (e) {
             .node--person text { font-weight: normal; fill: #2c5282; font-size: 13px; }
             .node--prominent text { font-weight: bold; font-size: 13px; }
             .node--autoplaced text { fill: #c53030 !important; font-weight: bold; }
-            .node--search-match text { fill: #c05621 !important; font-weight: 800 !important; font-size: 13.5px !important; }
+            .node--search-match text { fill: #c05621 !important; font-size: 13.5px !important; }
             .link { fill: none; stroke-width: 1.5px; opacity: 0.5; }
         `;
         clone.insertBefore(style, clone.firstChild);
