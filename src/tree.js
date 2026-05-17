@@ -178,7 +178,8 @@ export class TreeVisualizer {
             const hasNote = node.note && node.note.trim() !== "" && node.note !== t("notePathMissing");
 
             const isMtDnaExplicitNote = !this.isSquare && hasNote && !["L'AA'AB", "L'AA", "L"].includes(node.haplogroup);
-            const keepIfEmpty = isGroupRoot || (state.showAllMajorGroups && isMtDnaExplicitNote);
+            let keepIfEmpty = isGroupRoot || (state.showAllMajorGroups && isMtDnaExplicitNote);
+            if (state.showOnlyLineages) keepIfEmpty = false;
 
             if (!node.children || node.children.length === 0) {
                 return node.isPerson || keepIfEmpty ? node : null;
@@ -192,7 +193,7 @@ export class TreeVisualizer {
 
             if (state.showPassthrough) return node;
             if (
-                node.parent === "" || node.isPerson || isGroupRoot ||
+                node.parent === "" || node.isPerson || (!state.showOnlyLineages && isGroupRoot) ||
                 node.isAutoPlaced || hasNote || node.children.some((c) => c.isPerson) || node.children.length > 1
             ) {
                 return node;

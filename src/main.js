@@ -585,6 +585,18 @@ function initApp() {
         });
     }
 
+    const chkShowOnlyLineages = document.getElementById("chk-show-only-lineages");
+    if (chkShowOnlyLineages) {
+        chkShowOnlyLineages.checked = state.showOnlyLineages;
+        chkShowOnlyLineages.addEventListener("change", (e) => {
+            state.showOnlyLineages = e.target.checked;
+            updateURLState();
+            const view = (window.location.hash || "#map").substring(1);
+            if (view === "ydna") refreshYDNADisplay();
+            else if (view === "mtdna") refreshMTDNADisplay();
+        });
+    }
+
     let searchTimeout;
     const searchInput = document.getElementById("search-input");
     const searchClear = document.getElementById("search-clear");

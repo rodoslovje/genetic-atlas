@@ -47,6 +47,7 @@ export const translations = {
         selectionCount: "Shown: {0} of {1}",
         showLabels: "Show labels",
         showAllMajorGroups: "Show all major genetic groups",
+        showOnlyLineages: "Show only lineages",
         ungrouped: "Ungrouped",
         resetView: "Reset View",
         versionLabel: "Version: {0}",
@@ -286,6 +287,7 @@ export const translations = {
         selectionCount: "Prikazano: {0} od {1}",
         showLabels: "Prikaži oznake",
         showAllMajorGroups: "Prikaži vse glavne genetske skupine",
+        showOnlyLineages: "Prikaži samo linije",
         ungrouped: "Nerazvrščeni",
         resetView: "Ponastavi pogled",
         versionLabel: "Različica: {0}",
@@ -525,6 +527,7 @@ export const translations = {
         selectionCount: "Mostrati: {0} di {1}",
         showLabels: "Mostra etichette",
         showAllMajorGroups: "Mostra tutti i principali gruppi genetici",
+        showOnlyLineages: "Mostra solo i lignaggi",
         ungrouped: "Non raggruppati",
         resetView: "Ripristina vista",
         versionLabel: "Versione: {0}",
@@ -764,6 +767,7 @@ export const translations = {
         selectionCount: "Angezeigt: {0} von {1}",
         showLabels: "Beschriftungen anzeigen",
         showAllMajorGroups: "Alle genetischen Hauptgruppen anzeigen",
+        showOnlyLineages: "Nur Linien anzeigen",
         ungrouped: "Nicht gruppiert",
         resetView: "Ansicht zurücksetzen",
         versionLabel: "Version: {0}",
@@ -1003,6 +1007,7 @@ export const translations = {
         selectionCount: "Prikazano: {0} od {1}",
         showLabels: "Prikaži oznake",
         showAllMajorGroups: "Prikaži sve glavne genetske grupe",
+        showOnlyLineages: "Prikaži samo linije",
         ungrouped: "Negrupirano",
         resetView: "Poništi prikaz",
         versionLabel: "Verzija: {0}",
@@ -1242,6 +1247,7 @@ export const translations = {
         selectionCount: "Megjelenítve: {0} / {1}",
         showLabels: "Címkék megjelenítése",
         showAllMajorGroups: "Minden fő genetikai csoport megjelenítése",
+        showOnlyLineages: "Csak a vonalak megjelenítése",
         ungrouped: "Nem csoportosított",
         resetView: "Nézet visszaállítása",
         versionLabel: "Verzió: {0}",
@@ -1557,6 +1563,7 @@ export const state = {
     showPassthrough: new URLSearchParams(window.location.search).get("snp") === "1",
     showLabels: new URLSearchParams(window.location.search).get("lbl") === "1",
     showAllMajorGroups: new URLSearchParams(window.location.search).get("linea") === "1",
+    showOnlyLineages: new URLSearchParams(window.location.search).get("olin") === "1",
     searchQuery: new URLSearchParams(window.location.search).get("q") || "",
     startgroup: new URLSearchParams(window.location.search).get("startgroup") || null,
     ydnaSelectedGroups: new Set(),
@@ -1632,6 +1639,11 @@ export function updateURLState() {
         params.set("linea", "1");
     } else {
         params.delete("linea");
+    }
+    if (state.showOnlyLineages) {
+        params.set("olin", "1");
+    } else {
+        params.delete("olin");
     }
     if (state.searchQuery) {
         params.set("q", state.searchQuery);
