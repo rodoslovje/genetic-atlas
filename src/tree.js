@@ -264,6 +264,16 @@ export class TreeVisualizer {
 
             const markMatches = (node) => {
                 let hasMatch = !!node.data.isSearchMatch;
+
+                if (state.showAllMajorGroups) {
+                    const isGroupRoot = allRoots.has(node.data.haplogroup);
+                    const hasNote = node.data.note && node.data.note.trim() !== "" && node.data.note !== t("notePathMissing");
+                    const isMtDnaExplicitNote = !this.isSquare && hasNote && !["L'AA'AB", "L'AA", "L"].includes(node.data.haplogroup);
+                    if (isGroupRoot || isMtDnaExplicitNote) {
+                        hasMatch = true;
+                    }
+                }
+
                 const kids = node.children || node._children;
                 if (kids) {
                     kids.forEach(c => {
