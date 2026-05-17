@@ -222,6 +222,10 @@ window.exportView = function (e) {
                 ctx.fillStyle = "#4a5568";
                 ctx.fillText(sourceText, 20 * scale, height - (footerHeight / 2));
 
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#718096";
+                ctx.fillText(t("createdLabel", new Date().toLocaleDateString(state.currentLang)), width - 20 * scale, height - (footerHeight / 2));
+
                 const link = document.createElement("a");
                 link.download = `Slovenian_DNA_Map.png`;
                 link.href = newCanvas.toDataURL("image/png");
@@ -357,6 +361,15 @@ window.exportView = function (e) {
         });
 
         clone.appendChild(sourceText);
+
+        const createdText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        createdText.setAttribute("x", exportX + exportWidth - 20);
+        createdText.setAttribute("y", bbox.y + bbox.height + paddingY + 30);
+        createdText.setAttribute("font-size", "14px");
+        createdText.setAttribute("text-anchor", "end");
+        createdText.setAttribute("fill", "#718096");
+        createdText.textContent = t("createdLabel", new Date().toLocaleDateString(state.currentLang));
+        clone.appendChild(createdText);
 
         const svgString = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone);
         const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });

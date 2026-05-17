@@ -52,6 +52,7 @@ export const translations = {
         resetView: "Reset View",
         versionLabel: "Version: {0}",
         dataUpdateLabel: "Data update: {0}",
+        createdLabel: "Created: {0}",
         attributionHtml: "Source: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> and <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a> project.",
         yearsAgo: "{0} years ago",
         mtdnaNotes: {
@@ -292,6 +293,7 @@ export const translations = {
         resetView: "Ponastavi pogled",
         versionLabel: "Različica: {0}",
         dataUpdateLabel: "Posodobitev podatkov: {0}",
+        createdLabel: "Ustvarjeno: {0}",
         attributionHtml: "Vir: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> in projekt <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovensko poreklo</a>.",
         yearsAgo: "pred {0} leti",
         mtdnaNotes: {
@@ -532,6 +534,7 @@ export const translations = {
         resetView: "Ripristina vista",
         versionLabel: "Versione: {0}",
         dataUpdateLabel: "Aggiornamento dati: {0}",
+        createdLabel: "Creato: {0}",
         attributionHtml: "Fonte: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> e progetto <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a>.",
         yearsAgo: "{0} anni fa",
         mtdnaNotes: {
@@ -772,6 +775,7 @@ export const translations = {
         resetView: "Ansicht zurücksetzen",
         versionLabel: "Version: {0}",
         dataUpdateLabel: "Datenaktualisierung: {0}",
+        createdLabel: "Erstellt: {0}",
         attributionHtml: "Quelle: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> und <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a> Projekt.",
         yearsAgo: "vor {0} Jahren",
         mtdnaNotes: {
@@ -1012,6 +1016,7 @@ export const translations = {
         resetView: "Poništi prikaz",
         versionLabel: "Verzija: {0}",
         dataUpdateLabel: "Ažuriranje podataka: {0}",
+        createdLabel: "Izrađeno: {0}",
         attributionHtml: "Izvor: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> i projekt <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a>.",
         yearsAgo: "prije {0} godina",
         mtdnaNotes: {
@@ -1252,6 +1257,7 @@ export const translations = {
         resetView: "Nézet visszaállítása",
         versionLabel: "Verzió: {0}",
         dataUpdateLabel: "Adatfrissítés: {0}",
+        createdLabel: "Létrehozva: {0}",
         attributionHtml: "Forrás: <a href='https://www.familytreedna.com' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a> és <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>Slovenian Origin</a> projekt.",
         yearsAgo: "{0} évvel ezelőtt",
         mtdnaNotes: {
