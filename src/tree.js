@@ -116,7 +116,7 @@ export class TreeVisualizer {
 
             if (customNote) {
                 if (groupKey && groupKey !== hg) {
-                    return `${customNote} - ${groupKey}`;
+                    return this.isSquare ? `${groupKey} (${customNote})` : `${customNote} - ${groupKey}`;
                 }
                 return customNote;
             }
@@ -440,10 +440,10 @@ export class TreeVisualizer {
                 if (d.data.isPerson) {
                     this.tooltip.html(getPersonTooltip(d.data, error));
                 } else {
-                    let notePart = d.data.note && d.data.note.trim() !== "" && d.data.note !== t("notePathMissing") ? ` (${d.data.note})` : "";
+                    let notePart = d.data.note && d.data.note.trim() !== "" && d.data.note !== t("notePathMissing") ? (isSquare ? ` - ${d.data.note}` : ` (${d.data.note})`) : "";
                     if (!notePart) {
                         const rootGroupKey = Object.keys(groupRootsMap).find((k) => groupRootsMap[k] === d.data.haplogroup || k === d.data.haplogroup);
-                        if (rootGroupKey && rootGroupKey !== d.data.haplogroup) notePart = ` (${rootGroupKey})`;
+                        if (rootGroupKey && rootGroupKey !== d.data.haplogroup) notePart = isSquare ? ` - ${rootGroupKey}` : ` (${rootGroupKey})`;
                     }
                     this.tooltip.html(`${t("snpLabel")}: <b>${d.data.haplogroup}${notePart}</b>${error}<br>${t("ageEstimate")}: ${formatAge(d.data.age)}`);
                 }
@@ -525,10 +525,10 @@ export class TreeVisualizer {
                             .text(decodeHtmlEntities(d.data.location));
                     }
                 } else {
-                    let notePart = d.data.note && d.data.note.trim() !== "" && d.data.note !== t("notePathMissing") ? ` (${d.data.note})` : "";
+                    let notePart = d.data.note && d.data.note.trim() !== "" && d.data.note !== t("notePathMissing") ? (isSquare ? ` - ${d.data.note}` : ` (${d.data.note})`) : "";
                     if (!notePart) {
                         const rootGroupKey = Object.keys(groupRootsMap).find((k) => groupRootsMap[k] === d.data.haplogroup || k === d.data.haplogroup);
-                        if (rootGroupKey && rootGroupKey !== d.data.haplogroup) notePart = ` (${rootGroupKey})`;
+                        if (rootGroupKey && rootGroupKey !== d.data.haplogroup) notePart = isSquare ? ` - ${rootGroupKey}` : ` (${rootGroupKey})`;
                     }
                     let agePart = "";
                     if (d.data.age !== null && d.data.age !== undefined) {
