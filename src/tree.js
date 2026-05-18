@@ -424,6 +424,20 @@ export class TreeVisualizer {
 
         const getNodeClass = (d) => this.getNodeClass(d, allRoots);
 
+        // Suffix shown after a haplogroup name in the tree label and tooltip.
+        // Uses the data's explicit note when present, else falls back to the
+        // group key (e.g. "R1a" for "R-M420"). Y-DNA brackets with " - ",
+        // mtDNA brackets with " (...)".
+        const formatNoteSuffix = (data) => {
+            const hasNote = data.note && data.note.trim() !== "" && data.note !== t("notePathMissing");
+            if (hasNote) return isSquare ? ` - ${data.note}` : ` (${data.note})`;
+            const rootGroupKey = getGroupKey(data.haplogroup);
+            if (rootGroupKey && rootGroupKey !== data.haplogroup) {
+                return isSquare ? ` - ${rootGroupKey}` : ` (${rootGroupKey})`;
+            }
+            return "";
+        };
+
         let index = -1;
         this.root.eachBefore((n) => {
             n.x = ++index * NODE_ROW_HEIGHT;
@@ -475,11 +489,7 @@ export class TreeVisualizer {
                 if (d.data.isPerson) {
                     this.tooltip.html(getPersonTooltip(d.data, error, this.isSquare ? "y" : "mt", "tree"));
                 } else {
-                    let notePart = d.data.note && d.data.note.trim() !== "" && d.data.note !== t("notePathMissing") ? (isSquare ? ` - ${d.data.note}` : ` (${d.data.note})`) : "";
-                    if (!notePart) {
-                        const rootGroupKey = getGroupKey(d.data.haplogroup);
-                        if (rootGroupKey && rootGroupKey !== d.data.haplogroup) notePart = isSquare ? ` - ${rootGroupKey}` : ` (${rootGroupKey})`;
-                    }
+                    const notePart = formatNoteSuffix(d.data);
                     this.tooltip.html(`${t("snpLabel")}: <b>${d.data.haplogroup}${notePart}</b>${error}<br>${t("ageEstimate")}: ${formatAge(d.data.age)}`);
                 }
 
@@ -578,11 +588,7 @@ export class TreeVisualizer {
                             .text(decodeHtmlEntities(d.data.location));
                     }
                 } else {
-                    let notePart = d.data.note && d.data.note.trim() !== "" && d.data.note !== t("notePathMissing") ? (isSquare ? ` - ${d.data.note}` : ` (${d.data.note})`) : "";
-                    if (!notePart) {
-                        const rootGroupKey = getGroupKey(d.data.haplogroup);
-                        if (rootGroupKey && rootGroupKey !== d.data.haplogroup) notePart = isSquare ? ` - ${rootGroupKey}` : ` (${rootGroupKey})`;
-                    }
+                    const notePart = formatNoteSuffix(d.data);
                     let agePart = "";
                     if (d.data.age !== null && d.data.age !== undefined) {
                         const yearsAgo = Math.round((new Date().getFullYear() - d.data.age) / 100) * 100;

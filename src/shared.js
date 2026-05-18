@@ -145,18 +145,20 @@ export const eraColors = [
     { start: 1500, color: "#38a169", id: "eraModern" }
 ];
 
+const initialParams = new URLSearchParams(window.location.search);
+
 export const state = {
     currentLang: localStorage.getItem("preferredLang") || (navigator.language && navigator.language.toLowerCase().startsWith("sl") ? "sl" : "en"),
-    showPassthrough: new URLSearchParams(window.location.search).get("snp") === "1",
-    showLabels: new URLSearchParams(window.location.search).get("lbl") === "1",
-    showAllMajorGroups: new URLSearchParams(window.location.search).get("linea") === "1",
-    showOnlyLineages: new URLSearchParams(window.location.search).get("olin") === "1",
-    searchQuery: new URLSearchParams(window.location.search).get("q") || "",
-    startgroup: new URLSearchParams(window.location.search).get("startgroup") || null,
+    showPassthrough: initialParams.get("snp") === "1",
+    showLabels: initialParams.get("lbl") === "1",
+    showAllMajorGroups: initialParams.get("linea") === "1",
+    showOnlyLineages: initialParams.get("olin") === "1",
+    searchQuery: initialParams.get("q") || "",
+    startgroup: initialParams.get("startgroup") || null,
     ydnaSelectedGroups: new Set(),
     mtdnaSelectedGroups: new Set(),
-    yzoom: new URLSearchParams(window.location.search).get("yzoom") || null,
-    mzoom: new URLSearchParams(window.location.search).get("mzoom") || null,
+    yzoom: initialParams.get("yzoom") || null,
+    mzoom: initialParams.get("mzoom") || null,
     ydnaAllSelected: true,
     mtdnaAllSelected: true
 };
@@ -463,94 +465,106 @@ export function loadData() {
     return dataPromise;
 }
 
+// Sort groups using natural ordering: split into letter/number runs, compare
+// runs as numbers when both sides are numeric, else lexically.
+function naturalSortGroups(groups) {
+    const re = /([A-Za-z]+)|([0-9]+)/g;
+    return groups.slice().sort((a, b) => {
+        const aParts = a.match(re) || [];
+        const bParts = b.match(re) || [];
+        for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+            if (!aParts[i]) return -1;
+            if (!bParts[i]) return 1;
+            const aIsNum = !isNaN(aParts[i]);
+            const bIsNum = !isNaN(bParts[i]);
+            if (aIsNum && bIsNum) {
+                const diff = parseInt(aParts[i], 10) - parseInt(bParts[i], 10);
+                if (diff !== 0) return diff;
+            } else if (aParts[i] !== bParts[i]) {
+                return aParts[i] > bParts[i] ? 1 : -1;
+            }
+        }
+        return 0;
+    });
+}
+
+// Per-people-reference cache for the (expensive) ancestry walk + natural sort.
+// People arrays only change identity when loadData runs again, so this stays valid
+// across language switches, filter toggles, etc.
+const orderedGroupsCache = new WeakMap();
+function buildOrderedGroups(people, haploData, rootsMap) {
+    const cached = orderedGroupsCache.get(people);
+    if (cached) return cached;
+
+    const groups = [...new Set(people.map((p) => p.group))].filter(Boolean);
+
+    const parentMap = {};
+    if (haploData) haploData.forEach(d => { parentMap[d.haplogroup] = d.parent; });
+
+    const getAncestors = (hg) => {
+        const ancestors = new Set();
+        let curr = parentMap[hg];
+        let maxDepth = 0;
+        while (curr && maxDepth < 1000) {
+            ancestors.add(curr);
+            curr = parentMap[curr];
+            maxDepth++;
+        }
+        return ancestors;
+    };
+
+    const groupHgs = {};
+    groups.forEach(g => groupHgs[g] = rootsMap[g] || g);
+
+    const groupAncestors = {};
+    groups.forEach(g => groupAncestors[g] = getAncestors(groupHgs[g]));
+
+    const groupHierarchy = {};
+    groups.forEach(g => {
+        let parent = null;
+        let maxDepth = -1;
+        groups.forEach(otherG => {
+            if (g !== otherG && groupAncestors[g].has(groupHgs[otherG])) {
+                const depth = groupAncestors[otherG].size;
+                if (depth > maxDepth) {
+                    maxDepth = depth;
+                    parent = otherG;
+                }
+            }
+        });
+        groupHierarchy[g] = parent;
+    });
+
+    const sortedGroups = naturalSortGroups(groups);
+    const childrenMap = {};
+    sortedGroups.forEach(g => childrenMap[g] = []);
+
+    const rootGroups = [];
+    sortedGroups.forEach(g => {
+        const p = groupHierarchy[g];
+        if (p && childrenMap[p]) childrenMap[p].push(g);
+        else rootGroups.push(g);
+    });
+
+    const orderedGroups = [];
+    const groupDepths = {};
+    const traverse = (node, depth) => {
+        orderedGroups.push(node);
+        groupDepths[node] = depth;
+        if (childrenMap[node]) childrenMap[node].forEach(child => traverse(child, depth + 1));
+    };
+    rootGroups.forEach(root => traverse(root, 0));
+
+    const result = { groups: sortedGroups, orderedGroups, groupDepths };
+    orderedGroupsCache.set(people, result);
+    return result;
+}
+
 export function initFilters() {
     if (!ydnaPeopleData || !mtdnaPeopleData) return;
 
     const buildList = (people, haploData, rootsMap, selectedGroups, listId, toggleId, isMtDna) => {
-        const groups = [...new Set(people.map((p) => p.group))].filter(Boolean);
-
-        // 1. Build parent lookup from true phylogenetic tree paths
-        const parentMap = {};
-        if (haploData) {
-            haploData.forEach(d => {
-                parentMap[d.haplogroup] = d.parent;
-            });
-        }
-
-        const getAncestors = (hg) => {
-            const ancestors = new Set();
-            let curr = parentMap[hg];
-            let maxDepth = 0;
-            while (curr && maxDepth < 1000) {
-                ancestors.add(curr);
-                curr = parentMap[curr];
-                maxDepth++;
-            }
-            return ancestors;
-        };
-
-        // 2. Map groups to their tree nodes and fetch their full ancestry
-        const groupHgs = {};
-        groups.forEach(g => groupHgs[g] = rootsMap[g] || g);
-
-        const groupAncestors = {};
-        groups.forEach(g => groupAncestors[g] = getAncestors(groupHgs[g]));
-
-        // 3. Find the closest visible parent group for each group
-        const groupHierarchy = {};
-        groups.forEach(g => {
-            let parent = null;
-            let maxDepth = -1;
-            groups.forEach(otherG => {
-                if (g !== otherG && groupAncestors[g].has(groupHgs[otherG])) {
-                    const depth = groupAncestors[otherG].size;
-                    if (depth > maxDepth) {
-                        maxDepth = depth;
-                        parent = otherG;
-                    }
-                }
-            });
-            groupHierarchy[g] = parent;
-        });
-
-        // 4. Sort siblings logically and build final ordered structure
-        const childrenMap = {};
-        groups.forEach(g => childrenMap[g] = []);
-
-        groups.sort((a, b) => {
-            const re = /([A-Za-z]+)|([0-9]+)/g;
-            const aParts = a.match(re) || [];
-            const bParts = b.match(re) || [];
-            for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
-                if (!aParts[i]) return -1;
-                if (!bParts[i]) return 1;
-                const aIsNum = !isNaN(aParts[i]);
-                const bIsNum = !isNaN(bParts[i]);
-                if (aIsNum && bIsNum) {
-                    const diff = parseInt(aParts[i], 10) - parseInt(bParts[i], 10);
-                    if (diff !== 0) return diff;
-                } else if (aParts[i] !== bParts[i]) {
-                    return aParts[i] > bParts[i] ? 1 : -1;
-                }
-            }
-            return 0;
-        });
-
-        const rootGroups = [];
-        groups.forEach(g => {
-            const p = groupHierarchy[g];
-            if (p && childrenMap[p]) childrenMap[p].push(g);
-            else rootGroups.push(g);
-        });
-
-        const orderedGroups = [];
-        const groupDepths = {};
-        const traverse = (node, depth) => {
-            orderedGroups.push(node);
-            groupDepths[node] = depth;
-            if (childrenMap[node]) childrenMap[node].forEach(child => traverse(child, depth + 1));
-        };
-        rootGroups.forEach(root => traverse(root, 0));
+        const { groups, orderedGroups, groupDepths } = buildOrderedGroups(people, haploData, rootsMap);
 
         const hasUngrouped = people.some(p => !p.group);
         const currentView = (window.location.hash || "#map").substring(1);
