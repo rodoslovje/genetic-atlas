@@ -39,34 +39,32 @@ playwright install chromium
 
 ### 2. Process Data
 
+Each tool processes both lineages (Y-DNA and mtDNA) by default. Pass `--kind y` or `--kind mt` to limit it to one.
+
 **1. Download latest data from Slovenian Origin admin interface on FamilyTreeDNA and put it into `input/` folder.**
 
 **2. Fetch public results from FamilyTreeDNA:**
 
 ```bash
-python tools/ydna-fetch-results.py
-python tools/mtdna-fetch-results.py
+python tools/ftdna-fetch-results.py
 ```
 
-**2. Convert and merge exported CSV into JSON:**
+**3. Convert and merge exported CSV into JSON:**
 
 ```bash
-python tools/ydna-csv-to-json.py
-python tools/mtdna-csv-to-json.py
+python tools/ftdna-csv-to-json.py
 ```
 
-**Collect full SNP path for all haplogroups used (Incremental Update):**
+**4. Collect full SNP path for all haplogroups used (Incremental Update):**
 
 ```bash
-python tools/ydna-get-paths-ftdna.py
-python tools/mtdna-get-paths-ftdna.py
+python tools/ftdna-get-paths.py
 ```
 
-**Collect full SNP path for all haplogroups used (Full Rebuild):**
+**Full Rebuild (re-fetch every haplogroup):**
 
 ```bash
-python tools/ydna-get-paths-ftdna.py --mode full
-python tools/mtdna-get-paths-ftdna.py --mode full
+python tools/ftdna-get-paths.py --mode full
 ```
 
 ## 📄 License

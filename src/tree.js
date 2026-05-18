@@ -99,25 +99,21 @@ export class TreeVisualizer {
             if (p.group) allRoots.add(groupRootsMap[p.group] || p.group);
         });
 
+        // Reverse-lookup hg -> group-key (value match only, used during hierarchy build)
+        const groupKeyByValue = new Map();
+        for (const [k, v] of Object.entries(groupRootsMap)) {
+            if (!groupKeyByValue.has(v)) groupKeyByValue.set(v, k);
+        }
+        const notesDict = this.isSquare
+            ? translations[state.currentLang].ydnaNotes
+            : translations[state.currentLang].mtdnaNotes;
+
         const getCustomNote = (hg, defaultNote) => {
-            const groupKey = Object.keys(groupRootsMap).find(k => groupRootsMap[k] === hg);
+            const groupKey = groupKeyByValue.get(hg);
             let customNote = null;
-
-            if (!this.isSquare && translations[state.currentLang].mtdnaNotes) {
-                if (translations[state.currentLang].mtdnaNotes[hg]) {
-                    customNote = translations[state.currentLang].mtdnaNotes[hg];
-                } else if (groupKey && translations[state.currentLang].mtdnaNotes[groupKey]) {
-                    customNote = translations[state.currentLang].mtdnaNotes[groupKey];
-                }
+            if (notesDict) {
+                customNote = notesDict[hg] || (groupKey && notesDict[groupKey]) || null;
             }
-            if (this.isSquare && translations[state.currentLang].ydnaNotes) {
-                if (translations[state.currentLang].ydnaNotes[hg]) {
-                    customNote = translations[state.currentLang].ydnaNotes[hg];
-                } else if (groupKey && translations[state.currentLang].ydnaNotes[groupKey]) {
-                    customNote = translations[state.currentLang].ydnaNotes[groupKey];
-                }
-            }
-
             if (customNote) {
                 if (groupKey && groupKey !== hg) {
                     return this.isSquare ? `${groupKey} (${customNote})` : `${customNote} - ${groupKey}`;
@@ -392,7 +388,25 @@ export class TreeVisualizer {
         const links = this.root.links();
         const isSquare = this.isSquare;
         const peopleData = this.peopleData;
-        const getGroupKey = (hg) => Object.keys(groupRootsMap).find(k => groupRootsMap[k] === hg || k === hg);
+
+        // Reverse-lookup: prefer value-match (e.g. "R-M420" -> "R1a"), fall back to key-match
+        const groupKeyByHg = new Map();
+        for (const [k, v] of Object.entries(groupRootsMap)) {
+            if (!groupKeyByHg.has(v)) groupKeyByHg.set(v, k);
+        }
+        for (const k of Object.keys(groupRootsMap)) {
+            if (!groupKeyByHg.has(k)) groupKeyByHg.set(k, k);
+        }
+        const getGroupKey = (hg) => groupKeyByHg.get(hg);
+
+        const selectedGroups = getSelectedGroups();
+        const groupsWithPeople = new Set();
+        if (peopleData) {
+            for (const p of peopleData) {
+                if (p.group) groupsWithPeople.add(p.group);
+            }
+        }
+
         const getNodeClass = (d) => this.getNodeClass(d, allRoots);
 
         let index = -1;
@@ -446,7 +460,7 @@ export class TreeVisualizer {
                 } else {
                     let notePart = d.data.note && d.data.note.trim() !== "" && d.data.note !== t("notePathMissing") ? (isSquare ? ` - ${d.data.note}` : ` (${d.data.note})`) : "";
                     if (!notePart) {
-                        const rootGroupKey = Object.keys(groupRootsMap).find((k) => groupRootsMap[k] === d.data.haplogroup || k === d.data.haplogroup);
+                        const rootGroupKey = getGroupKey(d.data.haplogroup);
                         if (rootGroupKey && rootGroupKey !== d.data.haplogroup) notePart = isSquare ? ` - ${rootGroupKey}` : ` (${rootGroupKey})`;
                     }
                     this.tooltip.html(`${t("snpLabel")}: <b>${d.data.haplogroup}${notePart}</b>${error}<br>${t("ageEstimate")}: ${formatAge(d.data.age)}`);
@@ -501,12 +515,9 @@ export class TreeVisualizer {
                 const groupKey = getGroupKey(d.data.haplogroup);
                 const color = d.data.isAutoPlaced ? "#e53e3e" : groupKey ? getHaploColor(groupKey) : "#cbd5e0";
 
-                const isDeselectedRoot = groupKey && !getSelectedGroups().has(groupKey);
+                const isDeselectedRoot = groupKey && !selectedGroups.has(groupKey);
                 const hasHiddenChildren = d._children && d._children.length > 0;
-                let hasPeople = false;
-                if (isDeselectedRoot && peopleData) {
-                    hasPeople = peopleData.some(p => p.group === groupKey);
-                }
+                const hasPeople = isDeselectedRoot && groupsWithPeople.has(groupKey);
                 const isSolid = !hasHiddenChildren && !(isDeselectedRoot && hasPeople);
                 const fill = isSolid ? color : "#ffffff";
                 const stroke = d.data.isAutoPlaced ? "#9b2c2c" : color;
@@ -566,7 +577,7 @@ export class TreeVisualizer {
                 } else {
                     let notePart = d.data.note && d.data.note.trim() !== "" && d.data.note !== t("notePathMissing") ? (isSquare ? ` - ${d.data.note}` : ` (${d.data.note})`) : "";
                     if (!notePart) {
-                        const rootGroupKey = Object.keys(groupRootsMap).find((k) => groupRootsMap[k] === d.data.haplogroup || k === d.data.haplogroup);
+                        const rootGroupKey = getGroupKey(d.data.haplogroup);
                         if (rootGroupKey && rootGroupKey !== d.data.haplogroup) notePart = isSquare ? ` - ${rootGroupKey}` : ` (${rootGroupKey})`;
                     }
                     let agePart = "";
@@ -589,12 +600,9 @@ export class TreeVisualizer {
                 const groupKey = getGroupKey(d.data.haplogroup);
                 const color = d.data.isAutoPlaced ? "#e53e3e" : groupKey ? getHaploColor(groupKey) : "#cbd5e0";
 
-                const isDeselectedRoot = groupKey && !getSelectedGroups().has(groupKey);
+                const isDeselectedRoot = groupKey && !selectedGroups.has(groupKey);
                 const hasHiddenChildren = d._children && d._children.length > 0;
-                let hasPeople = false;
-                if (isDeselectedRoot && peopleData) {
-                    hasPeople = peopleData.some(p => p.group === groupKey);
-                }
+                const hasPeople = isDeselectedRoot && groupsWithPeople.has(groupKey);
                 const isSolid = !hasHiddenChildren && !(isDeselectedRoot && hasPeople);
                 return isSolid ? color : "#ffffff";
             })

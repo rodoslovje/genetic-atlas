@@ -1,19 +1,34 @@
 """
-Fetches the mtDNA results table from the FamilyTreeDNA public project page
-and saves it as a CSV file. Iterates through all pages.
+Fetches the Y-DNA and/or mtDNA results table from the FamilyTreeDNA public
+project page and saves it as a CSV file. Iterates through all pages.
+
+Usage:
+    python tools/ftdna-fetch-results.py            # both lineages
+    python tools/ftdna-fetch-results.py --kind y   # paternal only
+    python tools/ftdna-fetch-results.py --kind mt  # maternal only
 
 Requirements:
     pip install playwright
     playwright install chromium
 """
 
+import argparse
 import csv
 import re
 import sys
 from playwright.sync_api import sync_playwright
 
-URL = "https://www.familytreedna.com/public/Slovenianorigin?iframe=mtresults"
-OUTPUT = "input/slo-mtdna-fetched.csv"
+CONFIGS = {
+    "y": {
+        "url": "https://www.familytreedna.com/public/Slovenianorigin?iframe=ydna-results-overview",
+        "output": "input/slo-ydna-fetched.csv",
+    },
+    "mt": {
+        "url": "https://www.familytreedna.com/public/Slovenianorigin?iframe=mtresults",
+        "output": "input/slo-mtdna-fetched.csv",
+    },
+}
+
 TIMEOUT = 60_000  # ms
 PAGE_SETTLE_MS = 4000  # wait after clicking a page button
 
@@ -37,7 +52,7 @@ def extract_rows(page):
         for (const tr of document.querySelectorAll('table tbody tr')) {
             const tds = tr.querySelectorAll('td');
             if (tds.length === 0) continue;  // column header rows (<th> only)
-            // Group header: single <td> with colspan (e.g. "H haplogroup")
+            // Group header: single <td> with colspan (e.g. "R1a haplogroup" or "H haplogroup")
             if (tds.length === 1 && tds[0].getAttribute('colspan')) {
                 const text = tds[0].textContent.trim();
                 if (text) currentGroup = text.split(/\\s+/)[0];
@@ -59,6 +74,16 @@ def get_total_pages(page):
     return int(m.group(1)) if m else 1
 
 
+def dismiss_cookie_banner(page):
+    """Remove cookie consent overlay so it doesn't intercept clicks."""
+    page.evaluate(
+        """() => {
+        const banner = document.querySelector('.cky-consent-container');
+        if (banner) banner.remove();
+    }"""
+    )
+
+
 def click_page(page, num):
     dismiss_cookie_banner(page)
     btn = page.locator(f"a:text-is('{num}'), button:text-is('{num}')")
@@ -71,23 +96,13 @@ def click_page(page, num):
     return True
 
 
-def dismiss_cookie_banner(page):
-    """Remove cookie consent overlay so it doesn't intercept clicks."""
-    page.evaluate(
-        """() => {
-        const banner = document.querySelector('.cky-consent-container');
-        if (banner) banner.remove();
-    }"""
-    )
-
-
-def fetch_all(headless=True):
+def fetch_all(url, headless=True):
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=headless)
         pg = browser.new_page()
 
-        print(f"Loading {URL} ...")
-        pg.goto(URL, timeout=TIMEOUT)
+        print(f"Loading {url} ...")
+        pg.goto(url, timeout=TIMEOUT)
         pg.wait_for_selector("table tbody tr", timeout=TIMEOUT)
         pg.wait_for_timeout(2000)
         dismiss_cookie_banner(pg)
@@ -96,14 +111,13 @@ def fetch_all(headless=True):
         print(f"Total pages: {total}")
 
         headers = extract_headers(pg)
-        # Insert "Group" before "Haplogroup"
-        group_idx = (
-            headers.index("Haplogroup") if "Haplogroup" in headers else len(headers)
-        )
+        # Insert "Group" before "Haplogroup" to match csv-to-json.py expectations
+        group_idx = headers.index("Haplogroup") if "Haplogroup" in headers else len(headers)
         headers.insert(group_idx, "Group")
         print(f"Columns: {len(headers)}")
 
         def reorder(rows):
+            # group is appended last by JS — move it to group_idx
             result = []
             for row in rows:
                 group = row.pop()
@@ -128,19 +142,37 @@ def fetch_all(headless=True):
         return headers, all_rows
 
 
-def main():
-    headers, rows = fetch_all()
+def run_one(kind):
+    cfg = CONFIGS[kind]
+    print(f"=== {kind.upper()}-DNA ===")
+    headers, rows = fetch_all(cfg["url"])
 
     if not rows:
-        print("No data rows found.")
-        sys.exit(1)
+        print(f"No data rows found for {kind}-DNA.")
+        return False
 
-    with open(OUTPUT, "w", newline="", encoding="utf-8") as f:
+    with open(cfg["output"], "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(headers)
         writer.writerows(rows)
 
-    print(f"Saved {len(rows)} rows → {OUTPUT}")
+    print(f"Saved {len(rows)} rows → {cfg['output']}")
+    return True
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.split("\n")[1])
+    parser.add_argument("--kind", choices=["y", "mt"], default=None,
+                        help="Lineage to fetch (omit to process both)")
+    args = parser.parse_args()
+
+    kinds = [args.kind] if args.kind else ["y", "mt"]
+    ok = True
+    for kind in kinds:
+        if not run_one(kind):
+            ok = False
+    if not ok:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,5 @@
 import { state, translations, t, loadData, initFilters, updateURLState, ydnaPeopleData, mtdnaPeopleData, ydnaGroupRoots, mtdnaGroupRoots } from "./shared.js";
-import { initYDNA, refreshYDNADisplay, ydnaInitialized, resetYDNATree } from "./ydna.js";
-import { initMTDNA, refreshMTDNADisplay, mtdnaInitialized, resetMTDNATree } from "./mtdna.js";
+import { ydna, mtdna } from "./lineage.js";
 import { mapVis } from "./map.js";
 
 const languageConfig = {
@@ -118,8 +117,8 @@ window.setLanguage = function (e, lang) {
     applyTranslations();
     initFilters();
     validateSearch();
-    refreshYDNADisplay();
-    refreshMTDNADisplay();
+    ydna.refresh();
+    mtdna.refresh();
     document.getElementById("lang-menu").classList.remove("open");
     const sidebarMenu = document.getElementById("lang-menu-sidebar");
     if (sidebarMenu) sidebarMenu.classList.remove("open");
@@ -175,11 +174,11 @@ window.resetView = function (e) {
     } else if (view === "ydna") {
         state.yzoom = null;
         updateURLState();
-        resetYDNATree();
+        ydna.reset();
     } else if (view === "mtdna") {
         state.mzoom = null;
         updateURLState();
-        resetMTDNATree();
+        mtdna.reset();
     }
 };
 
@@ -443,8 +442,8 @@ function validateSearch() {
 window.addEventListener("filterChanged", () => {
     validateSearch();
     const view = (window.location.hash || "#map").substring(1);
-    if (view === "ydna") refreshYDNADisplay();
-    else if (view === "mtdna") refreshMTDNADisplay();
+    if (view === "ydna") ydna.refresh();
+    else if (view === "mtdna") mtdna.refresh();
 });
 
 function handleHashChange() {
@@ -505,11 +504,11 @@ function handleHashChange() {
 
         loadData().then(() => {
             initFilters();
-            if (view === "ydna" && !ydnaInitialized) {
-                initYDNA();
+            if (view === "ydna" && !ydna.initialized) {
+                ydna.init();
             }
-            if (view === "mtdna" && !mtdnaInitialized) {
-                initMTDNA();
+            if (view === "mtdna" && !mtdna.initialized) {
+                mtdna.init();
             }
             if (view === "map") {
                 setTimeout(() => mapVis.initMap(), 50);
@@ -566,8 +565,8 @@ function initApp() {
             state.showPassthrough = e.target.checked;
             updateURLState();
             const view = (window.location.hash || "#map").substring(1);
-            if (view === "ydna") refreshYDNADisplay();
-            else if (view === "mtdna") refreshMTDNADisplay();
+            if (view === "ydna") ydna.refresh();
+            else if (view === "mtdna") mtdna.refresh();
         });
     }
 
@@ -611,8 +610,8 @@ function initApp() {
 
             initFilters();
             const view = (window.location.hash || "#map").substring(1);
-            if (view === "ydna") refreshYDNADisplay();
-            else if (view === "mtdna") refreshMTDNADisplay();
+            if (view === "ydna") ydna.refresh();
+            else if (view === "mtdna") mtdna.refresh();
         });
     }
 
@@ -623,8 +622,8 @@ function initApp() {
             state.showOnlyLineages = e.target.checked;
             updateURLState();
             const view = (window.location.hash || "#map").substring(1);
-            if (view === "ydna") refreshYDNADisplay();
-            else if (view === "mtdna") refreshMTDNADisplay();
+            if (view === "ydna") ydna.refresh();
+            else if (view === "mtdna") mtdna.refresh();
         });
     }
 
@@ -652,8 +651,8 @@ function initApp() {
             searchTimeout = setTimeout(() => {
                 window.dispatchEvent(new CustomEvent("searchChanged"));
                 const view = (window.location.hash || "#map").substring(1);
-                if (view === "ydna") refreshYDNADisplay();
-                else if (view === "mtdna") refreshMTDNADisplay();
+                if (view === "ydna") ydna.refresh();
+                else if (view === "mtdna") mtdna.refresh();
             }, 300);
         };
 
