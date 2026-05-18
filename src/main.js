@@ -43,6 +43,23 @@ function applyTranslations() {
 
     checkNavOverflow();
     updatePageTitle();
+    updateInfoText();
+}
+
+function updateInfoText() {
+    const view = (window.location.hash || "#map").substring(1);
+    const container = document.getElementById("info-text-container");
+    if (!container) return;
+
+    const key = "infoText" + view.charAt(0).toUpperCase() + view.slice(1);
+    const translatedText = translations[state.currentLang][key];
+
+    if (translatedText) {
+        container.innerHTML = translatedText;
+        container.style.display = "block";
+    } else {
+        container.style.display = "none";
+    }
 }
 
 function updatePageTitle() {
@@ -435,6 +452,7 @@ function handleHashChange() {
     if (!hash || hash === "#ymap" || hash === "#mmap") hash = "#map";
 
     updatePageTitle();
+    updateInfoText();
     document.querySelectorAll(".page-view").forEach(el => el.classList.remove("active"));
 
     const viewId = "view-" + hash.substring(1);
