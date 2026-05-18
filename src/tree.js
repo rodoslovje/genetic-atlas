@@ -68,6 +68,15 @@ export class TreeVisualizer {
         if (this.tooltip.empty()) {
             this.tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
         }
+        // Allow mouse to enter the tooltip without it disappearing (so links inside are clickable)
+        const tooltipNode = this.tooltip.node();
+        this.tooltip
+            .on("mouseenter.keep", () => {
+                if (tooltipNode._hideTimer) { clearTimeout(tooltipNode._hideTimer); tooltipNode._hideTimer = null; }
+            })
+            .on("mouseleave.keep", () => {
+                this.tooltip.transition().duration(200).style("opacity", 0);
+            });
         this.svg.on("click", () => {
             this.tooltip.transition().duration(300).style("opacity", 0);
         });
@@ -104,9 +113,8 @@ export class TreeVisualizer {
         for (const [k, v] of Object.entries(groupRootsMap)) {
             if (!groupKeyByValue.has(v)) groupKeyByValue.set(v, k);
         }
-        const notesDict = this.isSquare
-            ? translations[state.currentLang].ydnaNotes
-            : translations[state.currentLang].mtdnaNotes;
+        const langDict = translations[state.currentLang] || translations.en;
+        const notesDict = this.isSquare ? langDict.ydnaNotes : langDict.mtdnaNotes;
 
         const getCustomNote = (hg, defaultNote) => {
             const groupKey = groupKeyByValue.get(hg);
@@ -449,10 +457,12 @@ export class TreeVisualizer {
                 this.update(d, allRoots, groupRootsMap);
             })
             .on("mouseover", (event, d) => {
+                const tn = this.tooltip.node();
+                if (tn._hideTimer) { clearTimeout(tn._hideTimer); tn._hideTimer = null; }
                 this.tooltip.transition().duration(100).style("opacity", 1);
                 const error = d.data.isAutoPlaced ? `<br><span class="error-tag">⚠ ${t("missingPath")}</span>` : "";
                 if (d.data.isPerson) {
-                    this.tooltip.html(getPersonTooltip(d.data, error));
+                    this.tooltip.html(getPersonTooltip(d.data, error, this.isSquare ? "y" : "mt", "tree"));
                 } else {
                     let notePart = d.data.note && d.data.note.trim() !== "" && d.data.note !== t("notePathMissing") ? (isSquare ? ` - ${d.data.note}` : ` (${d.data.note})`) : "";
                     if (!notePart) {
@@ -480,26 +490,12 @@ export class TreeVisualizer {
                 }
                 this.tooltip.style("left", left + "px").style("top", top + "px");
             })
-            .on("mousemove", (event) => {
-                let left = event.pageX + 15;
-                const h = this.tooltip.node().offsetHeight;
-                const w = this.tooltip.node().offsetWidth;
-
-                if (window.innerWidth <= 600) {
-                    left = 10;
-                } else if (left + w > window.innerWidth - 20) {
-                    left = Math.max(10, event.pageX - w - 15);
-                }
-
-                let top;
-                if (event.pageY - h - 20 < 70) {
-                    top = event.pageY + 25;
-                } else {
-                    top = event.pageY - h - 20;
-                }
-                this.tooltip.style("left", left + "px").style("top", top + "px");
-            })
-            .on("mouseout", () => this.tooltip.transition().duration(300).style("opacity", 0));
+            .on("mouseout", () => {
+                const tn = this.tooltip.node();
+                tn._hideTimer = setTimeout(() => {
+                    this.tooltip.transition().duration(200).style("opacity", 0);
+                }, 250);
+            });
 
         nodeEnter.each(function (d) {
             const el = d3.select(this);

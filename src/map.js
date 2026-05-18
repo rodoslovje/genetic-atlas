@@ -115,7 +115,7 @@ export class MapVisualizer {
                 marker = L.marker([lat, lon], { icon: icon });
             }
 
-            const popupContent = `<div style="font-size: 13px; line-height: 1.5;">${getPersonTooltip(p)}</div>`;
+            const popupContent = `<div style="font-size: 13px; line-height: 1.5;">${getPersonTooltip(p, "", isMtDna ? "mt" : "y", "map")}</div>`;
             marker.bindPopup(popupContent);
 
             const name = p.ancestor || p.surname;

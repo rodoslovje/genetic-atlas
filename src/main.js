@@ -1,4 +1,8 @@
-import { state, translations, t, loadData, initFilters, updateURLState, ydnaPeopleData, mtdnaPeopleData, ydnaGroupRoots, mtdnaGroupRoots, matchesSearchQuery } from "./shared.js";
+import { state, translations, t, loadData, loadTranslation, initFilters, updateURLState, ydnaPeopleData, mtdnaPeopleData, ydnaGroupRoots, mtdnaGroupRoots, matchesSearchQuery } from "./shared.js";
+
+function currentLangDict() {
+    return translations[state.currentLang] || translations.en;
+}
 import { ydna, mtdna } from "./lineage.js";
 import { mapVis } from "./map.js";
 
@@ -14,28 +18,28 @@ const languageConfig = {
 function applyTranslations() {
     document.querySelectorAll("[data-i18n]").forEach(el => {
         const key = el.getAttribute("data-i18n");
-        if (translations[state.currentLang][key]) {
+        if (currentLangDict()[key]) {
             el.innerText = t(key);
         }
     });
 
     document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
         const key = el.getAttribute("data-i18n-placeholder");
-        if (translations[state.currentLang][key]) {
+        if (currentLangDict()[key]) {
             el.setAttribute("placeholder", t(key));
         }
     });
 
     document.querySelectorAll("[data-i18n-html]").forEach(el => {
         const key = el.getAttribute("data-i18n-html");
-        if (translations[state.currentLang][key]) {
+        if (currentLangDict()[key]) {
             el.innerHTML = t(key);
         }
     });
 
     document.querySelectorAll("[data-i18n-title]").forEach(el => {
         const key = el.getAttribute("data-i18n-title");
-        if (translations[state.currentLang][key]) {
+        if (currentLangDict()[key]) {
             el.setAttribute("title", t(key));
         }
     });
@@ -51,7 +55,7 @@ function updateInfoText() {
     if (!container) return;
 
     const key = "infoText" + view.charAt(0).toUpperCase() + view.slice(1);
-    const translatedText = translations[state.currentLang][key];
+    const translatedText = currentLangDict()[key];
 
     if (translatedText) {
         container.innerHTML = translatedText;
@@ -108,8 +112,9 @@ window.toggleLangMenuSidebar = function (e) {
     document.getElementById("lang-menu-sidebar").classList.toggle("open");
 };
 
-window.setLanguage = function (e, lang) {
+window.setLanguage = async function (e, lang) {
     e.preventDefault();
+    await loadTranslation(lang);
     state.currentLang = lang;
     localStorage.setItem("preferredLang", lang);
     loadVersionInfo();
@@ -182,6 +187,217 @@ window.resetView = function (e) {
     }
 };
 
+const SVG_NS = "http://www.w3.org/2000/svg";
+const BG_COLOR = "#f1f5f9";
+const TITLE_COLOR = "#1a365d";
+const URL_COLOR = "#2b6cb0";
+const ATTRIBUTION_COLOR = "#4a5568";
+const CREATED_COLOR = "#718096";
+
+// Single source of truth for the header/footer label strings used in both exports.
+function getExportLabels(view) {
+    return {
+        title: `${t(view)} - ${t("brand")}`,
+        url: window.location.hostname,
+        urlHref: window.location.origin,
+        created: t("createdLabel", new Date().toLocaleDateString(state.currentLang)),
+        attributionHtml: t("attributionHtml"),
+    };
+}
+
+function triggerDownload(url, filename) {
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function setSvgAttrs(el, attrs) {
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+}
+
+function createSvg(tag, attrs = {}) {
+    const el = document.createElementNS(SVG_NS, tag);
+    setSvgAttrs(el, attrs);
+    return el;
+}
+
+// Walks the attribution HTML and emits a list of {text, href?} segments that
+// the SVG renderer turns into <tspan>/<a> children. Canvas renderer uses plain text.
+function parseAttributionFragments(html) {
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    const out = [];
+    for (const node of tmp.childNodes) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            out.push({ text: node.textContent });
+        } else if (node.nodeName === "A") {
+            out.push({ text: node.textContent, href: node.getAttribute("href") });
+        }
+    }
+    return out;
+}
+
+function exportMapAsPng(overlay) {
+    const mapEl = document.getElementById("map-container");
+    if (!mapEl || typeof html2canvas === "undefined") {
+        if (overlay) overlay.classList.remove("active");
+        return;
+    }
+
+    html2canvas(mapEl, { useCORS: true, allowTaint: false }).then(canvas => {
+        const labels = getExportLabels("map");
+        const scale = window.devicePixelRatio || 1;
+        const headerH = 80 * scale;
+        const footerH = 60 * scale;
+        const width = canvas.width;
+        const height = canvas.height + headerH + footerH;
+
+        const out = document.createElement("canvas");
+        out.width = width;
+        out.height = height;
+        const ctx = out.getContext("2d");
+
+        ctx.fillStyle = BG_COLOR;
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(canvas, 0, headerH);
+
+        const tmp = document.createElement("div");
+        tmp.innerHTML = labels.attributionHtml;
+        const attributionText = tmp.textContent || tmp.innerText || "";
+
+        ctx.textBaseline = "middle";
+
+        ctx.textAlign = "left";
+        ctx.font = `bold ${24 * scale}px 'Segoe UI', Tahoma, sans-serif`;
+        ctx.fillStyle = TITLE_COLOR;
+        ctx.fillText(labels.title, 20 * scale, headerH / 2);
+
+        ctx.textAlign = "right";
+        ctx.font = `${18 * scale}px 'Segoe UI', Tahoma, sans-serif`;
+        ctx.fillStyle = URL_COLOR;
+        ctx.fillText(labels.url, width - 20 * scale, headerH / 2);
+
+        ctx.textAlign = "left";
+        ctx.font = `${14 * scale}px 'Segoe UI', Tahoma, sans-serif`;
+        ctx.fillStyle = ATTRIBUTION_COLOR;
+        ctx.fillText(attributionText, 20 * scale, height - footerH / 2);
+
+        ctx.textAlign = "right";
+        ctx.fillStyle = CREATED_COLOR;
+        ctx.fillText(labels.created, width - 20 * scale, height - footerH / 2);
+
+        triggerDownload(out.toDataURL("image/png"), "Slovenian_DNA_Map.png");
+        if (overlay) overlay.classList.remove("active");
+    }).catch(err => {
+        console.error("Map export failed:", err);
+        if (overlay) overlay.classList.remove("active");
+    });
+}
+
+function addSvgHeader(clone, labels, x, y, width) {
+    clone.insertBefore(createSvg("rect", { x, y, width, height: 60, fill: BG_COLOR }), clone.firstChild);
+
+    const titleLink = createSvg("a", { href: labels.urlHref, target: "_blank" });
+    titleLink.appendChild(createSvg("text", {
+        x: x + 20, y: y + 38,
+        "font-size": "24px", "font-weight": "bold", fill: TITLE_COLOR,
+    })).textContent = labels.title;
+    clone.appendChild(titleLink);
+
+    const urlLink = createSvg("a", { href: labels.urlHref, target: "_blank" });
+    urlLink.appendChild(createSvg("text", {
+        x: x + width - 20, y: y + 38,
+        "font-size": "18px", "text-anchor": "end", fill: URL_COLOR,
+    })).textContent = labels.url;
+    clone.appendChild(urlLink);
+}
+
+function addSvgFooter(clone, labels, x, y, width) {
+    clone.insertBefore(createSvg("rect", { x, y, width, height: 50, fill: BG_COLOR }), clone.firstChild);
+
+    const sourceText = createSvg("text", {
+        x: x + 20, y: y + 30,
+        "font-size": "14px", fill: ATTRIBUTION_COLOR, "xml:space": "preserve",
+    });
+    for (const frag of parseAttributionFragments(labels.attributionHtml)) {
+        if (frag.href) {
+            const a = createSvg("a", { href: frag.href, target: "_blank" });
+            const tspan = createSvg("tspan", { fill: URL_COLOR });
+            tspan.textContent = frag.text;
+            a.appendChild(tspan);
+            sourceText.appendChild(a);
+        } else {
+            const tspan = createSvg("tspan");
+            tspan.textContent = frag.text;
+            sourceText.appendChild(tspan);
+        }
+    }
+    clone.appendChild(sourceText);
+
+    const createdText = createSvg("text", {
+        x: x + width - 20, y: y + 30,
+        "font-size": "14px", "text-anchor": "end", fill: CREATED_COLOR,
+    });
+    createdText.textContent = labels.created;
+    clone.appendChild(createdText);
+}
+
+function exportTreeAsSvg(view, overlay) {
+    const svgContainer = document.querySelector("#tree-container-" + view + " svg");
+    const g = svgContainer && svgContainer.querySelector("g");
+    if (!svgContainer || !g) {
+        if (overlay) overlay.classList.remove("active");
+        return;
+    }
+
+    const clone = svgContainer.cloneNode(true);
+    const cloneG = clone.querySelector("g");
+    cloneG.removeAttribute("transform"); // Reset pan/zoom on the exported version
+
+    const style = document.createElement("style");
+    style.textContent = `
+        text { font-family: 'Segoe UI', Tahoma, sans-serif; }
+        .node circle { stroke-width: 2.5px; }
+        .node text { font-size: 12px; fill: #1a202c; }
+        .node--person text { font-weight: normal; fill: #2c5282; font-size: 13px; }
+        .node--prominent text { font-weight: bold; font-size: 13px; }
+        .node--autoplaced text { fill: #c53030 !important; font-weight: bold; }
+        .node--search-match text { fill: #c05621 !important; font-size: 13.5px !important; }
+        .link { fill: none; stroke-width: 1.5px; opacity: 0.5; }
+    `;
+    clone.insertBefore(style, clone.firstChild);
+
+    const bbox = g.getBBox();
+    const minWidth = 1000;
+    const paddingY = 40;
+    const contentWidth = bbox.width + 120;
+    const extraWidth = Math.max(0, minWidth - contentWidth);
+    const exportX = bbox.x - 60 - extraWidth / 2;
+    const exportWidth = contentWidth + extraWidth;
+    const exportY = bbox.y - 60 - paddingY;
+    const exportHeight = bbox.height + 110 + (paddingY * 2);
+    const footerY = bbox.y + bbox.height + paddingY;
+
+    setSvgAttrs(clone, {
+        viewBox: `${exportX} ${exportY} ${exportWidth} ${exportHeight}`,
+        width: exportWidth,
+        height: exportHeight,
+    });
+
+    const labels = getExportLabels(view);
+    // Header text appended first then footer, preserving original z-order
+    addSvgHeader(clone, labels, exportX, exportY, exportWidth);
+    addSvgFooter(clone, labels, exportX, footerY, exportWidth);
+
+    const svgString = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone);
+    const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+    triggerDownload(URL.createObjectURL(blob), `Slovenian_${view.toUpperCase()}_Tree.svg`);
+    if (overlay) overlay.classList.remove("active");
+}
+
 window.exportView = function (e) {
     e.preventDefault();
     const view = (window.location.hash || "#map").substring(1);
@@ -190,210 +406,9 @@ window.exportView = function (e) {
 
     // Delay briefly to allow the browser to paint the loading UI
     setTimeout(() => {
-        if (view === "map") {
-            const mapEl = document.getElementById(view + "-container");
-            if (!mapEl || typeof html2canvas === "undefined") {
-                if (overlay) overlay.classList.remove("active");
-                return;
-            }
-
-            html2canvas(mapEl, { useCORS: true, allowTaint: false }).then(canvas => {
-                const scale = window.devicePixelRatio || 1;
-
-                const headerHeight = 80 * scale;
-                const footerHeight = 60 * scale;
-                const width = canvas.width;
-                const height = canvas.height + headerHeight + footerHeight;
-
-                const newCanvas = document.createElement("canvas");
-                newCanvas.width = width;
-                newCanvas.height = height;
-                const ctx = newCanvas.getContext("2d");
-
-                ctx.fillStyle = "#f1f5f9";
-                ctx.fillRect(0, 0, width, height);
-
-                ctx.drawImage(canvas, 0, headerHeight);
-
-                const tempDiv = document.createElement("div");
-                tempDiv.innerHTML = t("attributionHtml");
-                const sourceText = tempDiv.textContent || tempDiv.innerText || "";
-
-                const titleText = `${t(view)} - ${t("brand")}`;
-                const urlText = window.location.hostname;
-
-                ctx.textBaseline = "middle";
-                ctx.textAlign = "left";
-                ctx.font = `bold ${24 * scale}px 'Segoe UI', Tahoma, sans-serif`;
-                ctx.fillStyle = "#1a365d";
-                ctx.fillText(titleText, 20 * scale, headerHeight / 2);
-
-                ctx.textAlign = "right";
-                ctx.font = `${18 * scale}px 'Segoe UI', Tahoma, sans-serif`;
-                ctx.fillStyle = "#2b6cb0";
-                ctx.fillText(urlText, width - 20 * scale, headerHeight / 2);
-
-                ctx.textAlign = "left";
-                ctx.font = `${14 * scale}px 'Segoe UI', Tahoma, sans-serif`;
-                ctx.fillStyle = "#4a5568";
-                ctx.fillText(sourceText, 20 * scale, height - (footerHeight / 2));
-
-                ctx.textAlign = "right";
-                ctx.fillStyle = "#718096";
-                ctx.fillText(t("createdLabel", new Date().toLocaleDateString(state.currentLang)), width - 20 * scale, height - (footerHeight / 2));
-
-                const link = document.createElement("a");
-                link.download = `Slovenian_DNA_Map.png`;
-                link.href = newCanvas.toDataURL("image/png");
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                if (overlay) overlay.classList.remove("active");
-            }).catch(err => {
-                console.error("Map export failed:", err);
-                if (overlay) overlay.classList.remove("active");
-            });
-            return;
-        }
-
-        if (view !== "ydna" && view !== "mtdna") {
-            if (overlay) overlay.classList.remove("active");
-            return;
-        }
-
-        const svgContainer = document.querySelector("#tree-container-" + view + " svg");
-        if (!svgContainer) {
-            if (overlay) overlay.classList.remove("active");
-            return;
-        }
-
-        const clone = svgContainer.cloneNode(true);
-        const g = clone.querySelector("g");
-        if (!g) {
-            if (overlay) overlay.classList.remove("active");
-            return;
-        }
-
-        g.removeAttribute("transform"); // Reset pan/zoom on the exported version
-
-        const style = document.createElement("style");
-        style.textContent = `
-            text { font-family: 'Segoe UI', Tahoma, sans-serif; }
-            .node circle { stroke-width: 2.5px; }
-            .node text { font-size: 12px; fill: #1a202c; }
-            .node--person text { font-weight: normal; fill: #2c5282; font-size: 13px; }
-            .node--prominent text { font-weight: bold; font-size: 13px; }
-            .node--autoplaced text { fill: #c53030 !important; font-weight: bold; }
-            .node--search-match text { fill: #c05621 !important; font-size: 13.5px !important; }
-            .link { fill: none; stroke-width: 1.5px; opacity: 0.5; }
-        `;
-        clone.insertBefore(style, clone.firstChild);
-
-        const originalG = svgContainer.querySelector("g");
-        const bbox = originalG.getBBox();
-
-        const minWidth = 1000;
-        const paddingY = 40;
-        const contentWidth = bbox.width + 120;
-        const extraWidth = Math.max(0, minWidth - contentWidth);
-        const exportX = bbox.x - 60 - extraWidth / 2;
-        const exportWidth = contentWidth + extraWidth;
-        const exportY = bbox.y - 60 - paddingY;
-        const exportHeight = bbox.height + 110 + (paddingY * 2);
-
-        clone.setAttribute("viewBox", `${exportX} ${exportY} ${exportWidth} ${exportHeight}`);
-        clone.setAttribute("width", exportWidth);
-        clone.setAttribute("height", exportHeight);
-
-        const footerBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        footerBg.setAttribute("x", exportX);
-        footerBg.setAttribute("y", bbox.y + bbox.height + paddingY);
-        footerBg.setAttribute("width", exportWidth);
-        footerBg.setAttribute("height", 50);
-        footerBg.setAttribute("fill", "#f1f5f9");
-        clone.insertBefore(footerBg, clone.firstChild);
-
-        const headerBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        headerBg.setAttribute("x", exportX);
-        headerBg.setAttribute("y", exportY);
-        headerBg.setAttribute("width", exportWidth);
-        headerBg.setAttribute("height", 60);
-        headerBg.setAttribute("fill", "#f1f5f9");
-        clone.insertBefore(headerBg, clone.firstChild);
-
-        const titleLink = document.createElementNS("http://www.w3.org/2000/svg", "a");
-        titleLink.setAttribute("href", window.location.origin);
-        titleLink.setAttribute("target", "_blank");
-
-        const titleText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        titleText.textContent = `${t(view)} - ${t("brand")}`;
-        titleText.setAttribute("x", exportX + 20);
-        titleText.setAttribute("y", exportY + 38);
-        titleText.setAttribute("font-size", "24px");
-        titleText.setAttribute("font-weight", "bold");
-        titleText.setAttribute("fill", "#1a365d");
-        titleLink.appendChild(titleText);
-        clone.appendChild(titleLink);
-
-        const urlLink = document.createElementNS("http://www.w3.org/2000/svg", "a");
-        urlLink.setAttribute("href", window.location.origin);
-        urlLink.setAttribute("target", "_blank");
-
-        const urlText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        urlText.textContent = window.location.hostname;
-        urlText.setAttribute("x", exportX + exportWidth - 20);
-        urlText.setAttribute("y", exportY + 38);
-        urlText.setAttribute("font-size", "18px");
-        urlText.setAttribute("text-anchor", "end");
-        urlText.setAttribute("fill", "#2b6cb0");
-        urlLink.appendChild(urlText);
-        clone.appendChild(urlLink);
-
-        const sourceText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        sourceText.setAttribute("x", exportX + 20);
-        sourceText.setAttribute("y", bbox.y + bbox.height + paddingY + 30);
-        sourceText.setAttribute("font-size", "14px");
-        sourceText.setAttribute("fill", "#4a5568");
-        sourceText.setAttribute("xml:space", "preserve");
-
-        const tempDiv = document.createElement("div");
-        tempDiv.innerHTML = t("attributionHtml");
-
-        Array.from(tempDiv.childNodes).forEach(node => {
-            if (node.nodeType === 3) { // TEXT_NODE
-                const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-                tspan.textContent = node.textContent;
-                sourceText.appendChild(tspan);
-            } else if (node.nodeName === "A") {
-                const a = document.createElementNS("http://www.w3.org/2000/svg", "a");
-                a.setAttribute("href", node.getAttribute("href"));
-                a.setAttribute("target", "_blank");
-                const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-                tspan.textContent = node.textContent;
-                tspan.setAttribute("fill", "#2b6cb0");
-                a.appendChild(tspan);
-                sourceText.appendChild(a);
-            }
-        });
-
-        clone.appendChild(sourceText);
-
-        const createdText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        createdText.setAttribute("x", exportX + exportWidth - 20);
-        createdText.setAttribute("y", bbox.y + bbox.height + paddingY + 30);
-        createdText.setAttribute("font-size", "14px");
-        createdText.setAttribute("text-anchor", "end");
-        createdText.setAttribute("fill", "#718096");
-        createdText.textContent = t("createdLabel", new Date().toLocaleDateString(state.currentLang));
-        clone.appendChild(createdText);
-
-        const svgString = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone);
-        const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `Slovenian_${view.toUpperCase()}_Tree.svg`;
-        document.body.appendChild(link); link.click(); document.body.removeChild(link);
-        if (overlay) overlay.classList.remove("active");
+        if (view === "map") exportMapAsPng(overlay);
+        else if (view === "ydna" || view === "mtdna") exportTreeAsSvg(view, overlay);
+        else if (overlay) overlay.classList.remove("active");
     }, 50);
 };
 
@@ -440,6 +455,49 @@ window.addEventListener("filterChanged", () => {
     if (view === "ydna") ydna.refresh();
     else if (view === "mtdna") mtdna.refresh();
 });
+
+function applySearchToCurrentView() {
+    validateSearch();
+    window.dispatchEvent(new CustomEvent("searchChanged"));
+    const v = (window.location.hash || "#map").substring(1);
+    if (v === "ydna" && ydna.initialized) ydna.refresh();
+    else if (v === "mtdna" && mtdna.initialized) mtdna.refresh();
+    else if (v === "map" && mapVis.mapInitialized) mapVis.refreshMap();
+}
+
+window.navigateToSearch = function (view, query) {
+    state.searchQuery = query;
+    const searchInput = document.getElementById("search-input");
+    const searchClear = document.getElementById("search-clear");
+    if (searchInput) {
+        searchInput.value = query;
+        searchInput.style.paddingRight = query ? "75px" : "6px";
+    }
+    if (searchClear) searchClear.style.display = query ? "block" : "none";
+    updateURLState();
+
+    document.querySelectorAll(".tooltip").forEach(el => { el.style.opacity = "0"; });
+    if (mapVis.map) mapVis.map.closePopup();
+
+    const targetHash = "#" + view;
+    if (window.location.hash === targetHash) {
+        applySearchToCurrentView();
+    } else {
+        window.location.hash = targetHash;
+        // handleHashChange may need to load data and init the view; apply once that settles
+        setTimeout(applySearchToCurrentView, 250);
+    }
+};
+
+// Delegated click handler for tooltip/popup search links.
+// Use capture phase so Leaflet's popup stopPropagation can't swallow the event.
+document.addEventListener("click", (e) => {
+    const link = e.target.closest(".tooltip-link");
+    if (!link) return;
+    e.preventDefault();
+    e.stopPropagation();
+    window.navigateToSearch(link.dataset.view, link.dataset.search);
+}, true);
 
 function handleHashChange() {
     let hash = window.location.hash;
@@ -540,7 +598,7 @@ function renderLanguageMenus() {
     });
 }
 
-function initApp() {
+async function initApp() {
     if (window.innerWidth <= 768) {
         const sidebar = document.getElementById("sidebar");
         if (sidebar) sidebar.classList.add("closed");
@@ -549,6 +607,9 @@ function initApp() {
     if (window.location.hash === "#ymap" || window.location.hash === "#mmap" || !window.location.hash) {
         window.location.hash = "#map";
     }
+
+    // Load the user's preferred language before any translation lookup runs
+    await loadTranslation(state.currentLang);
 
     renderLanguageMenus();
     updateLangIcon();
