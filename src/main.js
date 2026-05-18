@@ -220,7 +220,7 @@ window.exportView = function (e) {
                 tempDiv.innerHTML = t("attributionHtml");
                 const sourceText = tempDiv.textContent || tempDiv.innerText || "";
 
-                const titleText = `${t("brand")} - ${t(view)}`;
+                const titleText = `${t(view)} - ${t("brand")}`;
                 const urlText = window.location.hostname;
 
                 ctx.textBaseline = "middle";
@@ -327,7 +327,7 @@ window.exportView = function (e) {
         titleLink.setAttribute("target", "_blank");
 
         const titleText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        titleText.textContent = `${t("brand")} - ${t(view)}`;
+        titleText.textContent = `${t(view)} - ${t("brand")}`;
         titleText.setAttribute("x", exportX + 20);
         titleText.setAttribute("y", exportY + 38);
         titleText.setAttribute("font-size", "24px");

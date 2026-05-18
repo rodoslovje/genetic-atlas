@@ -61,12 +61,16 @@ export class TreeVisualizer {
             .on("zoom", (e) => {
                 this.g.attr("transform", e.transform);
                 this._updateMinimapViewport();
+                if (this.tooltip) this.tooltip.style("opacity", 0);
             });
         this.svg.call(this.zoom);
         this.tooltip = d3.select("body").select(".tooltip");
         if (this.tooltip.empty()) {
             this.tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
         }
+        this.svg.on("click", () => {
+            this.tooltip.transition().duration(300).style("opacity", 0);
+        });
         this.root = null;
     }
 
@@ -411,8 +415,8 @@ export class TreeVisualizer {
             .style("opacity", 0)
             .style("cursor", d => d.data.isPerson ? "default" : "pointer")
             .on("click", (event, d) => {
-                if (d.data.isPerson) return;
                 event.stopPropagation();
+                if (d.data.isPerson) return;
 
                 const groupKey = getGroupKey(d.data.haplogroup);
 
@@ -447,9 +451,44 @@ export class TreeVisualizer {
                     }
                     this.tooltip.html(`${t("snpLabel")}: <b>${d.data.haplogroup}${notePart}</b>${error}<br>${t("ageEstimate")}: ${formatAge(d.data.age)}`);
                 }
-                this.tooltip.style("left", event.pageX + 15 + "px").style("top", event.pageY - 20 + "px");
+
+                let left = event.pageX + 15;
+                const h = this.tooltip.node().offsetHeight;
+                const w = this.tooltip.node().offsetWidth;
+
+                if (window.innerWidth <= 600) {
+                    left = 10;
+                } else if (left + w > window.innerWidth - 20) {
+                    left = Math.max(10, event.pageX - w - 15);
+                }
+
+                let top;
+                if (event.pageY - h - 20 < 70) {
+                    top = event.pageY + 25;
+                } else {
+                    top = event.pageY - h - 20;
+                }
+                this.tooltip.style("left", left + "px").style("top", top + "px");
             })
-            .on("mousemove", (event) => this.tooltip.style("left", event.pageX + 15 + "px").style("top", event.pageY - 20 + "px"))
+            .on("mousemove", (event) => {
+                let left = event.pageX + 15;
+                const h = this.tooltip.node().offsetHeight;
+                const w = this.tooltip.node().offsetWidth;
+
+                if (window.innerWidth <= 600) {
+                    left = 10;
+                } else if (left + w > window.innerWidth - 20) {
+                    left = Math.max(10, event.pageX - w - 15);
+                }
+
+                let top;
+                if (event.pageY - h - 20 < 70) {
+                    top = event.pageY + 25;
+                } else {
+                    top = event.pageY - h - 20;
+                }
+                this.tooltip.style("left", left + "px").style("top", top + "px");
+            })
             .on("mouseout", () => this.tooltip.transition().duration(300).style("opacity", 0));
 
         nodeEnter.each(function (d) {
