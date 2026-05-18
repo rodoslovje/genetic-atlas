@@ -1691,6 +1691,28 @@ export function formatAge(age) {
     return `<b>${Math.abs(age).toLocaleString(state.currentLang)} ${era}</b>`;
 }
 
+// Single source of truth for the free-text search predicate. Used by the
+// search counter (main.js), the map markers (map.js) and the tree filter (tree.js).
+export function matchesSearchQuery(person, query) {
+    if (!query) return true;
+    const q = query.toLowerCase();
+    return (person.surname && person.surname.toLowerCase().includes(q)) ||
+        (person.ancestor && person.ancestor.toLowerCase().includes(q)) ||
+        (person.kit && person.kit.toLowerCase().includes(q)) ||
+        (person.haplogroup && person.haplogroup.toLowerCase().includes(q)) ||
+        (person.location && person.location.toLowerCase().includes(q));
+}
+
+// A person is "prominent" (bold label) when they have the most informative test
+// for their lineage: Big Y for Y-DNA, full mtDNA sequence (Haplotype) for mtDNA.
+// "Private" haplotype values don't count — the test exists but the data is withheld.
+export function isProminentPerson(person) {
+    if (!person) return false;
+    if (person.haplotype && person.haplotype !== "Private") return true;
+    if (person.test && person.test.includes("Big Y")) return true;
+    return false;
+}
+
 export function getPersonTooltip(person, error = "") {
     const majorGroup = person.majorGroup || person.group || "N/A";
     let haplo = person.originalHaplo ?? person.haplogroup ?? "";

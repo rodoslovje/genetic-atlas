@@ -1,10 +1,11 @@
-import { state, ydnaPeopleData, mtdnaPeopleData, getPersonTooltip, getHaploColor } from "./shared.js";
+import { state, ydnaPeopleData, mtdnaPeopleData, getPersonTooltip, getHaploColor, isProminentPerson, matchesSearchQuery } from "./shared.js";
 
 function bindNameLabel(marker, dir) {
     const offset = { right: [6, 0], left: [-6, 0], top: [0, -6], bottom: [0, 6] }[dir] ?? [6, 0];
+    const className = marker._labelProminent ? "marker-name-label prominent" : "marker-name-label";
     marker.bindTooltip(marker._labelName, {
         permanent: true, direction: dir, offset,
-        className: "marker-name-label", interactive: false,
+        className, interactive: false,
     });
 }
 
@@ -87,15 +88,7 @@ export class MapVisualizer {
             const selectedGroups = isMtDna ? state.mtdnaSelectedGroups : state.ydnaSelectedGroups;
             if (!selectedGroups.has(p.group)) return;
 
-            if (state.searchQuery) {
-                const q = state.searchQuery.toLowerCase();
-                if (!(
-                    (p.surname && p.surname.toLowerCase().includes(q)) ||
-                    (p.ancestor && p.ancestor.toLowerCase().includes(q)) ||
-                    (p.kit && p.kit.toLowerCase().includes(q)) ||
-                    (p.haplogroup && p.haplogroup.toLowerCase().includes(q))
-                )) return;
-            }
+            if (!matchesSearchQuery(p, state.searchQuery)) return;
 
             const lat = Number(p.latitude);
             const lon = Number(p.longitude);
@@ -128,6 +121,7 @@ export class MapVisualizer {
             const name = p.ancestor || p.surname;
             if (name) {
                 marker._labelName = name;
+                marker._labelProminent = isProminentPerson(p);
                 if (state.showLabels) bindNameLabel(marker, "right");
             }
 

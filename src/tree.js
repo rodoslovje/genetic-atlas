@@ -1,4 +1,4 @@
-import { state, t, formatAge, getPersonTooltip, getHaploColor, eraColors, getSelectedGroups, translations } from "./shared.js";
+import { state, t, formatAge, getPersonTooltip, getHaploColor, eraColors, getSelectedGroups, translations, isProminentPerson, matchesSearchQuery } from "./shared.js";
 
 const NODE_ROW_HEIGHT = 45;
 const NODE_DEPTH_WIDTH = 50;
@@ -80,7 +80,7 @@ export class TreeVisualizer {
         if (d.data.isAutoPlaced) cls += " node--autoplaced";
         if (d.data.isSearchMatch) cls += " node--search-match";
         const hasNote = d.data.note && d.data.note.trim() !== "" && d.data.note !== t("notePathMissing");
-        if (hasNote || allRoots.has(d.data.haplogroup) || (d.data.isPerson && d.data.test && d.data.test.includes("Big Y"))) {
+        if (hasNote || allRoots.has(d.data.haplogroup) || (d.data.isPerson && isProminentPerson(d.data))) {
             cls += " node--prominent";
         }
         return cls;
@@ -164,7 +164,7 @@ export class TreeVisualizer {
                 if (hg && dataMap[hg]) {
                     dataMap[hg].children.push({
                         id: `${p.surname} (${p.kit})`, kit: p.kit, surname: p.surname, country: p.country, location: p.location,
-                        ancestor: p.ancestor, test: p.test, majorGroup: p.group, isPerson: true,
+                        ancestor: p.ancestor, test: p.test, haplotype: p.haplotype, majorGroup: p.group, isPerson: true,
                         originalHaplo: p.haplogroup, isAutoPlaced: !!dataMap[hg].isAutoPlaced,
                         isSearchMatch: p.isSearchMatch
                     });
@@ -205,12 +205,8 @@ export class TreeVisualizer {
         let filteredPeople = peopleData.filter(p => selectedGroups.has(p.group));
 
         if (state.searchQuery) {
-            const query = state.searchQuery.toLowerCase();
-            filteredPeople = filteredPeople.filter((p) => {
-                const isMatch = (p.surname && p.surname.toLowerCase().includes(query)) ||
-                (p.ancestor && p.ancestor.toLowerCase().includes(query)) ||
-                (p.kit && p.kit.toLowerCase().includes(query)) ||
-                    (p.haplogroup && p.haplogroup.toLowerCase().includes(query));
+            filteredPeople = filteredPeople.filter(p => {
+                const isMatch = matchesSearchQuery(p, state.searchQuery);
                 if (isMatch) p.isSearchMatch = true;
                 return isMatch;
             });

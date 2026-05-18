@@ -1,4 +1,4 @@
-import { state, translations, t, loadData, initFilters, updateURLState, ydnaPeopleData, mtdnaPeopleData, ydnaGroupRoots, mtdnaGroupRoots } from "./shared.js";
+import { state, translations, t, loadData, initFilters, updateURLState, ydnaPeopleData, mtdnaPeopleData, ydnaGroupRoots, mtdnaGroupRoots, matchesSearchQuery } from "./shared.js";
 import { ydna, mtdna } from "./lineage.js";
 import { mapVis } from "./map.js";
 
@@ -404,19 +404,14 @@ function validateSearch() {
 
     let hasResults = true;
     if (state.searchQuery) {
-        const query = state.searchQuery.toLowerCase();
         const currentView = (window.location.hash || "#map").substring(1);
         let matchCount = 0;
 
         const checkPeople = (people, selectedGroups, rootsMap) => {
             const matches = people.filter(p => {
-                const matchesText = (p.surname && p.surname.toLowerCase().includes(query)) ||
-                    (p.ancestor && p.ancestor.toLowerCase().includes(query)) ||
-                    (p.kit && p.kit.toLowerCase().includes(query)) ||
-                    (p.haplogroup && p.haplogroup.toLowerCase().includes(query));
                 const matchesGroup = selectedGroups.has(p.group);
                 const missingPath = ((currentView === "ydna" || currentView === "mtdna") && p.haplogroup === "" && !rootsMap[p.group]);
-                return matchesText && matchesGroup && !missingPath;
+                return matchesSearchQuery(p, state.searchQuery) && matchesGroup && !missingPath;
             });
             return matches.length;
         };
