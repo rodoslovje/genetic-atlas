@@ -3,6 +3,7 @@ import { TreeVisualizer } from "./tree.js";
 
 function makeLineage(containerId, isSquare, haploKey, peopleKey, rootsKey) {
     let tree = null;
+    let scheduled = false;
     const api = {
         initialized: false,
         init() {
@@ -10,9 +11,15 @@ function makeLineage(containerId, isSquare, haploKey, peopleKey, rootsKey) {
             tree = new TreeVisualizer(containerId, isSquare);
             api.refresh();
         },
+        // Coalesce rapid refresh calls (filter toggles, search input) into a single
+        // render per animation frame.
         refresh() {
-            if (!api.initialized) return;
-            tree.render(data[haploKey], data[peopleKey], data[rootsKey]);
+            if (!api.initialized || scheduled) return;
+            scheduled = true;
+            requestAnimationFrame(() => {
+                scheduled = false;
+                tree.render(data[haploKey], data[peopleKey], data[rootsKey]);
+            });
         },
         reset() {
             if (tree) tree.resetZoom();

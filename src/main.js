@@ -240,13 +240,14 @@ function parseAttributionFragments(html) {
     return out;
 }
 
-function exportMapAsPng(overlay) {
+async function exportMapAsPng(overlay) {
     const mapEl = document.getElementById("map-container");
-    if (!mapEl || typeof html2canvas === "undefined") {
+    if (!mapEl) {
         if (overlay) overlay.classList.remove("active");
         return;
     }
 
+    const { default: html2canvas } = await import("html2canvas");
     html2canvas(mapEl, { useCORS: true, allowTaint: false }).then(canvas => {
         const labels = getExportLabels("map");
         const scale = window.devicePixelRatio || 1;

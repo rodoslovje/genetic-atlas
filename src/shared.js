@@ -1,3 +1,9 @@
+import { json } from "d3-fetch";
+import { select } from "d3-selection";
+// Re-exported so other modules can `import { d3 } from "./shared.js"` if convenient,
+// but they should generally import directly from "d3-..." submodules.
+export const d3 = { json, select };
+
 // English bundled as fallback; all other languages lazy-loaded on first use.
 import enTranslations from "./i18n/en.json";
 
@@ -298,6 +304,22 @@ export function getPersonTooltip(person, error = "", kind = null, source = null)
     return html;
 }
 
+function warnOnDuplicateKits(people, label) {
+    const seen = new Map();
+    const dupes = [];
+    const missing = [];
+    for (const p of people) {
+        if (!p.kit) {
+            missing.push(p);
+            continue;
+        }
+        if (seen.has(p.kit)) dupes.push(p.kit);
+        else seen.set(p.kit, p);
+    }
+    if (dupes.length) console.warn(`[${label}] Duplicate kit numbers — d3 keying will collide:`, dupes);
+    if (missing.length) console.warn(`[${label}] ${missing.length} records have no kit number; tree will fall back to surname-ancestor for keying`);
+}
+
 export let ydnaHaploData = null;
 export let ydnaPeopleData = null;
 export let mtdnaHaploData = null;
@@ -402,6 +424,9 @@ export function loadData() {
             ydnaPeopleData = yPeople;
             mtdnaHaploData = mtHaplo;
             mtdnaPeopleData = mtPeople;
+
+            warnOnDuplicateKits(yPeople, "Y-DNA");
+            warnOnDuplicateKits(mtPeople, "mtDNA");
 
             const yGroups = [...new Set(yPeople.map(p => p.group))].filter(Boolean);
             yGroups.forEach(k => state.ydnaSelectedGroups.add(k));

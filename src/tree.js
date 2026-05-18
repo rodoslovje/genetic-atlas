@@ -1,3 +1,9 @@
+import { select } from "d3-selection";
+import "d3-transition"; // augments selection with .transition()
+import { zoom, zoomTransform, zoomIdentity } from "d3-zoom";
+import { drag } from "d3-drag";
+import { hierarchy } from "d3-hierarchy";
+const d3 = { select, zoom, zoomTransform, zoomIdentity, drag, hierarchy };
 import { state, t, formatAge, getPersonTooltip, getHaploColor, eraColors, getSelectedGroups, translations, isProminentPerson, matchesSearchQuery } from "./shared.js";
 
 const NODE_ROW_HEIGHT = 45;
@@ -171,7 +177,8 @@ export class TreeVisualizer {
 
                 if (hg && dataMap[hg]) {
                     dataMap[hg].children.push({
-                        id: `${p.surname} (${p.kit})`, kit: p.kit, surname: p.surname, country: p.country, location: p.location,
+                        id: p.kit || `${p.surname}-${p.ancestor || ""}`,
+                        kit: p.kit, surname: p.surname, country: p.country, location: p.location,
                         ancestor: p.ancestor, test: p.test, haplotype: p.haplotype, majorGroup: p.group, isPerson: true,
                         originalHaplo: p.haplogroup, isAutoPlaced: !!dataMap[hg].isAutoPlaced,
                         isSearchMatch: p.isSearchMatch
@@ -388,6 +395,10 @@ export class TreeVisualizer {
     }
 
     update(_source, allRoots, groupRootsMap) {
+        // Interrupt any in-flight transitions so a fast follow-up render doesn't
+        // stack animations on top of partially-completed ones (causes ghost nodes).
+        this.g.selectAll(".node, .link").interrupt();
+
         const nodes = this.root.descendants();
         const links = this.root.links();
         const isSquare = this.isSquare;
