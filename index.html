@@ -14,7 +14,7 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
-        :root { --nav-height: 60px; --sidebar-width: 230px; --accent: #1a365d; }
+        :root { --nav-height: 60px; --sidebar-width: 230px; --accent: #1a365d; --ydna-minimap-width: 160px; --mtdna-minimap-width: 160px; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; overflow: hidden; background: #f1f5f9; display: flex; flex-direction: column; height: 100vh; }
         #navbar { height: var(--nav-height); background: white; width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-sizing: border-box; border-bottom: 1px solid #e2e8f0; z-index: 2001; box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex-shrink: 0; }
         #navbar .brand { font-size: 20px; font-weight: bold; color: var(--accent); text-decoration: none; }
@@ -82,16 +82,6 @@
             transition: right 0.3s ease;
         }
         body:has(#sidebar.open) #floating-buttons { right: calc(var(--sidebar-width) + 10px); }
-        @media (min-width: 768px) {
-            body:has(#view-ydna.active) #floating-buttons,
-            body:has(#view-mtdna.active) #floating-buttons {
-                right: 180px;
-            }
-            body:has(#sidebar.open):has(#view-ydna.active) #floating-buttons,
-            body:has(#sidebar.open):has(#view-mtdna.active) #floating-buttons {
-                right: calc(var(--sidebar-width) + 180px);
-            }
-        }
 
         #info-widget { position: relative; font-family: 'Segoe UI', Tahoma, sans-serif; }
         #info-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: white; border: none; font-size: 18px; font-style: italic; font-family: serif; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
@@ -118,7 +108,7 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .marker-name-label { background: rgba(255,255,255,0.88); border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.18); font-size: 11px; padding: 2px 5px; color: #2d3748; border-radius: 3px; white-space: nowrap; pointer-events: none; }
         .marker-name-label::before { display: none; }
-        .tree-minimap { display: none; position: absolute; top: 10px; bottom: 10px; right: 10px; width: 60px; background: rgba(255, 255, 255, 0.85); border: 1px solid #cbd5e0; border-radius: 4px; pointer-events: auto; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); box-sizing: border-box; padding: 4px; cursor: pointer; }
+        .tree-minimap { display: none; position: absolute; top: 56px; bottom: 10px; right: 10px; width: 60px; background: rgba(255, 255, 255, 0.85); border: 1px solid #cbd5e0; border-radius: 4px; pointer-events: auto; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); box-sizing: border-box; padding: 4px; cursor: pointer; }
         .tree-minimap svg { width: 100%; height: 100%; display: block; }
         @media (min-width: 768px) { .tree-minimap { display: block; } }
         body:has(#sidebar.open) .tree-minimap { right: 240px; }
