@@ -20,6 +20,7 @@ import requests
 # Lines preceded by '#' are temporarily disabled (e.g. FTDNA 403).
 YDNA_MAJOR_ROOTS = [
     # "A-M91", "A-L1086",
+    "A-L1090",
     "A-V168", "A-V221",
     # "B-M60",
     "B-M182", "B-M112", "BT-M42",
