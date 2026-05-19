@@ -1,10 +1,19 @@
-# Slovenian Origin - FamilyTreeDNA Web & Tools
+# Slovenian Genetic Atlas
 
-This repository contains the web application and data conversion tools for the **Slovenian Origin** project at FamilyTreeDNA. It includes an interactive frontend for visualizing Y-DNA and mtDNA data, as well as Python scripts to convert FamilyTreeDNA CSV exports into a web-friendly JSON format.
+Interactive web application and data tooling for the **Slovenian Genetic Atlas** (Slovenski genetski atlas), a project of the Slovenian Genealogical Society in cooperation with FamilyTreeDNA. The app visualises Y-DNA and mtDNA results contributed by the Slovenian community on three views — an interactive map, a Y-DNA haplotree, and an mtDNA haplotree.
+
+## ✨ Features
+
+- **Map view** with two-ring jitter that spreads markers sharing the same address so individual haplogroup colours stay visible.
+- **Y-DNA & mtDNA tree views** rendered with D3, including era bands, lineage filters, prominent-tester highlighting, and SVG export.
+- **Haplogroup-aware search** across kit, surname, ancestor, location, and the full ancestry chain (a search for an upstream SNP matches every downstream tester).
+- **Filterable lineages** with persistent state in the URL; "Ungrouped" is an opt-in filter and is intentionally not persisted.
+- **Localisation** in six languages — Slovenian, English, Croatian, German, Italian, Hungarian — with a single i18n key for every translatable string and `{key}` placeholder substitution.
+- **PNG / SVG export** of the current view, complete with branded header and source attribution.
 
 ## 🌐 Web Application
 
-The frontend is built using Vite, D3.js, and Leaflet.
+Built with Vite, D3.js, and Leaflet.
 
 ### Installation
 
@@ -26,7 +35,7 @@ npm run build
 
 ## 🛠️ Data Conversion Tools
 
-These Python tools are used to process FamilyTreeDNA exported data for the web application.
+Python scripts that turn FamilyTreeDNA exports into the JSON consumed by the web app.
 
 ### 1. Setup Virtual Environment
 
@@ -41,7 +50,7 @@ playwright install chromium
 
 Each tool processes both lineages (Y-DNA and mtDNA) by default. Pass `--kind y` or `--kind mt` to limit it to one.
 
-**1. Download latest data from Slovenian Origin admin interface on FamilyTreeDNA and put it into the `data/input/` folder.**
+**1. Download the latest data from the Slovenian Genetic Atlas admin interface on FamilyTreeDNA and put it into the `data/input/` folder.**
 
 Generated JSON files land in `data/output/` (which is not tracked in git — `data/` is a symlink to an external store).
 
@@ -57,7 +66,7 @@ python tools/ftdna-fetch-results.py
 python tools/ftdna-csv-to-json.py
 ```
 
-**4. Collect full SNP path for all haplogroups used (Incremental Update):**
+**4. Collect full SNP path for all haplogroups used (incremental update):**
 
 ```bash
 python tools/ftdna-get-paths.py
