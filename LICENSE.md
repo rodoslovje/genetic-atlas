@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2026 Luka Renko, Vlasta Knapič and Slovenian Origin project on FamilyTreeDNA
+Copyright (c) 2026 Luka Renko, Vlasta Knapič and Slovenian Genetic Heritage project contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
