@@ -51,3 +51,6 @@ Thumbs.db
 
 # Data - not saved, always collected from FTDNA + output stored in project repository
 data
+
+# FTDNA admin session (contains auth cookie)
+.ftdna-session.json

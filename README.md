@@ -50,7 +50,22 @@ playwright install chromium
 
 Each tool processes both lineages (Y-DNA and mtDNA) by default. Pass `--kind y` or `--kind mt` to limit it to one.
 
-**1. Download the latest data from the Slovenian Genetic Atlas admin interface on FamilyTreeDNA and put it into the `data/input/` folder.**
+**1a. (One-time) Bootstrap a FamilyTreeDNA admin session:**
+
+```bash
+python tools/ftdna-login.py
+```
+
+Opens Chromium so you can sign in to GAP manually (including MFA / captcha). When the admin dashboard is visible, return to the terminal and press Enter — the session (cookies + localStorage) is saved to `.ftdna-session.json` (gitignored). Repeat whenever FTDNA expires the session.
+
+**1b. Download the admin CSV exports:**
+
+```bash
+python tools/ftdna-download-csv.py             # all four
+python tools/ftdna-download-csv.py --only YDNASNP MTDNARESULTS
+```
+
+Downloads `PANCESTRY`, `MANCESTRY`, `YDNASNP`, `MTDNARESULTS` into `data/input/` under the filenames FTDNA suggests (the same names you'd get from manual download). If the session has expired the script exits with code 2 and tells you to re-run `ftdna-login.py`.
 
 Generated JSON files land in `data/output/` (which is not tracked in git — `data/` is a symlink to an external store).
 
