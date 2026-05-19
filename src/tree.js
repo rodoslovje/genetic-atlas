@@ -124,17 +124,10 @@ export class TreeVisualizer {
 
         const getCustomNote = (hg, defaultNote) => {
             const groupKey = groupKeyByValue.get(hg);
-            let customNote = null;
-            if (notesDict) {
-                customNote = notesDict[hg] || (groupKey && notesDict[groupKey]) || null;
-            }
-            if (customNote) {
-                if (groupKey && groupKey !== hg) {
-                    return this.isSquare ? `${groupKey} (${customNote})` : `${customNote} - ${groupKey}`;
-                }
-                return customNote;
-            }
-            return defaultNote;
+            const customNote = notesDict
+                ? (notesDict[hg] || (groupKey && notesDict[groupKey]) || null)
+                : null;
+            return customNote || defaultNote;
         };
 
         const buildHierarchy = (nodes, leaves) => {
@@ -425,16 +418,22 @@ export class TreeVisualizer {
         const getNodeClass = (d) => this.getNodeClass(d, allRoots);
 
         // Suffix shown after a haplogroup name in the tree label and tooltip.
-        // Uses the data's explicit note when present, else falls back to the
-        // group key (e.g. "R1a" for "R-M420"). Y-DNA brackets with " - ",
-        // mtDNA brackets with " (...)".
+        // Combines the group key (e.g. "R1a" for "R-M420") and the descriptive
+        // note in a lineage-appropriate format:
+        //   Y-DNA with both:  " - GroupKey (Note)"     → "G-P15 - G2a (Gorazd Kmetovalec)"
+        //   mtDNA with both:  " (Note - GroupKey)"
+        //   Either, note only: " (Note)"
+        //   Either, key only:  Y " - GroupKey", mt " (GroupKey)"
         const formatNoteSuffix = (data) => {
             const hasNote = data.note && data.note.trim() !== "" && data.note !== t("notePathMissing");
-            if (hasNote) return isSquare ? ` - ${data.note}` : ` (${data.note})`;
-            const rootGroupKey = getGroupKey(data.haplogroup);
-            if (rootGroupKey && rootGroupKey !== data.haplogroup) {
-                return isSquare ? ` - ${rootGroupKey}` : ` (${rootGroupKey})`;
+            const groupKey = getGroupKey(data.haplogroup);
+            const hasGroupKey = groupKey && groupKey !== data.haplogroup;
+
+            if (hasNote && hasGroupKey) {
+                return isSquare ? ` - ${groupKey} (${data.note})` : ` (${data.note} - ${groupKey})`;
             }
+            if (hasNote) return ` (${data.note})`;
+            if (hasGroupKey) return isSquare ? ` - ${groupKey}` : ` (${groupKey})`;
             return "";
         };
 
