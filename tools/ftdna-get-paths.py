@@ -66,8 +66,8 @@ MTDNA_MAJOR_ROOTS = [
 
 CONFIGS = {
     "y": {
-        "input": "data/slo-ydna.json",
-        "output": "data/slo-ydna-paths.json",
+        "input": "data/output/slo-ydna.json",
+        "output": "data/output/slo-ydna-paths.json",
         "url_template": "https://discover.familytreedna.com/resources/y-dna/{hg}.json",
         "major_roots": YDNA_MAJOR_ROOTS,
         "include_group_in_targets": False,
@@ -77,8 +77,8 @@ CONFIGS = {
         "accept_parent_field": False,
     },
     "mt": {
-        "input": "data/slo-mtdna.json",
-        "output": "data/slo-mtdna-paths.json",
+        "input": "data/output/slo-mtdna.json",
+        "output": "data/output/slo-mtdna-paths.json",
         "url_template": "https://discover.familytreedna.com/resources/mtdna/{hg}.json",
         "major_roots": MTDNA_MAJOR_ROOTS,
         "include_group_in_targets": True,

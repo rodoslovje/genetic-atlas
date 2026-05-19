@@ -21,11 +21,11 @@ from playwright.sync_api import sync_playwright
 CONFIGS = {
     "y": {
         "url": "https://www.familytreedna.com/public/Slovenianorigin?iframe=ydna-results-overview",
-        "output": "input/slo-ydna-fetched.csv",
+        "output": "data/input/slo-ydna-fetched.csv",
     },
     "mt": {
         "url": "https://www.familytreedna.com/public/Slovenianorigin?iframe=mtresults",
-        "output": "input/slo-mtdna-fetched.csv",
+        "output": "data/input/slo-mtdna-fetched.csv",
     },
 }
 

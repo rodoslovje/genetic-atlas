@@ -331,10 +331,10 @@ let dataPromise = null;
 export function loadData() {
     if (!dataPromise) {
         dataPromise = Promise.all([
-            d3.json("/data/slo-ydna-paths.json"),
-            d3.json("/data/slo-ydna.json"),
-            d3.json("/data/slo-mtdna-paths.json").catch(() => []),
-            d3.json("/data/slo-mtdna.json").catch(() => [])
+            d3.json("/data/output/slo-ydna-paths.json"),
+            d3.json("/data/output/slo-ydna.json"),
+            d3.json("/data/output/slo-mtdna-paths.json").catch(() => []),
+            d3.json("/data/output/slo-mtdna.json").catch(() => [])
         ]).then(([yHaplo, yPeople, mtHaplo, mtPeople]) => {
             ydnaHaploData = yHaplo;
             yPeople.forEach((p) => {

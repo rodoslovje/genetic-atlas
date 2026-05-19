@@ -41,7 +41,9 @@ playwright install chromium
 
 Each tool processes both lineages (Y-DNA and mtDNA) by default. Pass `--kind y` or `--kind mt` to limit it to one.
 
-**1. Download latest data from Slovenian Origin admin interface on FamilyTreeDNA and put it into `input/` folder.**
+**1. Download latest data from Slovenian Origin admin interface on FamilyTreeDNA and put it into the `data/input/` folder.**
+
+Generated JSON files land in `data/output/` (which is not tracked in git — `data/` is a symlink to an external store).
 
 **2. Fetch public results from FamilyTreeDNA:**
 

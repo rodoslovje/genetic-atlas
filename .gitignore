@@ -49,5 +49,5 @@ Thumbs.db
 .idea/
 *.swp
 
-# Input data - not saved, always collected from FTDNA
-input
+# Data - not saved, always collected from FTDNA + output stored in project repository
+data

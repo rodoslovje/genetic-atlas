@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "vite build && cp -r data dist/",
+    "build": "vite build && mkdir -p dist/data && cp -rL data/output dist/data/",
     "preview": "vite preview",
     "format": "prettier --write \"src/**/*.js\""
   },

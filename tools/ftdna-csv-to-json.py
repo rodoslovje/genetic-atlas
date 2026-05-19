@@ -17,10 +17,10 @@ import pandas as pd
 
 CONFIGS = {
     "y": {
-        "input_glob": "input/Slovenianorigin_Paternal_Ancestry_*.csv",
-        "input_fetched": "input/slo-ydna-fetched.csv",
-        "input_snp": "input/Slovenianorigin_YDNA_Haplogroups_Report.csv",
-        "output": "data/slo-ydna.json",
+        "input_glob": "data/input/Slovenianorigin_Paternal_Ancestry_*.csv",
+        "input_fetched": "data/input/slo-ydna-fetched.csv",
+        "input_snp": "data/input/Slovenianorigin_YDNA_Haplogroups_Report.csv",
+        "output": "data/output/slo-ydna.json",
         "ancestor_col": "Paternal Ancestor Name",
         "primary_name_alias": "Name_ydna",
         # Extra columns pulled from the fetched CSV: source -> renamed
@@ -36,10 +36,10 @@ CONFIGS = {
         ],
     },
     "mt": {
-        "input_glob": "input/Slovenianorigin_Maternal_Ancestry_*.csv",
-        "input_fetched": "input/slo-mtdna-fetched.csv",
-        "input_snp": "input/Slovenianorigin_MTDNA_Results.csv",
-        "output": "data/slo-mtdna.json",
+        "input_glob": "data/input/Slovenianorigin_Maternal_Ancestry_*.csv",
+        "input_fetched": "data/input/slo-mtdna-fetched.csv",
+        "input_snp": "data/input/Slovenianorigin_MTDNA_Results.csv",
+        "output": "data/output/slo-mtdna.json",
         "ancestor_col": "Maternal Ancestor Name",
         "primary_name_alias": "Name_mtdna",
         "fetched_extra": {"Mitotree Haplogroup": "mitotree"},
