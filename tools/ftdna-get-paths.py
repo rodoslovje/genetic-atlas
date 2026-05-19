@@ -292,25 +292,50 @@ def run_one(kind, mode):
     nodes_db = existing_nodes.copy() if mode == "update" else {}
 
     if mode == "full":
-        missing_hgs = sorted(target_haplogroups)
+        candidates = list(target_haplogroups)
     else:
-        missing_hgs = sorted(hg for hg in target_haplogroups if hg not in nodes_db)
+        candidates = [hg for hg in target_haplogroups if hg not in nodes_db]
+
+    # Fetch order: person-derived (likely deep, leaf-ish SNPs) before major roots,
+    # and longer names before shorter within each bucket. Each FTDNA response
+    # includes the queried node's full ancestry, so fetching the deepest target
+    # first lets the skip-already-populated check eliminate its ancestors from
+    # later iterations — fewer HTTP requests overall.
+    major_roots_set = set(cfg["major_roots"])
+    missing_hgs = sorted(candidates, key=lambda h: (h in major_roots_set, -len(h), h))
 
     print(f"Need to fetch paths for {len(missing_hgs)} haplogroups")
 
+    # The on-disk JSON is the source of truth. Write it after every successful
+    # fetch (atomically via temp+rename) so kill -9 at any moment leaves a valid
+    # checkpoint, and a partial "full" run can be resumed by re-running in
+    # "update" mode.
+    def save():
+        os.makedirs(os.path.dirname(cfg["output"]), exist_ok=True)
+        output_list = sorted(
+            nodes_db.values(),
+            key=lambda n: (999999 if n.get("age") is None else n["age"], n.get("haplogroup", "")),
+        )
+        tmp_path = cfg["output"] + ".tmp"
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(output_list, f, indent=4, ensure_ascii=False)
+        os.replace(tmp_path, cfg["output"])
+
     for idx, hg in enumerate(missing_hgs, 1):
+        # Each FTDNA response includes the full ancestry, so by the time we
+        # reach a haplogroup that was an ancestor of an earlier target, it
+        # is already in nodes_db — no need to re-fetch it.
+        if hg in nodes_db:
+            print(f"[{idx}/{len(missing_hgs)}] {hg} already populated from earlier path; skipping")
+            continue
         print(f"[{idx}/{len(missing_hgs)}] Fetching path for {hg} ...")
+        before = len(nodes_db)
         fetch_one(hg, cfg, nodes_db)
+        if len(nodes_db) > before:
+            save()
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    output_list = list(nodes_db.values())
-    output_list.sort(key=lambda n: (999999 if n.get("age") is None else n["age"], n.get("haplogroup", "")))
-
-    os.makedirs(os.path.dirname(cfg["output"]), exist_ok=True)
-    with open(cfg["output"], "w", encoding="utf-8") as f:
-        json.dump(output_list, f, indent=4, ensure_ascii=False)
-
-    print(f"Saved {len(output_list)} nodes to {cfg['output']}")
+    print(f"Saved {len(nodes_db)} nodes to {cfg['output']}")
     return True
 
 
