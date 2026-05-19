@@ -188,8 +188,10 @@ export function getSelectedGroups() {
     return view === "mtdna" ? state.mtdnaSelectedGroups : state.ydnaSelectedGroups;
 }
 
-const serializeGroups = (set) => Array.from(set).map(g => g === "" ? "_" : g).join(",");
-const deserializeGroups = (str) => new Set(str ? str.split(",").map(g => g === "_" ? "" : g) : []);
+// Ungrouped (empty string) is deliberately stripped: it's off by default and not
+// persisted to/restored from the URL.
+const serializeGroups = (set) => Array.from(set).filter(g => g !== "").join(",");
+const deserializeGroups = (str) => new Set(str ? str.split(",").filter(g => g !== "" && g !== "_") : []);
 
 export function updateURLState() {
     const params = new URLSearchParams(window.location.search);
@@ -264,7 +266,7 @@ export function matchesSearchQuery(person, query) {
     return (person.surname && person.surname.toLowerCase().includes(q)) ||
         (person.ancestor && person.ancestor.toLowerCase().includes(q)) ||
         (person.kit && person.kit.toLowerCase().includes(q)) ||
-        (person.haplogroup && person.haplogroup.toLowerCase().includes(q)) ||
+        (person._ancestry && person._ancestry.includes(q)) ||
         (person.location && person.location.toLowerCase().includes(q));
 }
 
@@ -433,16 +435,35 @@ export function loadData() {
             mtdnaHaploData = mtHaplo;
             mtdnaPeopleData = mtPeople;
 
+            // Precompute each person's ancestry chain (own haplogroup + all upstream
+            // SNPs) so a search for an upstream haplogroup matches downstream people.
+            const buildAncestryStrings = (haploData, people) => {
+                const parentMap = {};
+                if (haploData) haploData.forEach(d => { parentMap[d.haplogroup] = d.parent; });
+                people.forEach(p => {
+                    const parts = [];
+                    let curr = p.haplogroup;
+                    let depth = 0;
+                    while (curr && depth < 1000) {
+                        parts.push(curr);
+                        curr = parentMap[curr];
+                        depth++;
+                    }
+                    p._ancestry = parts.join("").toLowerCase();
+                });
+            };
+            buildAncestryStrings(yHaplo, yPeople);
+            buildAncestryStrings(mtHaplo, mtPeople);
+
             warnOnDuplicateKits(yPeople, "Y-DNA");
             warnOnDuplicateKits(mtPeople, "mtDNA");
 
+            // Ungrouped is intentionally not seeded — it's an opt-in filter.
             const yGroups = [...new Set(yPeople.map(p => p.group))].filter(Boolean);
             yGroups.forEach(k => state.ydnaSelectedGroups.add(k));
-            if (yPeople.some(p => !p.group)) state.ydnaSelectedGroups.add("");
 
             const mtGroups = [...new Set(mtPeople.map(p => p.group))].filter(Boolean);
             mtGroups.forEach(k => state.mtdnaSelectedGroups.add(k));
-            if (mtPeople.some(p => !p.group)) state.mtdnaSelectedGroups.add("");
 
             const urlParams = new URLSearchParams(window.location.search);
             const view = (window.location.hash || "#map").substring(1);
@@ -570,11 +591,13 @@ export function initFilters() {
     if (!ydnaPeopleData || !mtdnaPeopleData) return;
 
     const buildList = (people, haploData, rootsMap, selectedGroups, listId, toggleId, isMtDna) => {
-        const { groups, orderedGroups, groupDepths } = buildOrderedGroups(people, haploData, rootsMap);
+        const { groups, orderedGroups: cachedOrdered, groupDepths } = buildOrderedGroups(people, haploData, rootsMap);
 
         const hasUngrouped = people.some(p => !p.group);
         const currentView = (window.location.hash || "#map").substring(1);
-        if (hasUngrouped && currentView === "map") orderedGroups.push("");
+        const orderedGroups = hasUngrouped && currentView === "map"
+            ? [...cachedOrdered, ""]
+            : cachedOrdered;
 
         const counterId = isMtDna ? "lineage-count-mtdna" : "lineage-count-ydna";
         const listedPeople = people.filter(p => p.group === "" ? (hasUngrouped && currentView === "map") : groups.includes(p.group));
@@ -590,6 +613,9 @@ export function initFilters() {
         listContainer.html("");
 
         const prefix = isMtDna ? "m" : "y";
+        // "Select all" / "all selected" operate on real lineages — Ungrouped is
+        // an independent opt-in toggle.
+        const selectableGroups = orderedGroups.filter(g => g !== "");
         orderedGroups.forEach((groupName) => {
             const isUngrouped = groupName === "";
             const count = people.filter((p) => isUngrouped ? !p.group : p.group === groupName).length;
@@ -617,8 +643,9 @@ export function initFilters() {
                     }
                     if (isMtDna) state.mzoom = isUngrouped ? null : groupName;
                     else state.yzoom = isUngrouped ? null : groupName;
-                    if (isMtDna) state.mtdnaAllSelected = selectedGroups.size === orderedGroups.length;
-                    else state.ydnaAllSelected = selectedGroups.size === orderedGroups.length;
+                    const allSel = selectableGroups.every(g => selectedGroups.has(g));
+                    if (isMtDna) state.mtdnaAllSelected = allSel;
+                    else state.ydnaAllSelected = allSel;
                     updateCounter();
                     updateURLState();
                     window.dispatchEvent(new CustomEvent("filterChanged"));
@@ -627,24 +654,23 @@ export function initFilters() {
 
         d3.select(toggleId).on("click", function () {
             let newState;
+            const target = isMtDna ? state.mtdnaSelectedGroups : state.ydnaSelectedGroups;
             if (isMtDna) {
                 state.mzoom = null;
                 state.mtdnaAllSelected = !state.mtdnaAllSelected;
                 newState = state.mtdnaAllSelected;
-                if (newState) orderedGroups.forEach(k => state.mtdnaSelectedGroups.add(k));
-                else state.mtdnaSelectedGroups.clear();
             } else {
                 state.yzoom = null;
                 state.ydnaAllSelected = !state.ydnaAllSelected;
                 newState = state.ydnaAllSelected;
-                if (newState) orderedGroups.forEach(k => state.ydnaSelectedGroups.add(k));
-                else state.ydnaSelectedGroups.clear();
             }
+            // Toggle only the grouped lineages — leave the Ungrouped state alone.
+            if (newState) selectableGroups.forEach(k => target.add(k));
+            else selectableGroups.forEach(k => target.delete(k));
 
             this.innerText = t(newState ? "deselectAll" : "selectAll");
-            orderedGroups.forEach((groupName) => {
-                const isUngrouped = groupName === "";
-                const chkId = `chk-${prefix}-${isUngrouped ? "_ungrouped" : groupName}`;
+            selectableGroups.forEach((groupName) => {
+                const chkId = `chk-${prefix}-${groupName}`;
                 const chk = document.getElementById(chkId);
                 if (chk) chk.checked = newState;
             });

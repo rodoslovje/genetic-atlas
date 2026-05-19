@@ -1,8 +1,5 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import "leaflet.markercluster";
-import "leaflet.markercluster/dist/MarkerCluster.css";
-import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { state, ydnaPeopleData, mtdnaPeopleData, getPersonTooltip, getHaploColor, isProminentPerson, matchesSearchQuery } from "./shared.js";
 
 function bindNameLabel(marker, dir) {
@@ -14,6 +11,10 @@ function bindNameLabel(marker, dir) {
     });
 }
 
+// Base spread radius in degrees latitude (~270 m near Slovenia). Markers sharing a
+// coordinate are placed on a circle whose radius scales with sqrt(group size).
+const JITTER_BASE_DEG = 0.0024;
+
 export class MapVisualizer {
     constructor(containerId) {
         this.containerId = containerId;
@@ -22,6 +23,7 @@ export class MapVisualizer {
         this.markers = null;
         this.lastSearchQuery = null;
         this.firstLoad = true;
+        this.jitteredCoords = null;
     }
 
     initMap() {
@@ -35,38 +37,93 @@ export class MapVisualizer {
             crossOrigin: true
         }).addTo(this.map);
 
-        this.markers = L.markerClusterGroup({
-            spiderfyOnMaxZoom: true,
-            showCoverageOnHover: false,
-            zoomToBoundsOnClick: true,
-            maxClusterRadius: 40,
-            spiderfyDistanceMultiplier: 1.5
-        }).addTo(this.map);
-
-        this.markers.on("spiderfied", (e) => {
-            const center = e.cluster.getLatLng();
-            e.markers.forEach(marker => {
-                if (!marker._labelName) return;
-                const mll = marker.getLatLng();
-                const dx = mll.lng - center.lng;
-                const dy = mll.lat - center.lat;
-                const dir = Math.abs(dx) >= Math.abs(dy)
-                    ? (dx >= 0 ? "right" : "left")
-                    : (dy >= 0 ? "top" : "bottom");
-                marker.unbindTooltip();
-                bindNameLabel(marker, dir);
-            });
-        });
-
-        this.markers.on("unspiderfied", (e) => {
-            e.markers.forEach(marker => {
-                if (!marker._labelName) return;
-                marker.unbindTooltip();
-                bindNameLabel(marker, "right");
-            });
-        });
+        this.markers = L.featureGroup().addTo(this.map);
 
         this.refreshMap();
+    }
+
+    // Stable spread for markers that share a (rounded) coordinate: deterministic
+    // ring layout keyed by person identity so positions don't reshuffle when
+    // filters or searches change.
+    precomputeJitter() {
+        if (this.jitteredCoords) return;
+        if (!ydnaPeopleData || !mtdnaPeopleData) return;
+
+        const groups = new Map();
+        const consider = (p, isMt) => {
+            const lat = Number(p.latitude);
+            const lon = Number(p.longitude);
+            if (!lat || !lon || (lat === 0 && lon === 0)) return;
+            const key = `${lat.toFixed(5)},${lon.toFixed(5)}`;
+            if (!groups.has(key)) groups.set(key, { lat, lon, items: [] });
+            groups.get(key).items.push({ person: p, isMt });
+        };
+
+        ydnaPeopleData.forEach(p => consider(p, false));
+        mtdnaPeopleData.forEach(p => consider(p, true));
+
+        // Sort key: haplogroup, then ancestor, then surname. Ungrouped items have
+        // an empty group so they fall back to ancestor/surname order.
+        const sortItems = (items) => items.slice().sort((a, b) => {
+            const ag = String(a.person.group ?? ""), bg = String(b.person.group ?? "");
+            if (ag !== bg) return ag.localeCompare(bg);
+            const aa = String(a.person.ancestor ?? ""), ba = String(b.person.ancestor ?? "");
+            if (aa !== ba) return aa.localeCompare(ba);
+            return String(a.person.surname ?? "").localeCompare(String(b.person.surname ?? ""));
+        });
+
+        const result = new Map();
+        for (const [key, group] of groups) {
+            if (group.items.length === 1) {
+                result.set(group.items[0].person, { lat: group.lat, lon: group.lon });
+                continue;
+            }
+            // Two rings per cluster, both traversed CW from 12 o'clock:
+            //   Grouped ring   = Y grouped  → mt grouped       (with haplogroup)
+            //   Ungrouped ring = mt no-grp  → Y no-grp         (without haplogroup)
+            const grouped = [
+                ...sortItems(group.items.filter(it => !it.isMt && it.person.group)),
+                ...sortItems(group.items.filter(it =>  it.isMt && it.person.group)),
+            ];
+            const ungrouped = [
+                ...sortItems(group.items.filter(it =>  it.isMt && !it.person.group)),
+                ...sortItems(group.items.filter(it => !it.isMt && !it.person.group)),
+            ];
+
+            const lngScale = 1 / Math.cos(group.lat * Math.PI / 180);
+            const placeRing = (items, radius) => {
+                const n = items.length;
+                if (n === 0) return;
+                const step = (2 * Math.PI) / n;
+                items.forEach((it, i) => {
+                    const angle = Math.PI / 2 - i * step;
+                    result.set(it.person, {
+                        lat: group.lat + radius * Math.sin(angle),
+                        lon: group.lon + radius * lngScale * Math.cos(angle)
+                    });
+                });
+            };
+
+            // Larger bucket gets the outer ring; inner ring is exactly half its
+            // radius (the "at least 2× larger" constraint). On a tie, grouped wins.
+            let rGrouped, rUngrouped;
+            if (grouped.length === 0) {
+                rUngrouped = JITTER_BASE_DEG * Math.sqrt(ungrouped.length);
+            } else if (ungrouped.length === 0) {
+                rGrouped = JITTER_BASE_DEG * Math.sqrt(grouped.length);
+            } else {
+                const groupedIsOuter = grouped.length >= ungrouped.length;
+                const rBig = JITTER_BASE_DEG * Math.sqrt(groupedIsOuter ? grouped.length : ungrouped.length);
+                const rSmall = rBig / 2;
+                rGrouped = groupedIsOuter ? rBig : rSmall;
+                rUngrouped = groupedIsOuter ? rSmall : rBig;
+            }
+
+            placeRing(grouped, rGrouped);
+            placeRing(ungrouped, rUngrouped);
+        }
+
+        this.jitteredCoords = result;
     }
 
     resetZoom() {
@@ -84,6 +141,7 @@ export class MapVisualizer {
         if (view !== "map") return;
 
         if (!this.markers || !ydnaPeopleData || !mtdnaPeopleData) return;
+        this.precomputeJitter();
         this.markers.clearLayers();
 
         let bounds = L.latLngBounds();
@@ -95,10 +153,9 @@ export class MapVisualizer {
 
             if (!matchesSearchQuery(p, state.searchQuery)) return;
 
-            const lat = Number(p.latitude);
-            const lon = Number(p.longitude);
-
-            if (!lat || !lon || (lat === 0 && lon === 0)) return;
+            const coords = this.jitteredCoords.get(p);
+            if (!coords) return;
+            const { lat, lon } = coords;
 
             const color = getHaploColor(p.group);
             let marker;
