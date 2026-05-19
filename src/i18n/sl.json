@@ -1,5 +1,5 @@
 {
-    "brand": "Slovenska genetska dediščina",
+    "brand": "Slovenski genetski atlas",
     "map": "Zemljevid",
     "ydna": "Očetne linije (Y-DNK)",
     "mtdna": "Materne linije (mtDNK)",
@@ -55,7 +55,7 @@
     "versionLabel": "Različica: {0}",
     "dataUpdateLabel": "Posodobitev podatkov: {0}",
     "createdLabel": "Ustvarjeno: {0}",
-    "attributionHtml": "Vir: <a href='https://rodoslovje.si/slovenska-dnk' target='_blank' rel='noopener noreferrer'>Slovenska genetska dediščina</a> in <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a>",
+    "attributionHtml": "Vir: <a href='https://rodoslovje.si/slovenska-dnk' target='_blank' rel='noopener noreferrer'>{infoSloGenHeritage}</a> in <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a>",
     "yearsAgo": "pred {0} leti",
     "mtdnaNotes": {
         "L'AA'AB": "Denisovski razcep - skupna prednica denisovskega in sodobnega človeka",

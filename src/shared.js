@@ -164,8 +164,14 @@ export const state = {
 };
 
 export function t(key, ...args) {
-    let str = translations[state.currentLang][key] ?? key;
+    const dict = translations[state.currentLang] || translations.en;
+    let str = dict[key] ?? key;
     args.forEach((val, i) => { str = str.replace(`{${i}}`, val); });
+    str = str.replace(/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g, (m, name) => {
+        if (name === key) return m;
+        const v = dict[name];
+        return typeof v === "string" ? v : m;
+    });
     return str;
 }
 

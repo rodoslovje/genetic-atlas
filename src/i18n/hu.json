@@ -1,5 +1,5 @@
 {
-    "brand": "Szlovén Genetikai Örökség",
+    "brand": "Szlovén Genetikai Atlasz",
     "map": "Térkép",
     "ydna": "Apasági Vonalak (Y-DNA)",
     "mtdna": "Anyasági Vonalak (mtDNA)",
@@ -55,7 +55,7 @@
     "versionLabel": "Verzió: {0}",
     "dataUpdateLabel": "Adatfrissítés: {0}",
     "createdLabel": "Létrehozva: {0}",
-    "attributionHtml": "Forrás: <a href='https://rodoslovje.si/slovenska-dnk' target='_blank' rel='noopener noreferrer'>Szlovén Genetikai Örökség</a> és <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a>",
+    "attributionHtml": "Forrás: <a href='https://rodoslovje.si/slovenska-dnk' target='_blank' rel='noopener noreferrer'>{infoSloGenHeritage}</a> és <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a>",
     "yearsAgo": "{0} évvel ezelőtt",
     "mtdnaNotes": {
         "L'AA'AB": "Gyenyiszovai divergencia - a gyenyiszovaiak és a modern ember közös őse",

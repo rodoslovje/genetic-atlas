@@ -1,5 +1,5 @@
 {
-    "brand": "Slovenian Genetic Heritage",
+    "brand": "Slovenian Genetic Atlas",
     "map": "Map",
     "ydna": "Paternal Lineages (Y-DNA)",
     "mtdna": "Maternal Lineages (mtDNA)",
@@ -55,7 +55,7 @@
     "versionLabel": "Version: {0}",
     "dataUpdateLabel": "Data update: {0}",
     "createdLabel": "Created: {0}",
-    "attributionHtml": "Source: <a href='https://rodoslovje.si/slovenska-dnk' target='_blank' rel='noopener noreferrer'>Slovenian Genetic Heritage</a> and <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a>",
+    "attributionHtml": "Source: <a href='https://rodoslovje.si/slovenska-dnk' target='_blank' rel='noopener noreferrer'>{infoSloGenHeritage}</a> and <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a>",
     "yearsAgo": "{0} years ago",
     "mtdnaNotes": {
         "L'AA'AB": "Denisovan divergence - common ancestor of Denisovans and modern humans",

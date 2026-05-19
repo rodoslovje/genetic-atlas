@@ -1,5 +1,5 @@
 {
-    "brand": "Slowenisches Genetisches Erbe",
+    "brand": "Slowenischer Genetischer Atlas",
     "map": "Karte",
     "ydna": "Väterliche Linien (Y-DNA)",
     "mtdna": "Mütterliche Linien (mtDNA)",
@@ -55,7 +55,7 @@
     "versionLabel": "Version: {0}",
     "dataUpdateLabel": "Datenaktualisierung: {0}",
     "createdLabel": "Erstellt: {0}",
-    "attributionHtml": "Quelle: <a href='https://rodoslovje.si/slovenska-dnk' target='_blank' rel='noopener noreferrer'>Slowenisches Genetisches Erbe</a> und <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a>",
+    "attributionHtml": "Quelle: <a href='https://rodoslovje.si/slovenska-dnk' target='_blank' rel='noopener noreferrer'>{infoSloGenHeritage}</a> und <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a>",
     "yearsAgo": "vor {0} Jahren",
     "mtdnaNotes": {
         "L'AA'AB": "Denisova-Divergenz - gemeinsamer Vorfahre von Denisova-Menschen und modernen Menschen",

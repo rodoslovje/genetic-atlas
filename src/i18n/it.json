@@ -1,5 +1,5 @@
 {
-    "brand": "Patrimonio Genetico Sloveno",
+    "brand": "Atlante Genetico Sloveno",
     "map": "Mappa",
     "ydna": "Lignaggi Paterni (Y-DNA)",
     "mtdna": "Lignaggi Materni (mtDNA)",
@@ -55,7 +55,7 @@
     "versionLabel": "Versione: {0}",
     "dataUpdateLabel": "Aggiornamento dati: {0}",
     "createdLabel": "Creato: {0}",
-    "attributionHtml": "Fonte: <a href='https://rodoslovje.si/slovenska-dnk' target='_blank' rel='noopener noreferrer'>Patrimonio Genetico Sloveno</a> e <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a>",
+    "attributionHtml": "Fonte: <a href='https://rodoslovje.si/slovenska-dnk' target='_blank' rel='noopener noreferrer'>{infoSloGenHeritage}</a> e <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a>",
     "yearsAgo": "{0} anni fa",
     "mtdnaNotes": {
         "L'AA'AB": "Divergenza denisoviana - antenato comune dell'uomo di Denisova e dell'uomo moderno",
