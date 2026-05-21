@@ -1,0 +1,515 @@
+/* =============================================================
+ * Slovenian Genetic Atlas — app-specific styles
+ *
+ * Tokens come from srd-tokens.css. Header / navbar / sidebar /
+ * buttons / tooltips / loading overlay come from srd.css.
+ *
+ * This file is for things only the Atlas needs: page views,
+ * lineage control widgets, d3 tree node styling, leaflet map
+ * label overrides, the tree minimap, and the attribution
+ * overlay.
+ * ============================================================= */
+
+body {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* --- View container & page views (router target) --------------- */
+#view-container {
+  flex-grow: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-view {
+  display: none;
+  width: 100%;
+  height: 100%;
+}
+
+.page-view.active {
+  display: block;
+}
+
+/* --- Mobile nav links inside the sidebar ----------------------- */
+/* Pill styling mirrors .srd-nav-tabs a in srd.css so selected/hover states
+   read identically in the navbar and the sidebar. */
+.nav-list-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-list-mobile a {
+  text-decoration: none;
+  color: var(--srd-ink-muted);
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-list-mobile a:hover {
+  background: var(--srd-bg);
+  color: var(--srd-ink);
+}
+
+.nav-list-mobile a.active {
+  color: var(--srd-brand);
+  background: var(--srd-brand-tint);
+  font-weight: 600;
+}
+
+.nav-list-mobile img {
+  width: 16px;
+  border-radius: 2px;
+}
+
+/* --- Search input (inside sidebar) ----------------------------- */
+.search-wrap {
+  position: relative;
+}
+
+#search-counter {
+  position: absolute;
+  right: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--srd-font-sans);
+  font-size: 11px;
+  color: var(--srd-ink-subtle);
+  pointer-events: none;
+  display: none;
+}
+
+#search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--srd-ink-subtle);
+  display: none;
+  font-weight: bold;
+  font-size: 12px;
+  padding: 4px;
+}
+
+#search-clear:hover {
+  color: var(--srd-ink);
+}
+
+/* --- Lineage controls (Y-DNA / mtDNA filter checklists) -------- */
+.group-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12.5px;
+  color: var(--srd-ink-muted);
+  cursor: pointer;
+}
+
+.group-item input {
+  margin-right: 8px;
+  cursor: pointer;
+  accent-color: var(--srd-brand);
+}
+
+.select-all-btn {
+  width: 100%;
+  padding: 7px 8px;
+  font-family: var(--srd-font-sans);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--srd-ink-muted);
+  background: var(--srd-bg);
+  border: 1px solid var(--srd-line);
+  border-radius: var(--srd-radius);
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.select-all-btn:hover {
+  background: var(--srd-bg-subtle);
+  border-color: var(--srd-line-strong);
+  color: var(--srd-ink);
+}
+
+.passthrough-item {
+  display: flex;
+  align-items: center;
+  margin-top: 15px;
+  font-size: 12.5px;
+  color: var(--srd-ink-muted);
+  cursor: pointer;
+}
+
+.passthrough-item input {
+  margin-right: 8px;
+  accent-color: var(--srd-brand);
+}
+
+#lineage-count-ydna,
+#lineage-count-mtdna {
+  font-size: 11px;
+  color: var(--srd-ink-subtle);
+  margin: 4px 0 6px;
+}
+
+/* --- Era list ------------------------------------------------- */
+#era-list .legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 12.5px;
+  color: var(--srd-ink-muted);
+}
+
+.legend-color {
+  width: 24px;
+  height: 4px;
+  border-radius: 2px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+/* =============================================================
+ * d3 tree node styling
+ *
+ * Lineage colors are JS-computed in lineage.js and applied as
+ * fill/stroke attributes — those stay verbatim. The CSS rules
+ * below cover everything else (text color, hover, search-
+ * match highlight, autoplaced marker). Slate ink replaces the
+ * previous loose hex literals.
+ * ============================================================= */
+
+.node {
+  cursor: pointer;
+}
+
+.node circle,
+.node rect {
+  stroke-width: 2.5px;
+  transition: r 0.2s, x 0.2s, y 0.2s, width 0.2s, height 0.2s;
+}
+
+.node:hover circle { r: 12; }
+
+.node:hover rect {
+  x: -11px;
+  y: -11px;
+  width: 22px;
+  height: 22px;
+}
+
+.node text {
+  font-family: var(--srd-font-sans);
+  font-size: 12px;
+  fill: var(--srd-ink);
+  pointer-events: auto;
+}
+
+.node--person text {
+  font-weight: 500;
+  fill: var(--srd-brand);   /* heritage navy — high contrast for readability */
+  font-size: 13px;
+}
+
+.node--prominent text {
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.node--autoplaced text {
+  fill: #c53030 !important;   /* semantic: autoplaced marker (preserved) */
+  font-weight: bold;
+}
+
+.node--search-match text {
+  fill: #c05621 !important;   /* semantic: search highlight (preserved) */
+  font-size: 13.5px !important;
+  text-shadow: 0 0 4px rgba(237, 137, 54, 0.4);
+}
+
+.node--search-match image {
+  filter: drop-shadow(0 0 4px rgba(221, 107, 32, 0.8));
+}
+
+.link {
+  fill: none;
+  stroke: var(--srd-line-strong);
+  stroke-width: 1.5px;
+  opacity: 0.5;
+}
+
+.error-tag {
+  color: var(--srd-error);
+  font-weight: bold;
+  font-style: italic;
+}
+
+.ydna-square-marker {
+  background: none;
+  border: none;
+}
+
+/* =============================================================
+ * Leaflet map overrides
+ * ============================================================= */
+
+.marker-name-label {
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  box-shadow: 0 1px 3px rgba(15, 34, 64, 0.18);
+  font-family: var(--srd-font-sans);
+  font-size: 11px;
+  padding: 2px 6px;
+  color: var(--srd-ink);
+  border-radius: 3px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.marker-name-label.prominent {
+  font-weight: bold;
+}
+
+.marker-name-label::before {
+  display: none;
+}
+
+.leaflet-popup-content .tooltip-link {
+  color: var(--srd-accent);
+  text-decoration: none;
+}
+
+.leaflet-popup-content .tooltip-link:hover {
+  color: var(--srd-accent-strong);
+  text-decoration: underline;
+}
+
+/* Use the shared tooltip pattern from srd.css */
+/* pointer-events default to `none` so a faded-out tooltip (opacity: 0 but still
+   positioned at its last spot) cannot eat clicks on whatever's underneath
+   (sidebar nav, info popover, etc.). The attribute selector flips it back to
+   `auto` only when d3 has set inline `opacity: 1` — i.e. the tooltip is fully
+   visible — so the keep-alive mouseenter/mouseleave handlers still work. */
+.tooltip {
+  position: absolute;
+  padding: 12px 16px;
+  background: var(--srd-surface);
+  color: var(--srd-ink-muted);
+  border: 1px solid var(--srd-line-strong);
+  border-radius: var(--srd-radius);
+  pointer-events: none;
+  font-family: var(--srd-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  box-shadow: var(--srd-shadow-2);
+  z-index: 3000;
+}
+
+.tooltip[style*="opacity: 1"] {
+  pointer-events: auto;
+}
+
+.tooltip b {
+  color: var(--srd-ink);
+  font-weight: 600;
+}
+
+.tooltip-link {
+  color: var(--srd-accent);
+  text-decoration: none;
+}
+
+.tooltip-link:hover {
+  color: var(--srd-accent-strong);
+  text-decoration: underline;
+}
+
+/* =============================================================
+ * Attribution overlay (bottom-left map credits)
+ * ============================================================= */
+
+#attribution-overlay {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 1px 6px;
+  font: 11px/1.5 var(--srd-font-sans);
+  color: var(--srd-ink-muted);
+  z-index: 2000;
+  pointer-events: auto;
+}
+
+#attribution-overlay a {
+  color: var(--srd-accent);
+  text-decoration: none;
+}
+
+#attribution-overlay a:hover {
+  color: var(--srd-accent-strong);
+  text-decoration: underline;
+}
+
+/* =============================================================
+ * Floating action buttons (cluster top-right of viewport)
+ * ============================================================= */
+
+#floating-buttons {
+  position: fixed;
+  top: calc(var(--srd-nav-h) + 12px);
+  right: 12px;
+  z-index: 1900;
+  display: flex;
+  gap: 10px;
+  transition: right 0.25s ease;
+}
+
+body:has(#sidebar.open) #floating-buttons {
+  right: 252px;   /* 240px sidebar + 12px gutter */
+}
+
+#info-widget {
+  position: relative;
+}
+
+#reset-btn,
+#export-btn {
+  display: none;       /* JS toggles to "flex" per view */
+}
+
+/* =============================================================
+ * Info bubble layout (uses srd-popover for chrome,
+ * Atlas-specific content layout here)
+ * ============================================================= */
+
+#info-bubble .info-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+#info-bubble .info-content img {
+  width: 54px;
+  height: auto;
+  flex-shrink: 0;
+  display: block;
+}
+
+#info-text-container {
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: var(--srd-ink-muted);
+  line-height: 1.55;
+  display: none;
+  border-bottom: 1px solid var(--srd-line);
+  padding-bottom: 14px;
+}
+
+#info-bubble #version-info,
+#info-bubble #data-info {
+  font-size: 11px;
+  color: var(--srd-ink-subtle);
+}
+
+#info-bubble #version-info {
+  margin-top: 10px;
+  border-top: 1px solid var(--srd-line);
+  padding-top: 8px;
+}
+
+#info-bubble #data-info {
+  margin-top: 4px;
+}
+
+.info-github-link {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--srd-ink-subtle);
+  text-decoration: none;
+}
+
+.info-github-link:hover {
+  color: var(--srd-ink-muted);
+  text-decoration: underline;
+}
+
+/* =============================================================
+ * Tree minimap (top-right overlay on tree views)
+ * ============================================================= */
+
+.tree-minimap {
+  display: none;
+  position: absolute;
+  top: 56px;
+  bottom: 12px;
+  right: 12px;
+  width: 64px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--srd-line-strong);
+  border-radius: var(--srd-radius);
+  pointer-events: auto;
+  z-index: 100;
+  box-shadow: var(--srd-shadow-1);
+  box-sizing: border-box;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.tree-minimap svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .tree-minimap {
+    display: block;
+  }
+}
+
+body:has(#sidebar.open) .tree-minimap {
+  right: 252px;
+}
+
+/* =============================================================
+ * Responsive tweaks
+ * ============================================================= */
+
+/* Floating buttons stack vertically whenever the tree minimap is hidden
+   (same breakpoint as `.tree-minimap`'s `min-width: 768px` display rule),
+   so the column layout aligns with the minimap-less viewport. */
+@media (max-width: 767px) {
+  #floating-buttons {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+}
+
+@media (max-width: 600px) {
+  #info-bubble {
+    width: calc(100vw - 24px);
+    max-width: none;
+  }
+  #info-bubble .info-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .tooltip {
+    width: calc(100vw - 24px);
+    box-sizing: border-box;
+  }
+}
+

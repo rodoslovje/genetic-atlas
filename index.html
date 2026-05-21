@@ -4,203 +4,123 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Slovenian Genetic Atlas</title>
+
     <link rel="icon" type="image/png" sizes="32x32" href="/srd-favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/srd-favicon-192x192.png">
-    <style>
-        :root { --nav-height: 60px; --sidebar-width: 230px; --accent: #1a365d; --ydna-minimap-width: 160px; --mtdna-minimap-width: 160px; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; overflow: hidden; background: #f1f5f9; display: flex; flex-direction: column; height: 100vh; }
-        #navbar { height: var(--nav-height); background: white; width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-sizing: border-box; border-bottom: 1px solid #e2e8f0; z-index: 2001; box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex-shrink: 0; }
-        #navbar .brand { font-size: 20px; font-weight: bold; color: var(--accent); text-decoration: none; }
-        .nav-links { display: flex; gap: 20px; padding: 0 15px; }
-        .nav-links a { text-decoration: none; color: #4a5568; font-weight: 500; padding: 5px 0; }
-        .nav-links a.active { color: #3182ce; border-bottom: 2px solid #3182ce; }
-        #sidebar { position: fixed; right: 0; top: var(--nav-height); width: var(--sidebar-width); height: calc(100% - var(--nav-height)); background: white; border-left: 1px solid #e2e8f0; padding: 15px; padding-bottom: 80px; box-sizing: border-box; overflow-y: auto; z-index: 1500; box-shadow: -4px 0 6px rgba(0,0,0,0.05); transform: translateX(100%); transition: transform 0.3s ease; -webkit-overflow-scrolling: touch; }
-        #sidebar.open { transform: translateX(0); }
-        .mobile-nav-section { display: none !important; }
-        body.compact-nav .mobile-nav-section { display: block !important; }
-        body.compact-nav .desktop-nav { display: none !important; }
-        body.compact-nav .lang-selector { display: none !important; }
-        .brand, .nav-links a { white-space: nowrap; }
-        #navbar > * { flex-shrink: 0; }
-        .nav-right { display: flex; align-items: center; gap: 15px; }
-        .lang-selector { position: relative; }
-        .lang-btn { display: flex; align-items: center; gap: 6px; background: transparent; border: 1px solid #e2e8f0; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; color: #4a5568; transition: background 0.2s; }
-        .lang-btn:hover { background: #f8fafc; }
-        .lang-btn img { width: 16px; border-radius: 2px; }
-        .lang-menu { position: absolute; top: 100%; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 8px; display: none; flex-direction: column; min-width: 150px; z-index: 2500; }
-        .lang-menu.open { display: flex; }
-        .lang-menu a { display: flex; align-items: center; gap: 8px; padding: 8px 12px; text-decoration: none; color: #4a5568; font-size: 13px; transition: background 0.2s; }
-        .lang-menu a:hover { background: #f1f5f9; }
-        .lang-menu img { width: 16px; border-radius: 2px; }
-        .hamburger { cursor: pointer; font-size: 24px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0 4px 4px 4px; line-height: 1; color: var(--accent); }
-        #view-container { flex-grow: 1; position: relative; overflow: hidden; }
-        .page-view { display: none; width: 100%; height: 100%; }
-        .page-view.active { display: block; }
-        .sidebar-section { margin-bottom: 20px; }
-        h4.sidebar-section-title { margin: 0 0 10px 0; font-size: 15px; color: #2d3748; border-bottom: 1px solid #edf2f7; padding-bottom: 5px; }
-        .nav-list-mobile { display: flex; flex-direction: column; gap: 12px; }
-        .nav-list-mobile a { text-decoration: none; color: #4a5568; font-size: 14px; display: flex; align-items: center; gap: 8px; }
-        .nav-list-mobile a.active { color: #3182ce; }
-        .nav-list-mobile img { width: 16px; border-radius: 2px; }
-        .group-item { display: flex; align-items: center; margin-bottom: 8px; font-size: 12px; color: #4a5568; cursor: pointer; }
-        .group-item input { margin-right: 8px; cursor: pointer; }
-        .select-all-btn { background: #edf2f7; border: 1px solid #cbd5e0; padding: 6px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-bottom: 15px; width: 100%; color: #4a5568; font-weight: 600; }
-        .passthrough-item { display: flex; align-items: center; margin-top: 15px; font-size: 12px; color: #4a5568; cursor: pointer; }
-        .passthrough-item input { margin-right: 8px; }
-        .node { cursor: pointer; }
-        .node circle, .node rect { stroke-width: 2.5px; transition: all 0.2s; }
-        .node:hover circle { r: 12; }
-        .node:hover rect { x: -11px; y: -11px; width: 22px; height: 22px; }
-        .node text { font-size: 12px; fill: #1a202c; pointer-events: auto; }
-        .node--person text { font-weight: normal; fill: #2c5282; font-size: 13px; }
-        .node--prominent text { font-weight: bold; font-size: 13px; }
-        .node--autoplaced text { fill: #c53030 !important; font-weight: bold; }
-        .node--search-match text { fill: #c05621 !important; font-size: 13.5px !important; text-shadow: 0 0 4px rgba(237, 137, 54, 0.4); }
-        .node--search-match image { filter: drop-shadow(0px 0px 4px rgba(221, 107, 32, 0.8)); }
-        .ydna-square-marker { background: none; border: none; }
-        .link { fill: none; stroke: #cbd5e0; stroke-width: 1.5px; opacity: 0.5; }
-        .legend-item { display: flex; align-items: center; margin-bottom: 10px; font-size: 12px; color: #4a5568; }
-        .legend-color { width: 24px; height: 4px; border-radius: 2px; margin-right: 12px; flex-shrink: 0; }
-        .tooltip { position: absolute; padding: 12px 16px; background: white; color: #4a5568; border-radius: 8px; pointer-events: auto; font-size: 13px; z-index: 3000; line-height: 1.5; border: 1px solid #cbd5e0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
-        .tooltip b { color: #1a202c; font-weight: 600; }
-        .tooltip-link { color: #2b6cb0; text-decoration: none; }
-        .tooltip-link:hover { text-decoration: underline; }
-        .leaflet-popup-content .tooltip-link { color: #2b6cb0; text-decoration: none; }
-        .leaflet-popup-content .tooltip-link:hover { text-decoration: underline; }
-        .error-tag { color: #e53e3e; font-weight: bold; font-style: italic; }
 
-        #floating-buttons {
-            position: fixed;
-            top: calc(var(--nav-height) + 10px);
-            right: 10px;
-            z-index: 1900;
-            display: flex;
-            gap: 10px;
-            transition: right 0.3s ease;
-        }
-        body:has(#sidebar.open) #floating-buttons { right: calc(var(--sidebar-width) + 10px); }
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600&display=swap" rel="stylesheet">
 
-        #info-widget { font-family: 'Segoe UI', Tahoma, sans-serif; }
-        #info-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: white; border: none; font-size: 18px; font-style: italic; font-family: serif; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
-        #info-btn:hover { background: #2c5282; }
-        #info-bubble { position: absolute; top: 46px; right: 0; background: white; border: 1px solid #cbd5e0; border-radius: 8px; padding: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); width: max-content; max-width: 440px; max-height: calc(100vh - 100px); overflow-y: auto; box-sizing: border-box; display: none; }
-        #info-bubble.open { display: block; }
-        .info-content { display: flex; align-items: center; gap: 15px; }
-        #info-bubble ul { list-style: none; padding: 0; margin: 0; }
-        #info-bubble li { margin-bottom: 8px; }
-        #info-bubble li:last-child { margin-bottom: 0; }
-        #info-bubble #version-info { font-size: 11px; color: #718096; margin-top: 10px; border-top: 1px solid #edf2f7; padding-top: 8px; }
-        #info-bubble #data-info { font-size: 11px; color: #718096; margin-top: 4px; }
-        #info-bubble a { text-decoration: none; color: #2b6cb0; font-size: 13px; font-weight: 600; transition: color 0.2s; }
-        #info-bubble a:hover { color: #1a365d; text-decoration: underline; }
-        #reset-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: white; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: none; align-items: center; justify-content: center; transition: background 0.2s; }
-        #reset-btn:hover { background: #2c5282; }
-        #export-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: white; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: none; align-items: center; justify-content: center; transition: background 0.2s; }
-        #export-btn:hover { background: #2c5282; }
-        #attribution-overlay { position: fixed; bottom: 0; left: 0; background: rgba(255, 255, 255, 0.7); padding: 0 5px; font: 11px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif; color: #333; z-index: 2000; pointer-events: auto; }
-        #attribution-overlay a { color: #0078A8; text-decoration: none; }
-        #attribution-overlay a:hover { text-decoration: underline; }
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.85); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; color: var(--accent); font-weight: 600; font-size: 16px; backdrop-filter: blur(2px); }
-        #loading-overlay.active { display: flex; }
-        .spinner { width: 40px; height: 40px; border: 4px solid rgba(26, 54, 93, 0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .marker-name-label { background: rgba(255,255,255,0.88); border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.18); font-size: 11px; padding: 2px 5px; color: #2d3748; border-radius: 3px; white-space: nowrap; pointer-events: none; }
-        .marker-name-label.prominent { font-weight: bold; }
-        .marker-name-label::before { display: none; }
-        .tree-minimap { display: none; position: absolute; top: 56px; bottom: 10px; right: 10px; width: 60px; background: rgba(255, 255, 255, 0.85); border: 1px solid #cbd5e0; border-radius: 4px; pointer-events: auto; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); box-sizing: border-box; padding: 4px; cursor: pointer; }
-        .tree-minimap svg { width: 100%; height: 100%; display: block; }
-        @media (min-width: 768px) { .tree-minimap { display: block; } }
-        @media (max-width: 600px) {
-            #floating-buttons { flex-direction: column; align-items: flex-end; }
-            #info-bubble { width: calc(100vw - 20px); max-width: none; }
-            .info-content { flex-direction: column; align-items: flex-start; gap: 8px; }
-            .tooltip { width: calc(100vw - 20px); box-sizing: border-box; }
-        }
-        body:has(#sidebar.open) .tree-minimap { right: 240px; }
-    </style>
+    <!-- Load styles via <link> (render-blocking) instead of through main.js so
+         the first paint isn't FOUC. Order matches the previous import chain. -->
+    <link rel="stylesheet" href="/src/style/srd-tokens.css">
+    <link rel="stylesheet" href="/src/style/srd.css">
+    <link rel="stylesheet" href="/src/style/style.css">
+
     <script type="module" src="/src/main.js"></script>
 </head>
 <body>
-    <nav id="navbar">
-        <a href="#" onclick="resetApp(event)" class="brand" data-i18n="brand">Slovenski genetski atlas</a>
-        <div class="nav-links desktop-nav">
-            <a href="#map" class="nav-route" id="link-map" data-i18n="map">Map</a>
-            <a href="#ydna" class="nav-route" id="link-ydna" data-i18n="ydna">Y-DNA</a>
+
+    <!-- ========================================================
+         Unified SRD header (shared with rodoslovje/genealogical-index)
+         ID `navbar` retained for JS (checkNavOverflow, etc.)
+         ======================================================== -->
+    <nav id="navbar" class="srd-navbar">
+        <a href="#" class="srd-brand" onclick="resetApp(event)" aria-label="Slovenski genetski atlas">
+            <img src="/srd-logo-transparent.png" alt="SRD" class="srd-brand-mark">
+            <span class="srd-brand-title">
+                <span class="app" data-i18n="brand">Slovenski genetski atlas</span>
+                <span class="org" data-i18n="infoSloGenSoc">Slovensko rodoslovno društvo</span>
+            </span>
+        </a>
+
+        <span class="srd-nav-sep" aria-hidden="true"></span>
+
+        <div class="srd-nav-tabs desktop-nav">
+            <a href="#map"   class="nav-route" id="link-map"   data-i18n="map">Map</a>
+            <a href="#ydna"  class="nav-route" id="link-ydna"  data-i18n="ydna">Y-DNA</a>
             <a href="#mtdna" class="nav-route" id="link-mtdna" data-i18n="mtdna">mtDNA</a>
         </div>
-        <div class="nav-right">
-            <div class="lang-selector">
-                <button class="lang-btn" id="lang-btn" onclick="toggleLangMenu(event)">
+
+        <div class="srd-nav-right">
+            <div class="lang-selector" style="position: relative;">
+                <button class="srd-lang-btn" id="lang-btn" onclick="toggleLangMenu(event)">
                     <img src="https://flagcdn.com/w20/gb.png" id="lang-btn-flag" alt="Flag">
                     <span id="lang-btn-text">EN</span>
                 </button>
-                <div class="lang-menu" id="lang-menu">
-                </div>
+                <div class="srd-lang-menu" id="lang-menu"></div>
             </div>
-            <button class="hamburger" onclick="toggleSidebar()">☰</button>
+
+            <button class="srd-icon-btn srd-nav-hamburger-wrap" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+                <span class="srd-hamburger"><span></span></span>
+            </button>
         </div>
     </nav>
+
+    <!-- ======= View container (router target) ======= -->
     <div id="view-container">
-        <div id="view-map" class="page-view"><div id="map-container" style="width: 100%; height: 100%; z-index: 1;"></div></div>
-        <div id="view-ydna" class="page-view"><div id="tree-container-ydna" style="width: 100%; height: 100%; position: relative; overflow: visible;"></div></div>
-        <div id="view-mtdna" class="page-view"><div id="tree-container-mtdna" style="width: 100%; height: 100%; position: relative; overflow: visible;"></div></div>
+        <div id="view-map"   class="page-view"><div id="map-container"        style="width:100%;height:100%;z-index:1;"></div></div>
+        <div id="view-ydna"  class="page-view"><div id="tree-container-ydna"  style="width:100%;height:100%;position:relative;overflow:visible;"></div></div>
+        <div id="view-mtdna" class="page-view"><div id="tree-container-mtdna" style="width:100%;height:100%;position:relative;overflow:visible;"></div></div>
     </div>
-    <div id="sidebar">
-        <div class="sidebar-section mobile-nav-section">
-            <h4 class="sidebar-section-title" data-i18n="navTitle">Navigation</h4>
+
+    <!-- ======= Sidebar ======= -->
+    <aside id="sidebar" class="srd-sidebar">
+
+        <!-- Mobile-only mirror of the top-nav routes -->
+        <div class="srd-sidebar-section mobile-nav-section">
+            <h4 class="srd-sidebar-title" data-i18n="navTitle">Navigation</h4>
             <div class="nav-list-mobile">
-                <a href="#map" class="nav-route" onclick="toggleSidebar()" data-i18n="map">Map</a>
-                <a href="#ydna" class="nav-route" onclick="toggleSidebar()" data-i18n="ydna">Y-DNA</a>
+                <a href="#map"   class="nav-route" onclick="toggleSidebar()" data-i18n="map">Map</a>
+                <a href="#ydna"  class="nav-route" onclick="toggleSidebar()" data-i18n="ydna">Y-DNA</a>
                 <a href="#mtdna" class="nav-route" onclick="toggleSidebar()" data-i18n="mtdna">mtDNA</a>
             </div>
         </div>
-        <div class="sidebar-section mobile-nav-section">
-            <div class="lang-selector-sidebar" style="position: relative;">
-                <button class="lang-btn" onclick="toggleLangMenuSidebar(event)" style="width: 100%; justify-content: space-between;">
-                    <span style="display: flex; align-items: center; gap: 6px;">
-                        <img src="https://flagcdn.com/w20/gb.png" id="lang-btn-flag-sidebar" alt="Flag">
-                        <span id="lang-btn-text-sidebar">English (EN)</span>
-                    </span>
-                    <span style="font-size: 10px; color: #a0aec0;">▼</span>
-                </button>
-                <div class="lang-menu" id="lang-menu-sidebar" style="width: 100%; box-sizing: border-box;">
-                </div>
+
+        <div class="srd-sidebar-section">
+            <h4 class="srd-sidebar-title" data-i18n="searchTitle">Search</h4>
+            <div class="search-wrap">
+                <input type="text"
+                       class="srd-input"
+                       id="search-input"
+                       data-i18n-placeholder="searchPlaceholder"
+                       placeholder="Surname, ancestor, kit..."
+                       autocomplete="off">
+                <span id="search-counter"></span>
+                <span id="search-clear">✕</span>
             </div>
         </div>
-        <div class="sidebar-section">
-            <h4 class="sidebar-section-title" data-i18n="searchTitle">Search</h4>
-            <div style="position: relative;">
-                <input type="text" id="search-input" data-i18n-placeholder="searchPlaceholder" placeholder="Surname, ancestor, kit..." style="width: 100%; padding: 6px; font-size: 13px; border: 1px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; outline: none;" autocomplete="off">
-                <span id="search-counter" style="position: absolute; right: 28px; top: 50%; transform: translateY(-50%); font-size: 11px; color: #718096; pointer-events: none; display: none;"></span>
-                <span id="search-clear" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #a0aec0; display: none; font-weight: bold; font-size: 12px; padding: 4px;">✕</span>
-            </div>
-        </div>
+
         <div id="map-options" style="display: none;">
-            <div class="sidebar-section">
+            <div class="srd-sidebar-section">
                 <label class="passthrough-item" style="margin-top: 0;">
                     <input type="checkbox" id="chk-show-labels">
                     <span data-i18n="showLabels">Show labels</span>
                 </label>
             </div>
         </div>
+
         <div id="lineage-controls-ydna" style="display: none;">
-            <div class="sidebar-section">
-                <h4 class="sidebar-section-title" data-i18n="filterTitleYdna">Lineage (Y-DNA)</h4>
+            <div class="srd-sidebar-section">
+                <h4 class="srd-sidebar-title" data-i18n="filterTitleYdna">Lineage (Y-DNA)</h4>
                 <button class="select-all-btn" id="toggle-all-ydna" data-i18n="selectAll">Select All</button>
-                <div id="lineage-count-ydna" style="font-size: 11px; color: #718096; margin: 4px 0 6px;"></div>
+                <div id="lineage-count-ydna"></div>
                 <div id="group-list-ydna"></div>
             </div>
         </div>
+
         <div id="lineage-controls-mtdna" style="display: none;">
-            <div class="sidebar-section">
-                <h4 class="sidebar-section-title" data-i18n="filterTitleMtdna">Lineage (mtDNA)</h4>
+            <div class="srd-sidebar-section">
+                <h4 class="srd-sidebar-title" data-i18n="filterTitleMtdna">Lineage (mtDNA)</h4>
                 <button class="select-all-btn" id="toggle-all-mtdna" data-i18n="selectAll">Select All</button>
-                <div id="lineage-count-mtdna" style="font-size: 11px; color: #718096; margin: 4px 0 6px;"></div>
+                <div id="lineage-count-mtdna"></div>
                 <div id="group-list-mtdna"></div>
             </div>
         </div>
+
         <div id="tree-options" style="display: none;">
-            <div class="sidebar-section">
+            <div class="srd-sidebar-section">
                 <label class="passthrough-item" style="margin-top: 0;">
                     <input type="checkbox" id="chk-show-all-major">
                     <span data-i18n="showAllMajorGroups">Show all major lineages</span>
@@ -215,21 +135,29 @@
                 </label>
             </div>
         </div>
+
         <div id="ydna-eras" style="display: none;">
-            <div class="sidebar-section">
-                <h4 class="sidebar-section-title" data-i18n="eraTitle">Eras</h4>
+            <div class="srd-sidebar-section">
+                <h4 class="srd-sidebar-title" data-i18n="eraTitle">Eras</h4>
                 <div id="era-list"></div>
             </div>
         </div>
-    </div>
+    </aside>
+
+    <!-- ======= Floating action buttons ======= -->
     <div id="floating-buttons">
         <div id="info-widget">
-            <button id="info-btn" aria-label="Info" onclick="toggleInfoBubble()" data-i18n-title="infoButton">i</button>
-            <div id="info-bubble">
-                <div id="info-text-container" style="margin-bottom: 15px; font-size: 13px; color: #4a5568; line-height: 1.5; display: none; border-bottom: 1px solid #edf2f7; padding-bottom: 15px;"></div>
+            <button id="info-btn"
+                    class="srd-fab srd-fab--info"
+                    aria-label="Info"
+                    onclick="toggleInfoBubble()"
+                    data-i18n-title="infoButton">i</button>
+
+            <div id="info-bubble" class="srd-popover">
+                <div id="info-text-container"></div>
                 <div class="info-content">
-                    <a href="https://rodoslovje.si/" target="_blank" rel="noopener noreferrer" style="flex-shrink: 0;">
-                        <img src="/srd-logo.png" alt="SRD Logo" style="width: 55px; height: auto;">
+                    <a href="https://rodoslovje.si/" target="_blank" rel="noopener noreferrer">
+                        <img src="/srd-logo-transparent.png" alt="SRD Logo">
                     </a>
                     <ul>
                         <li><a href="https://rodoslovje.si/slovenska-dnk" target="_blank" rel="noopener noreferrer" data-i18n="infoSloGenHeritage">Slovenian Genetic Heritage</a></li>
@@ -239,22 +167,37 @@
                         <li id="data-info"></li>
                     </ul>
                 </div>
-                <div style="text-align: right; margin-top: 6px;">
-                    <a href="https://github.com/rodoslovje/genetic-atlas" target="_blank" rel="noopener noreferrer" style="font-size: 11px; font-weight: normal; color: #a0aec0;">GitHub</a>
+                <div style="text-align: right; margin-top: 8px;">
+                    <a href="https://github.com/rodoslovje/genetic-atlas" target="_blank" rel="noopener noreferrer" class="info-github-link">GitHub</a>
                 </div>
             </div>
         </div>
-        <button id="export-btn" aria-label="Export View" onclick="exportView(event)" data-i18n-title="exportTree">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+
+        <button id="export-btn" class="srd-fab" aria-label="Export View" onclick="exportView(event)" data-i18n-title="exportTree">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
         </button>
-        <button id="reset-btn" aria-label="Reset View" onclick="resetView(event)" data-i18n-title="resetView">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+
+        <button id="reset-btn" class="srd-fab" aria-label="Reset View" onclick="resetView(event)" data-i18n-title="resetView">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="22" y1="12" x2="18" y2="12"></line>
+                <line x1="6"  y1="12" x2="2"  y2="12"></line>
+                <line x1="12" y1="6"  x2="12" y2="2"></line>
+                <line x1="12" y1="22" x2="12" y2="18"></line>
+            </svg>
         </button>
     </div>
+
     <div id="attribution-overlay" data-i18n-html="attributionHtml"></div>
-    <div id="loading-overlay">
-        <div class="spinner"></div>
+
+    <div id="loading-overlay" class="srd-loading">
+        <div class="srd-spinner"></div>
         <div data-i18n="exporting">Exporting...</div>
     </div>
+
 </body>
 </html>

@@ -107,11 +107,6 @@ window.toggleLangMenu = function (e) {
     document.getElementById("lang-menu").classList.toggle("open");
 };
 
-window.toggleLangMenuSidebar = function (e) {
-    e.stopPropagation();
-    document.getElementById("lang-menu-sidebar").classList.toggle("open");
-};
-
 window.setLanguage = async function (e, lang) {
     e.preventDefault();
     await loadTranslation(lang);
@@ -125,8 +120,6 @@ window.setLanguage = async function (e, lang) {
     ydna.refresh();
     mtdna.refresh();
     document.getElementById("lang-menu").classList.remove("open");
-    const sidebarMenu = document.getElementById("lang-menu-sidebar");
-    if (sidebarMenu) sidebarMenu.classList.remove("open");
     const sidebar = document.getElementById("sidebar");
     if (sidebar) sidebar.classList.remove("open");
 };
@@ -143,12 +136,6 @@ function updateLangIcon() {
         text.innerText = config.text;
     }
 
-    const flagSidebar = document.getElementById("lang-btn-flag-sidebar");
-    const textSidebar = document.getElementById("lang-btn-text-sidebar");
-    if (flagSidebar && textSidebar) {
-        flagSidebar.src = imgSrc;
-        textSidebar.innerText = config.fullText;
-    }
 }
 
 window.addEventListener("click", (e) => {
@@ -162,12 +149,6 @@ window.addEventListener("click", (e) => {
     const langMenu = document.getElementById("lang-menu");
     if (langSelector && langMenu && !langSelector.contains(e.target)) {
         langMenu.classList.remove("open");
-    }
-
-    const langSelectorSidebar = document.querySelector(".lang-selector-sidebar");
-    const langMenuSidebar = document.getElementById("lang-menu-sidebar");
-    if (langSelectorSidebar && langMenuSidebar && !langSelectorSidebar.contains(e.target)) {
-        langMenuSidebar.classList.remove("open");
     }
 });
 
@@ -272,17 +253,17 @@ async function exportMapAsPng(overlay) {
         ctx.textBaseline = "middle";
 
         ctx.textAlign = "left";
-        ctx.font = `bold ${24 * scale}px 'Segoe UI', Tahoma, sans-serif`;
+        ctx.font = `bold ${24 * scale}px 'IBM Plex Sans', 'Segoe UI', Tahoma, sans-serif`;
         ctx.fillStyle = TITLE_COLOR;
         ctx.fillText(labels.title, 20 * scale, headerH / 2);
 
         ctx.textAlign = "right";
-        ctx.font = `${18 * scale}px 'Segoe UI', Tahoma, sans-serif`;
+        ctx.font = `${18 * scale}px 'IBM Plex Sans', 'Segoe UI', Tahoma, sans-serif`;
         ctx.fillStyle = URL_COLOR;
         ctx.fillText(labels.url, width - 20 * scale, headerH / 2);
 
         ctx.textAlign = "left";
-        ctx.font = `${14 * scale}px 'Segoe UI', Tahoma, sans-serif`;
+        ctx.font = `${14 * scale}px 'IBM Plex Sans', 'Segoe UI', Tahoma, sans-serif`;
         ctx.fillStyle = ATTRIBUTION_COLOR;
         ctx.fillText(attributionText, 20 * scale, height - footerH / 2);
 
@@ -360,7 +341,7 @@ function exportTreeAsSvg(view, overlay) {
 
     const style = document.createElement("style");
     style.textContent = `
-        text { font-family: 'Segoe UI', Tahoma, sans-serif; }
+        text { font-family: 'IBM Plex Sans', 'Segoe UI', Tahoma, sans-serif; }
         .node circle { stroke-width: 2.5px; }
         .node text { font-size: 12px; fill: #1a202c; }
         .node--person text { font-weight: normal; fill: #2c5282; font-size: 13px; }
@@ -580,7 +561,7 @@ function handleHashChange() {
 window.addEventListener("hashchange", handleHashChange);
 
 function renderLanguageMenus() {
-    const menus = [document.getElementById("lang-menu"), document.getElementById("lang-menu-sidebar")];
+    const menus = [document.getElementById("lang-menu")];
 
     const sortedLangs = Object.entries(languageConfig)
         .map(([code, config]) => ({ code, ...config }))
