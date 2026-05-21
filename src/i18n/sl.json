@@ -53,7 +53,7 @@
     "ungrouped": "Nerazvrščeni",
     "resetView": "Ponastavi pogled",
     "versionLabel": "Različica: {0}",
-    "dataUpdateLabel": "Posodobitev podatkov: {0}",
+    "dataUpdateLabel": "Podatki: {0}",
     "createdLabel": "Ustvarjeno: {0}",
     "attributionHtml": "Vir: <a href='https://rodoslovje.si/slovenska-dnk' target='_blank' rel='noopener noreferrer'>{infoSloGenHeritage}</a> in <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a>",
     "yearsAgo": "pred {0} leti",

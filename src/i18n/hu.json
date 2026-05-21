@@ -53,7 +53,7 @@
     "ungrouped": "Nem csoportosított",
     "resetView": "Nézet visszaállítása",
     "versionLabel": "Verzió: {0}",
-    "dataUpdateLabel": "Adatfrissítés: {0}",
+    "dataUpdateLabel": "Adatok: {0}",
     "createdLabel": "Létrehozva: {0}",
     "attributionHtml": "Forrás: <a href='https://rodoslovje.si/slovenska-dnk' target='_blank' rel='noopener noreferrer'>{infoSloGenHeritage}</a> és <a href='https://www.familytreedna.com/groups/slovenianorigin/about' target='_blank' rel='noopener noreferrer'>FamilyTreeDNA</a>",
     "yearsAgo": "{0} évvel ezelőtt",
