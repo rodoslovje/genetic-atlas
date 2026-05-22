@@ -222,6 +222,19 @@ function parseAttributionFragments(html) {
     return out;
 }
 
+let logoImagePromise = null;
+function getLogoImage() {
+    if (!logoImagePromise) {
+        logoImagePromise = new Promise(resolve => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => resolve(null);
+            img.src = "srd-logo-transparent.png";
+        });
+    }
+    return logoImagePromise;
+}
+
 async function exportMapAsPng(overlay) {
     const mapEl = document.getElementById("map-container");
     if (!mapEl) {
@@ -230,6 +243,7 @@ async function exportMapAsPng(overlay) {
     }
 
     const { default: html2canvas } = await import("html2canvas");
+    const logoImg = await getLogoImage();
     html2canvas(mapEl, { useCORS: true, allowTaint: false }).then(canvas => {
         const labels = getExportLabels("map");
         const scale = window.devicePixelRatio || 1;
@@ -253,10 +267,19 @@ async function exportMapAsPng(overlay) {
 
         ctx.textBaseline = "middle";
 
+        let titleX = 20 * scale;
+        if (logoImg) {
+            const logoH = 50 * scale;
+            const logoW = logoH * 186 / 288;  // preserve PNG aspect (186x288)
+            const logoY = (headerH - logoH) / 2;
+            ctx.drawImage(logoImg, 20 * scale, logoY, logoW, logoH);
+            titleX = 20 * scale + logoW + 12 * scale;
+        }
+
         ctx.textAlign = "left";
         ctx.font = `bold ${24 * scale}px 'IBM Plex Sans', 'Segoe UI', Tahoma, sans-serif`;
         ctx.fillStyle = TITLE_COLOR;
-        ctx.fillText(labels.title, 20 * scale, headerH / 2);
+        ctx.fillText(labels.title, titleX, headerH / 2);
 
         ctx.textAlign = "right";
         ctx.font = `${18 * scale}px 'IBM Plex Sans', 'Segoe UI', Tahoma, sans-serif`;
@@ -298,11 +321,45 @@ function addSvgHeader(clone, labels, x, y, width) {
     clone.appendChild(urlLink);
 }
 
-function addSvgFooter(clone, labels, x, y, width) {
+let logoDataUriPromise = null;
+function getLogoDataUri() {
+    if (!logoDataUriPromise) {
+        logoDataUriPromise = fetch("srd-logo-transparent.png")
+            .then(r => r.ok ? r.blob() : Promise.reject())
+            .then(b => new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => resolve(null);
+                reader.readAsDataURL(b);
+            }))
+            .catch(() => null);
+    }
+    return logoDataUriPromise;
+}
+
+function addSvgFooter(clone, labels, x, y, width, logoDataUri) {
     clone.insertBefore(createSvg("rect", { x, y, width, height: 50, fill: BG_COLOR }), clone.firstChild);
 
+    let sourceTextX = x + 20;
+    if (logoDataUri) {
+        const logoH = 36;
+        const logoW = Math.round(logoH * 186 / 288);  // preserve PNG aspect (186x288)
+        const logoY = y + (50 - logoH) / 2;
+        const img = createSvg("image", {
+            x: x + 20,
+            y: logoY,
+            width: logoW,
+            height: logoH,
+            preserveAspectRatio: "xMidYMid meet",
+        });
+        img.setAttributeNS("http://www.w3.org/1999/xlink", "href", logoDataUri);
+        img.setAttribute("href", logoDataUri);
+        clone.appendChild(img);
+        sourceTextX = x + 20 + logoW + 10;
+    }
+
     const sourceText = createSvg("text", {
-        x: x + 20, y: y + 30,
+        x: sourceTextX, y: y + 30,
         "font-size": "14px", fill: ATTRIBUTION_COLOR, "xml:space": "preserve",
     });
     for (const frag of parseAttributionFragments(labels.attributionHtml)) {
@@ -328,13 +385,14 @@ function addSvgFooter(clone, labels, x, y, width) {
     clone.appendChild(createdText);
 }
 
-function exportTreeAsSvg(view, overlay) {
+async function exportTreeAsSvg(view, overlay) {
     const svgContainer = document.querySelector("#tree-container-" + view + " svg");
     const g = svgContainer && svgContainer.querySelector("g");
     if (!svgContainer || !g) {
         if (overlay) overlay.classList.remove("active");
         return;
     }
+    const logoDataUri = await getLogoDataUri();
 
     const clone = svgContainer.cloneNode(true);
     const cloneG = clone.querySelector("g");
@@ -384,7 +442,7 @@ function exportTreeAsSvg(view, overlay) {
     const paddingY = 40;
     const contentWidth = bbox.width + 120;
     const extraWidth = Math.max(0, minWidth - contentWidth);
-    const exportX = bbox.x - 60 - extraWidth / 2;
+    const exportX = bbox.x - 60;
     const exportWidth = contentWidth + extraWidth;
     const exportY = bbox.y - 60 - paddingY;
     const exportHeight = bbox.height + 110 + (paddingY * 2);
@@ -399,7 +457,7 @@ function exportTreeAsSvg(view, overlay) {
     const labels = getExportLabels(view);
     // Header text appended first then footer, preserving original z-order
     addSvgHeader(clone, labels, exportX, exportY, exportWidth);
-    addSvgFooter(clone, labels, exportX, footerY, exportWidth);
+    addSvgFooter(clone, labels, exportX, footerY, exportWidth, logoDataUri);
 
     clone.removeAttribute("style");
     const svgString = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone);
