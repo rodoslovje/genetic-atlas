@@ -233,14 +233,9 @@ body {
   font-weight: bold;
 }
 
-.node--search-match text {
-  fill: #c05621 !important;   /* semantic: search highlight (preserved) */
-  font-size: 13.5px !important;
-  text-shadow: 0 0 4px rgba(237, 137, 54, 0.4);
-}
-
-.node--search-match image {
-  filter: drop-shadow(0 0 4px rgba(221, 107, 32, 0.8));
+.search-highlight-bg {
+  fill: var(--srd-warn-bg);
+  stroke: none;
 }
 
 .link {

@@ -597,6 +597,33 @@ export class TreeVisualizer {
                 }
             });
 
+        mergedNode.each(function (d) {
+            const el = d3.select(this);
+            let bg = el.select("rect.search-highlight-bg");
+            if (!d.data.isPerson || !d.data.isSearchMatch) {
+                if (!bg.empty()) bg.remove();
+                return;
+            }
+            if (bg.empty()) {
+                bg = el.insert("rect", ":first-child").attr("class", "search-highlight-bg");
+            }
+            const textEl = el.select("text").node();
+            if (!textEl) return;
+            const tb = textEl.getBBox();
+            const padX = 5;
+            const padY = 3;
+            const left = Math.min(-12, tb.x) - padX;
+            const right = Math.max(12, tb.x + tb.width) + padX;
+            const top = Math.min(-8, tb.y) - padY;
+            const bottom = Math.max(8, tb.y + tb.height) + padY;
+            bg.attr("x", left)
+              .attr("y", top)
+              .attr("width", right - left)
+              .attr("height", bottom - top)
+              .attr("rx", 6)
+              .attr("ry", 6);
+        });
+
         mergedNode
             .attr("class", getNodeClass)
             .transition().duration(TRANSITION_DURATION)
