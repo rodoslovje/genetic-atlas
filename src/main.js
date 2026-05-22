@@ -345,6 +345,7 @@ function exportTreeAsSvg(view, overlay) {
         .node circle { stroke-width: 2.5px; }
         .node text { font-size: 12px; fill: #1a202c; }
         .node--person text { font-weight: normal; fill: #2c5282; font-size: 13px; }
+        .node--person image { filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.35)); }
         .node--prominent text { font-weight: bold; font-size: 13px; }
         .node--autoplaced text { fill: #c53030 !important; font-weight: bold; }
         .search-highlight-bg { fill: #fff8e1; stroke: none; }
