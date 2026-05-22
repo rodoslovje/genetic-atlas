@@ -5,6 +5,7 @@ function currentLangDict() {
 }
 import { ydna, mtdna } from "./lineage.js";
 import { mapVis } from "./map.js";
+import { measureTextBounds } from "./tree.js";
 
 const languageConfig = {
     de: { flag: "de", text: "DE", fullText: "Deutsch (DE)" },
@@ -341,6 +342,7 @@ function exportTreeAsSvg(view, overlay) {
 
     const style = document.createElement("style");
     style.textContent = `
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
         text { font-family: 'IBM Plex Sans', 'Segoe UI', Tahoma, sans-serif; }
         .node circle { stroke-width: 2.5px; }
         .node text { font-size: 12px; fill: #1a202c; }
@@ -353,7 +355,31 @@ function exportTreeAsSvg(view, overlay) {
     `;
     clone.insertBefore(style, clone.firstChild);
 
-    const bbox = g.getBBox();
+    // Mount the clone off-screen so its text lays out with the export styles
+    // (font fallback differs from the live view); needed to size search-highlight
+    // rects against the actual exported text width.
+    clone.setAttribute("style", "position:absolute;left:-99999px;top:0;visibility:hidden");
+    document.body.appendChild(clone);
+
+    clone.querySelectorAll(".search-highlight-bg").forEach(rect => {
+        const textEl = rect.parentNode && rect.parentNode.querySelector("text");
+        const bounds = measureTextBounds(textEl);
+        if (!bounds) return;
+        // Small extra buffer in the export to cover offline viewers that can't
+        // load the @import'd font and fall back to a slightly wider system font.
+        const padX = 8;
+        const padY = 3;
+        const left = Math.min(-12, bounds.xMin) - padX;
+        const right = Math.max(12, bounds.xMax) + padX;
+        const top = Math.min(-8, bounds.yMin) - padY;
+        const bottom = Math.max(8, bounds.yMax) + padY;
+        rect.setAttribute("x", left);
+        rect.setAttribute("y", top);
+        rect.setAttribute("width", right - left);
+        rect.setAttribute("height", bottom - top);
+    });
+
+    const bbox = cloneG.getBBox();
     const minWidth = 1000;
     const paddingY = 40;
     const contentWidth = bbox.width + 120;
@@ -375,7 +401,9 @@ function exportTreeAsSvg(view, overlay) {
     addSvgHeader(clone, labels, exportX, exportY, exportWidth);
     addSvgFooter(clone, labels, exportX, footerY, exportWidth);
 
+    clone.removeAttribute("style");
     const svgString = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone);
+    document.body.removeChild(clone);
     const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
     triggerDownload(URL.createObjectURL(blob), `Slovenian_${view.toUpperCase()}_Tree.svg`);
     if (overlay) overlay.classList.remove("active");

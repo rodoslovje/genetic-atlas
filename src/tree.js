@@ -19,6 +19,29 @@ function decodeHtmlEntities(text) {
     return textArea.value;
 }
 
+// Union of per-tspan bboxes. text.getBBox() can miss the full width of
+// explicitly-positioned second-line tspans on some browsers/SVG viewers.
+export function measureTextBounds(textEl) {
+    if (!textEl) return null;
+    const tspans = textEl.querySelectorAll("tspan");
+    const targets = tspans.length ? Array.from(tspans) : [textEl];
+    let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+    for (const node of targets) {
+        let b;
+        try { b = node.getBBox(); } catch (e) { continue; }
+        if (!b || (b.width === 0 && b.height === 0)) continue;
+        if (b.x < xMin) xMin = b.x;
+        if (b.x + b.width > xMax) xMax = b.x + b.width;
+        if (b.y < yMin) yMin = b.y;
+        if (b.y + b.height > yMax) yMax = b.y + b.height;
+    }
+    if (!isFinite(xMin)) {
+        const fb = textEl.getBBox();
+        return { xMin: fb.x, xMax: fb.x + fb.width, yMin: fb.y, yMax: fb.y + fb.height };
+    }
+    return { xMin, xMax, yMin, yMax };
+}
+
 export class TreeVisualizer {
     constructor(containerSelector, isSquare = false) {
         this.containerSelector = containerSelector;
@@ -609,13 +632,14 @@ export class TreeVisualizer {
             }
             const textEl = el.select("text").node();
             if (!textEl) return;
-            const tb = textEl.getBBox();
+            const bounds = measureTextBounds(textEl);
+            if (!bounds) return;
             const padX = 5;
             const padY = 3;
-            const left = Math.min(-12, tb.x) - padX;
-            const right = Math.max(12, tb.x + tb.width) + padX;
-            const top = Math.min(-8, tb.y) - padY;
-            const bottom = Math.max(8, tb.y + tb.height) + padY;
+            const left = Math.min(-12, bounds.xMin) - padX;
+            const right = Math.max(12, bounds.xMax) + padX;
+            const top = Math.min(-8, bounds.yMin) - padY;
+            const bottom = Math.max(8, bounds.yMax) + padY;
             bg.attr("x", left)
               .attr("y", top)
               .attr("width", right - left)
