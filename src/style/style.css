@@ -233,7 +233,7 @@ body {
 }
 
 .node--autoplaced text {
-  fill: #c53030 !important;   /* semantic: autoplaced marker (preserved) */
+  fill: var(--srd-error) !important;
   font-weight: bold;
 }
 
@@ -514,4 +514,3 @@ body:has(#sidebar.open) .tree-minimap {
     box-sizing: border-box;
   }
 }
-
