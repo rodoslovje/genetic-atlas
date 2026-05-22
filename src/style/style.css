@@ -465,6 +465,9 @@ body:has(#sidebar.open) #floating-buttons {
   box-sizing: border-box;
   padding: 4px;
   cursor: pointer;
+  /* Required so d3-drag works on touch; without it Firefox Android freezes
+     fighting native pan/zoom against the drag handler. */
+  touch-action: none;
 }
 
 .tree-minimap svg {
@@ -473,7 +476,7 @@ body:has(#sidebar.open) #floating-buttons {
   display: block;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 600px) {
   .tree-minimap {
     display: block;
   }
@@ -488,9 +491,9 @@ body:has(#sidebar.open) .tree-minimap {
  * ============================================================= */
 
 /* Floating buttons stack vertically whenever the tree minimap is hidden
-   (same breakpoint as `.tree-minimap`'s `min-width: 768px` display rule),
+   (same breakpoint as `.tree-minimap`'s `min-width: 600px` display rule),
    so the column layout aligns with the minimap-less viewport. */
-@media (max-width: 767px) {
+@media (max-width: 599px) {
   #floating-buttons {
     flex-direction: column;
     align-items: flex-end;
