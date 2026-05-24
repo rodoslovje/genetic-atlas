@@ -5,6 +5,7 @@ import { drag } from "d3-drag";
 import { hierarchy } from "d3-hierarchy";
 const d3 = { select, zoom, zoomTransform, zoomIdentity, drag, hierarchy };
 import { state, t, formatAge, getPersonTooltip, getHaploColor, eraColors, getSelectedGroups, translations, isProminentPerson, matchesSearchQuery } from "./shared.js";
+import { getFlagDataUri } from "./flags.js";
 
 const NODE_ROW_HEIGHT = 45;
 const NODE_DEPTH_WIDTH = 50;
@@ -544,7 +545,10 @@ export class TreeVisualizer {
             const el = d3.select(this);
             if (d.data.isPerson) {
                 const code = d.data.country || "un";
-                el.append("image").attr("xlink:href", `https://flagcdn.com/w40/${code}.png`).attr("x", -12).attr("y", -8).attr("width", 24).attr("height", 16);
+                const href = getFlagDataUri(code) || `https://flagcdn.com/w40/${code}.png`;
+                el.append("image").attr("href", href).attr("xlink:href", href)
+                    .attr("x", -12).attr("y", -8).attr("width", 24).attr("height", 16)
+                    .attr("preserveAspectRatio", "xMidYMid slice");
             } else {
                 const radius = d3.select(this.parentNode).classed("node--prominent") ? 10.5 : 6.5;
                 const groupKey = getGroupKey(d.data.haplogroup);

@@ -193,6 +193,7 @@ body {
   width: 16px;
   border-radius: 2px;
   display: block;
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.35));
 }
 
 .srd-lang-menu {
@@ -235,6 +236,7 @@ body {
 .srd-lang-menu a img {
   width: 16px;
   border-radius: 2px;
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.35));
 }
 
 /* Icon button (hamburger + future utilities) */

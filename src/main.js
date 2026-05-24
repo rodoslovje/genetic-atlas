@@ -6,6 +6,7 @@ function currentLangDict() {
 import { ydna, mtdna } from "./lineage.js";
 import { mapVis } from "./map.js";
 import { measureTextBounds } from "./tree.js";
+import { prefetchFlags, getFlagDataUri } from "./flags.js";
 
 const languageConfig = {
     de: { flag: "de", text: "DE", fullText: "Deutsch (DE)" },
@@ -128,7 +129,7 @@ window.setLanguage = async function (e, lang) {
 function updateLangIcon() {
     const lang = state.currentLang;
     const config = languageConfig[lang] || languageConfig["en"];
-    const imgSrc = `https://flagcdn.com/w20/${config.flag}.png`;
+    const imgSrc = getFlagDataUri(config.flag) || `https://flagcdn.com/w20/${config.flag}.png`;
 
     const flag = document.getElementById("lang-btn-flag");
     const text = document.getElementById("lang-btn-text");
@@ -624,8 +625,13 @@ function handleHashChange() {
             sidebar.classList.add("open");
         }
 
-        loadData().then(() => {
+        loadData().then(async () => {
             initFilters();
+            const codes = [
+                ...(ydnaPeopleData || []).map(p => p.country),
+                ...(mtdnaPeopleData || []).map(p => p.country),
+            ];
+            await prefetchFlags(codes);
             if (view === "ydna" && !ydna.initialized) {
                 ydna.init();
             }
@@ -661,7 +667,8 @@ function renderLanguageMenus() {
             const a = document.createElement("a");
             a.href = "#";
             a.onclick = (e) => setLanguage(e, lang.code);
-            a.innerHTML = `<img src="https://flagcdn.com/w20/${lang.flag}.png" alt="${lang.text}"> ${lang.fullText}`;
+            const src = getFlagDataUri(lang.flag) || `https://flagcdn.com/w20/${lang.flag}.png`;
+            a.innerHTML = `<img src="${src}" alt="${lang.text}"> ${lang.fullText}`;
             menu.appendChild(a);
         });
     });
@@ -680,6 +687,7 @@ async function initApp() {
     // Load the user's preferred language before any translation lookup runs
     await loadTranslation(state.currentLang);
 
+    await prefetchFlags(Object.values(languageConfig).map(c => c.flag));
     renderLanguageMenus();
     updateLangIcon();
 
