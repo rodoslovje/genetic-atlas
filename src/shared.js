@@ -30,10 +30,10 @@ export async function loadTranslation(lang) {
 
 export const ydnaGroupRoots = {
     "A0-T": "A-L1090", A1: "A-V168", A1b: "A-V221", B2: "B-M182", B2b: "B-M112", BT: "BT-M42", C: "C-M216", C1: "C-F3393", C2: "C-M217", CF: "CF-P143", CT: "CT-M168", D: "D-M174", D1: "D-M15", DE: "DE-M145", E: "E-M96", E1: "E-CTS9083", E1b1a: "E-M2", E1b1b: "E-M215", EV13: "E-V13",
-    F: "F-M89", F1: "F-F15527", F2: "F-M427", G: "G-M201", G1: "G-M285", G2: "G-L89", G2a: "G-P15", GHIJK: "GHIJK-F1329", H: "H-L901", H1: "H-M2826", H2: "H-P96", HIJK: "HIJK-PF3494", I: "I-M170", I1: "I-M253", I2: "I-P215", I2a: "I-L460", IJ: "IJ-P124", IJK: "IJK-L15",
+    F: "F-M89", F1: "F-F15527", F2: "F-M427", G: "G-M201", G1: "G-M285", G2: "G-L89", G2a: "G-P15", GHIJK: "GHIJK-F1329", H: "H-L901", H1: "H-M2826", H2: "H-P96", HIJK: "HIJK-PF3494", I: "I-M170", I1: "I-M253", I2: "I-P215", IJ: "IJ-P124", IJK: "IJK-L15",
     J: "J-M304", J1: "J-M267", J2: "J-M172", K: "K-M9", K1: "K-M177", K2: "K-M526", K2a: "K-M2308", K2a1: "K-F549", K2b: "K-YSC0000186",
     L: "L-M20", L1: "L-M22", L1b: "L-M317", LT: "LT-L298", N: "N-M231", N1: "N-L735", N1a1: "N-L550", NO: "NO-M214", O: "O-M175", O1: "O-F265", O2: "O-M122", P: "P-P295", Q: "Q-M242",
-    R: "R-M207", R1: "R-M173", R1a: "R-M420", "R1a-Z283": "R-Z283", "R1a-L260": "R-L260", R1b: "R-M343", R2: "R-M479", S1: "S-B255", T: "T-M184"
+    R: "R-M207", R1: "R-M173", R1a: "R-M420", R1b: "R-M343", R2: "R-M479", S1: "S-B255", T: "T-M184"
     // Temporarily disabled due to FTDNA 403: A: "A-M91", A00: "A-L1086", B: "B-M60", D2: "D-M55", F3: "F-M481", M: "M-P256", M1: "M-M4", M2: "M-M353", N1a: "N-M46", S: "S-B254", S2: "S-P378"
 };
 
