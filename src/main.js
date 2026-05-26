@@ -386,6 +386,118 @@ function addSvgFooter(clone, labels, x, y, width, logoDataUri) {
     clone.appendChild(createdText);
 }
 
+const EXPORT_FONT_FAMILY = "'IBM Plex Sans', 'Segoe UI', Tahoma, sans-serif";
+const XLINK_NS = "http://www.w3.org/1999/xlink";
+
+// Rasterize an SVG data URI to a PNG data URI at the given display size.
+// Microsoft Word (and several other consumers) won't render <image> elements
+// whose href is itself an SVG — nested SVG isn't supported by their renderers.
+// Converting to PNG ahead of serialization makes person flags visible
+// everywhere images-in-SVG are allowed.
+const flagPngCache = new Map();
+function rasterizeSvgDataUri(svgDataUri, displayW, displayH) {
+    const cacheKey = `${displayW}x${displayH}|${svgDataUri}`;
+    if (flagPngCache.has(cacheKey)) return flagPngCache.get(cacheKey);
+    const p = new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            // Oversample so the embedded PNG stays crisp when Word/Pages/Slides
+            // scale the parent SVG up for high-DPI rendering or printing.
+            const scale = 4;
+            const cw = Math.max(1, Math.round(displayW * scale));
+            const ch = Math.max(1, Math.round(displayH * scale));
+            const sw = img.naturalWidth, sh = img.naturalHeight;
+            if (!sw || !sh) { resolve(null); return; }
+            const canvas = document.createElement("canvas");
+            canvas.width = cw;
+            canvas.height = ch;
+            const ctx = canvas.getContext("2d");
+            // Replicate preserveAspectRatio="xMidYMid slice" (CSS object-fit:cover):
+            // scale the source to cover the destination box, center-cropping overflow.
+            const srcAR = sw / sh;
+            const dstAR = cw / ch;
+            let cropX = 0, cropY = 0, cropW = sw, cropH = sh;
+            if (srcAR > dstAR) {
+                cropW = sh * dstAR;
+                cropX = (sw - cropW) / 2;
+            } else if (srcAR < dstAR) {
+                cropH = sw / dstAR;
+                cropY = (sh - cropH) / 2;
+            }
+            ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cw, ch);
+            try { resolve(canvas.toDataURL("image/png")); }
+            catch { resolve(null); }
+        };
+        img.onerror = () => resolve(null);
+        img.src = svgDataUri;
+    });
+    flagPngCache.set(cacheKey, p);
+    return p;
+}
+
+async function rasterizePersonFlagsInClone(clone) {
+    const images = Array.from(clone.querySelectorAll(".node--person image"));
+    await Promise.all(images.map(async (img) => {
+        const href = img.getAttribute("href") || img.getAttributeNS(XLINK_NS, "href") || "";
+        // Only the inlined vector flags need conversion. Remote PNG fallbacks
+        // (flagcdn.com) wouldn't load in Word either, but rasterizing them
+        // requires a fetch — not worth it for an already-degraded fallback.
+        if (!href.startsWith("data:image/svg+xml")) return;
+        const w = parseFloat(img.getAttribute("width")) || 24;
+        const h = parseFloat(img.getAttribute("height")) || 16;
+        const png = await rasterizeSvgDataUri(href, w, h);
+        if (!png) return;
+        img.setAttribute("href", png);
+        img.setAttributeNS(XLINK_NS, "href", png);
+        // The slice crop is now baked into the raster, so the destination box
+        // matches the image 1:1 — let consumers stretch without re-cropping.
+        img.setAttribute("preserveAspectRatio", "none");
+    }));
+}
+
+// Convert the class-based <style> rules used during measurement into per-element
+// presentation attributes. Required for SVG consumers (Adobe Illustrator,
+// Inkscape <1.0, many print pipelines) that ignore or only partially apply
+// <style> blocks — without this, .link paths fill solid black and class-styled
+// text loses its size/color.
+function inlineTreeExportStyles(clone) {
+    // Order matches CSS source order so later setAttribute calls correctly
+    // override earlier ones (mirrors the cascade since all selectors have equal
+    // specificity).
+    clone.querySelectorAll("text, tspan").forEach(el => {
+        if (!el.getAttribute("font-family")) el.setAttribute("font-family", EXPORT_FONT_FAMILY);
+    });
+    clone.querySelectorAll(".node circle").forEach(el => {
+        // Halos already carry inline stroke-width from d3; skip them.
+        if (!el.style || !el.style.strokeWidth) el.setAttribute("stroke-width", "2.5");
+    });
+    clone.querySelectorAll(".node text").forEach(el => {
+        el.setAttribute("font-size", "12");
+        el.setAttribute("fill", "#1a202c");
+    });
+    clone.querySelectorAll(".node--person text").forEach(el => {
+        el.setAttribute("font-weight", "normal");
+        el.setAttribute("fill", "#2c5282");
+        el.setAttribute("font-size", "13");
+    });
+    clone.querySelectorAll(".node--prominent text").forEach(el => {
+        el.setAttribute("font-weight", "bold");
+        el.setAttribute("font-size", "13");
+    });
+    clone.querySelectorAll(".node--autoplaced text").forEach(el => {
+        el.setAttribute("fill", "#c53030");
+        el.setAttribute("font-weight", "bold");
+    });
+    clone.querySelectorAll(".search-highlight-bg").forEach(el => {
+        el.setAttribute("fill", "#fff8e1");
+        el.setAttribute("stroke", "none");
+    });
+    // Without fill="none" Illustrator fills the curved connectors solid black.
+    clone.querySelectorAll(".link").forEach(el => {
+        el.setAttribute("fill", "none");
+    });
+}
+
 async function exportTreeAsSvg(view, overlay) {
     const svgContainer = document.querySelector("#tree-container-" + view + " svg");
     const g = svgContainer && svgContainer.querySelector("g");
@@ -399,9 +511,13 @@ async function exportTreeAsSvg(view, overlay) {
     const cloneG = clone.querySelector("g");
     cloneG.removeAttribute("transform"); // Reset pan/zoom on the exported version
 
+    // Styles applied during off-screen measurement only. Removed before
+    // serialization in favor of inline presentation attributes — Adobe
+    // Illustrator and several other consumers don't apply <style> class rules
+    // reliably, which would otherwise leave .link paths with their default
+    // black fill (rendering as solid blobs) and text without sizes/colors.
     const style = document.createElement("style");
     style.textContent = `
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
         text { font-family: 'IBM Plex Sans', 'Segoe UI', Tahoma, sans-serif; }
         .node circle { stroke-width: 2.5px; }
         .node text { font-size: 12px; fill: #1a202c; }
@@ -424,8 +540,8 @@ async function exportTreeAsSvg(view, overlay) {
         const textEl = rect.parentNode && rect.parentNode.querySelector("text");
         const bounds = measureTextBounds(textEl);
         if (!bounds) return;
-        // Small extra buffer in the export to cover offline viewers that can't
-        // load the @import'd font and fall back to a slightly wider system font.
+        // Small extra buffer to cover viewers without IBM Plex Sans installed,
+        // which fall back to a slightly wider system font.
         const padX = 8;
         const padY = 3;
         const left = Math.min(-12, bounds.xMin) - padX;
@@ -461,6 +577,10 @@ async function exportTreeAsSvg(view, overlay) {
     addSvgFooter(clone, labels, exportX, footerY, exportWidth, logoDataUri);
 
     clone.removeAttribute("style");
+    inlineTreeExportStyles(clone);
+    await rasterizePersonFlagsInClone(clone);
+    const styleEl = clone.querySelector("style");
+    if (styleEl) styleEl.remove();
     const svgString = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone);
     document.body.removeChild(clone);
     const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
