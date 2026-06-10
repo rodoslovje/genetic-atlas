@@ -63,6 +63,7 @@ COUNTRY_MAP = {
     "Slovakia": "sk",
     "Spain": "es",
     "United States": "us",
+    "Canada": "ca",
     "Norway": "no",
     "Romania": "ro",
     "Morocco": "ma",
