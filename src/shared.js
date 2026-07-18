@@ -338,11 +338,15 @@ let dataPromise = null;
 
 export function loadData() {
     if (!dataPromise) {
+        // Data files keep stable names, so browsers/CDNs cache them across
+        // deploys. __DATA_DATE__ changes whenever data/output changes, which
+        // busts the cache exactly when the data is actually new.
+        const v = encodeURIComponent(__DATA_DATE__);
         dataPromise = Promise.all([
-            d3.json("/data/output/slo-ydna-paths.json"),
-            d3.json("/data/output/slo-ydna.json"),
-            d3.json("/data/output/slo-mtdna-paths.json").catch(() => []),
-            d3.json("/data/output/slo-mtdna.json").catch(() => [])
+            d3.json(`/data/output/slo-ydna-paths.json?v=${v}`),
+            d3.json(`/data/output/slo-ydna.json?v=${v}`),
+            d3.json(`/data/output/slo-mtdna-paths.json?v=${v}`).catch(() => []),
+            d3.json(`/data/output/slo-mtdna.json?v=${v}`).catch(() => [])
         ]).then(([yHaplo, yPeople, mtHaplo, mtPeople]) => {
             ydnaHaploData = yHaplo;
             yPeople.forEach((p) => {
