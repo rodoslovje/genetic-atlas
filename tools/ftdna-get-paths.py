@@ -209,6 +209,10 @@ def find_path_in_json(obj, target_hg, sentinels, accept_parent_field):
 
 
 def fetch_one(hg, cfg, nodes_db):
+    """Fetch and store one haplogroup path.
+
+    Returns "rate_limited" if FTDNA responded with HTTP 429, otherwise None.
+    """
     safe_hg = urllib.parse.quote(hg)
     url = cfg["url_template"].format(hg=safe_hg)
 
@@ -217,6 +221,10 @@ def fetch_one(hg, cfg, nodes_db):
     except Exception as e:
         print(f"  Error fetching {hg}: {e}")
         return
+
+    if response.status_code == 429:
+        print(f"  Rate limited (HTTP 429) while fetching {hg}")
+        return "rate_limited"
 
     if response.status_code == 404:
         print(f"  Warning: {hg} not found on FTDNA")
@@ -270,7 +278,7 @@ def run_one(kind, mode):
 
     if not os.path.exists(cfg["input"]):
         print(f"Error: {cfg['input']} not found.")
-        return False
+        return "error"
 
     with open(cfg["input"], "r", encoding="utf-8") as f:
         people = json.load(f)
@@ -330,13 +338,20 @@ def run_one(kind, mode):
             continue
         print(f"[{idx}/{len(missing_hgs)}] Fetching path for {hg} ...")
         before = len(nodes_db)
-        fetch_one(hg, cfg, nodes_db)
+        status = fetch_one(hg, cfg, nodes_db)
         if len(nodes_db) > before:
             save()
+        if status == "rate_limited":
+            save()
+            print(f"Saved {len(nodes_db)} nodes to {cfg['output']} (partial)")
+            print("FTDNA is rate limiting requests (HTTP 429). Stopping now to "
+                  "avoid a longer block. Please retry in about 1 hour to fetch "
+                  "the remaining haplogroups.")
+            return "rate_limited"
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
     print(f"Saved {len(nodes_db)} nodes to {cfg['output']}")
-    return True
+    return "ok"
 
 
 def main():
@@ -350,7 +365,11 @@ def main():
     kinds = [args.kind] if args.kind else ["y", "mt"]
     ok = True
     for kind in kinds:
-        if not run_one(kind, args.mode):
+        status = run_one(kind, args.mode)
+        if status == "rate_limited":
+            # Don't start the next lineage; FTDNA is throttling us.
+            sys.exit(2)
+        if status != "ok":
             ok = False
     if not ok:
         sys.exit(1)
