@@ -30,16 +30,38 @@ export class MapVisualizer {
         if (this.mapInitialized) return;
         this.mapInitialized = true;
 
-        this.map = L.map(this.containerId);
-        L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-            maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            crossOrigin: true
-        }).addTo(this.map);
-
+        this.map = L.map(this.containerId, { maxZoom: 19 });
         this.markers = L.featureGroup().addTo(this.map);
 
+        this.addBaseLayer();
         this.refreshMap();
+    }
+
+    // CARTO Voyager as vector tiles (MapLibre GL) instead of raster PNGs: sharper
+    // labels at any zoom and crisp rendering on HiDPI screens. MapLibre is a heavy
+    // dependency, so it is only pulled in once the map view is actually opened.
+    async addBaseLayer() {
+        const [{ setWorkerUrl }, { default: maplibreGL }, { default: workerUrl }] = await Promise.all([
+            import("maplibre-gl"),
+            import("@maplibre/maplibre-gl-leaflet"),
+            // MapLibre resolves its tile-parsing worker relative to its own module
+            // URL, which the bundler never emits; point it at the bundled worker
+            // instead, or tiles are fetched but never decoded (blank basemap).
+            import("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url"),
+            import("maplibre-gl/dist/maplibre-gl.css"),
+        ]);
+        if (!this.map) return;
+        setWorkerUrl(workerUrl);
+        maplibreGL({
+            style: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
+            // Keeps the WebGL frame readable so html2canvas can export the map;
+            // without it the buffer is cleared after compositing and the basemap
+            // comes out blank.
+            canvasContextAttributes: { preserveDrawingBuffer: true },
+            attributionControl: {
+                customAttribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            }
+        }).addTo(this.map);
     }
 
     // Stable spread for markers that share a (rounded) coordinate: deterministic
