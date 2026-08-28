@@ -12,6 +12,7 @@ import enTranslations from "./i18n/en.json";
 const langLoaders = {
     sl: () => import("./i18n/sl.json"),
     de: () => import("./i18n/de.json"),
+    fr: () => import("./i18n/fr.json"),
     hr: () => import("./i18n/hr.json"),
     hu: () => import("./i18n/hu.json"),
     it: () => import("./i18n/it.json"),

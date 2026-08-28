@@ -8,7 +8,7 @@ Interactive web application and data tooling for the **Slovenian Genetic Atlas**
 - **Y-DNA & mtDNA tree views** rendered with D3, including era bands, lineage filters, prominent-tester highlighting, and SVG export.
 - **Haplogroup-aware search** across kit, surname, ancestor, location, and the full ancestry chain (a search for an upstream SNP matches every downstream tester).
 - **Filterable lineages** with persistent state in the URL; "Ungrouped" is an opt-in filter and is intentionally not persisted.
-- **Localisation** in six languages — Slovenian, English, Croatian, German, Italian, Hungarian — with a single i18n key for every translatable string and `{key}` placeholder substitution.
+- **Localisation** in seven languages — Slovenian, English, Croatian, French, German, Italian, Hungarian — with a single i18n key for every translatable string and `{key}` placeholder substitution.
 - **PNG / SVG export** of the current view, complete with branded header and source attribution.
 
 ## 🌐 Web Application

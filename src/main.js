@@ -11,6 +11,7 @@ import { prefetchFlags, getFlagDataUri } from "./flags.js";
 const languageConfig = {
     de: { flag: "de", text: "DE", fullText: "Deutsch (DE)" },
     en: { flag: "gb", text: "EN", fullText: "English (EN)" },
+    fr: { flag: "fr", text: "FR", fullText: "Français (FR)" },
     hr: { flag: "hr", text: "HR", fullText: "Hrvatski (HR)" },
     hu: { flag: "hu", text: "HU", fullText: "Magyar (HU)" },
     it: { flag: "it", text: "IT", fullText: "Italiano (IT)" },
