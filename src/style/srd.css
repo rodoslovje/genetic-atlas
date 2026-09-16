@@ -531,6 +531,79 @@ body.compact-nav .mobile-nav-section {
 }
 
 /* =============================================================
+ * Footer
+ *
+ * Three cells: build / data dates on the left, the User Guide and
+ * Changelog links in the middle, the source repository on the
+ * right. The middle cell is centred on the page rather than
+ * between its neighbours, so the links don't shift when a date
+ * gets longer in another language.
+ * ============================================================= */
+
+.app-footer {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 20px;
+  padding: 0 22px;
+  height: var(--srd-footer-h);
+  flex-shrink: 0;
+  border-top: 1px solid var(--srd-line);
+  background: var(--srd-surface);
+  font-family: var(--srd-font-sans);
+  font-size: 12px;
+  color: var(--srd-ink-subtle);
+}
+
+.footer-left {
+  display: flex;
+  gap: 20px;
+  justify-self: start;
+}
+
+/* Guide + Changelog sit together in the middle cell, separated by a thin
+   divider rather than a bullet so they read as two peers, not a list. */
+.footer-center {
+  justify-self: center;
+  display: flex;
+  gap: 14px;
+}
+
+.footer-center .footer-link + .footer-link {
+  border-left: 1px solid var(--srd-line);
+  padding-left: 14px;
+}
+
+.footer-right {
+  justify-self: end;
+}
+
+.footer-link {
+  color: var(--srd-ink-subtle);
+  text-decoration: none;
+}
+
+.footer-link:hover {
+  color: var(--srd-accent);
+  text-decoration: underline;
+}
+
+/* Phones: the three cells no longer fit on one line. The build version is the
+   first to go — a reader cares whether the *data* is current, far more than
+   which build is serving it — and both dates stay in reach on any wider
+   screen. */
+@media (max-width: 700px) {
+  .app-footer {
+    gap: 12px;
+    padding: 0 12px;
+    font-size: 11px;
+  }
+  #footer-version {
+    display: none;
+  }
+}
+
+/* =============================================================
  * Loading overlay
  * ============================================================= */
 

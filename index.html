@@ -174,12 +174,7 @@
                         <li><a href="https://rodoslovje.si/slovenska-dnk" target="_blank" rel="noopener noreferrer" data-i18n="infoSloGenHeritage">Slovenian Genetic Heritage</a></li>
                         <li><a href="https://www.familytreedna.com/groups/slovenianorigin/about" target="_blank" rel="noopener noreferrer" data-i18n="infoDataFtdna">FamilyTreeDNA</a></li>
                         <li><a href="https://rodoslovje.si/" target="_blank" rel="noopener noreferrer" data-i18n="infoSloGenSoc">Slovenian Genealogical Society</a></li>
-                        <li id="version-info"></li>
-                        <li id="data-info"></li>
                     </ul>
-                </div>
-                <div style="text-align: right; margin-top: 8px;">
-                    <a href="https://github.com/rodoslovje/genetic-atlas" target="_blank" rel="noopener noreferrer" class="info-github-link">GitHub</a>
                 </div>
             </div>
         </div>
@@ -204,6 +199,23 @@
     </div>
 
     <div id="attribution-overlay" data-i18n-html="attributionHtml"></div>
+
+    <!-- ========================================================
+         Footer (shared with rodoslovje/genealogical-index)
+         Build + data dates are filled in by main.js; the two page
+         links get a ?lang= matching the language the reader is in.
+         ======================================================== -->
+    <footer class="app-footer">
+        <div class="footer-left">
+            <span id="footer-version"></span>
+            <span id="footer-data"></span>
+        </div>
+        <div class="footer-center">
+            <a class="footer-link" id="footer-guide-link" href="/guide/" target="_blank" rel="noopener" data-i18n="userGuide">User Guide</a>
+            <a class="footer-link" id="footer-changelog-link" href="/changelog/" target="_blank" rel="noopener" data-i18n="changelog">Changelog</a>
+        </div>
+        <a class="footer-link footer-right" href="https://github.com/rodoslovje/genetic-atlas" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </footer>
 
     <div id="loading-overlay" class="srd-loading">
         <div class="srd-spinner"></div>

@@ -17,6 +17,10 @@ body {
   height: 100vh;
 }
 
+/* The app fills the viewport exactly: navbar, the view, then the footer. The
+   sidebar and the map attribution are fixed rather than in flow, so both have
+   to be told about the footer's height themselves (below). */
+
 /* --- View container & page views (router target) --------------- */
 #view-container {
   flex-grow: 1;
@@ -32,6 +36,20 @@ body {
 
 .page-view.active {
   display: block;
+}
+
+/* --- Sidebar: stop above the footer ---------------------------- */
+/* srd.css sizes the panel against the navbar alone; in the Atlas it also has
+   to clear the footer, or its lower edge (and the GitHub link under it) would
+   be hidden behind the bar whenever the panel is open. */
+.srd-sidebar {
+  height: calc(100% - var(--srd-nav-h) - var(--srd-footer-h));
+}
+
+@media (max-width: 480px) {
+  .srd-sidebar {
+    height: calc(100% - 52px - var(--srd-footer-h));
+  }
 }
 
 /* --- Mobile nav links inside the sidebar ----------------------- */
@@ -341,7 +359,7 @@ body {
 
 #attribution-overlay {
   position: fixed;
-  bottom: 0;
+  bottom: var(--srd-footer-h);   /* sits on the map, just above the footer bar */
   left: 0;
   background: rgba(255, 255, 255, 0.78);
   padding: 1px 6px;
@@ -414,34 +432,6 @@ body:has(#sidebar.open) #floating-buttons {
   display: none;
   border-bottom: 1px solid var(--srd-line);
   padding-bottom: 14px;
-}
-
-#info-bubble #version-info,
-#info-bubble #data-info {
-  font-size: 11px;
-  color: var(--srd-ink-subtle);
-}
-
-#info-bubble #version-info {
-  margin-top: 10px;
-  border-top: 1px solid var(--srd-line);
-  padding-top: 8px;
-}
-
-#info-bubble #data-info {
-  margin-top: 4px;
-}
-
-.info-github-link {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--srd-ink-subtle);
-  text-decoration: none;
-}
-
-.info-github-link:hover {
-  color: var(--srd-ink-muted);
-  text-decoration: underline;
 }
 
 /* =============================================================

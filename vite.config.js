@@ -1,5 +1,5 @@
 import { readdirSync, statSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
 
 function getDataDate() {
   const dataDir = join(process.cwd(), 'data', 'output');
@@ -19,6 +19,20 @@ export default {
     // the project root unless their real location is in fs.allow.
     fs: {
       allow: ['.', '..']
+    }
+  },
+  build: {
+    rollupOptions: {
+      // The User Guide and the Changelog are standalone pages, not routes of
+      // the app: each is its own entry so it keeps a shareable URL and loads
+      // none of the app's code. Each lives in a directory of its own so the
+      // build emits guide/index.html and the page is served at the extensionless
+      // /guide/ on any static host.
+      input: {
+        main: resolve(process.cwd(), 'index.html'),
+        guide: resolve(process.cwd(), 'guide/index.html'),
+        changelog: resolve(process.cwd(), 'changelog/index.html'),
+      }
     }
   },
   define: {

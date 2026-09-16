@@ -11,6 +11,7 @@ Interactive web application and data tooling for the **Slovenian Genetic Atlas**
 - **Filterable lineages** with persistent state in the URL; "Ungrouped" is an opt-in filter and is intentionally not persisted.
 - **Localisation** in seven languages — Slovenian, English, Croatian, French, German, Italian, Hungarian — with a single i18n key for every translatable string and `{key}` placeholder substitution.
 - **PNG / SVG export** of the current view, complete with branded header and source attribution.
+- **User Guide and Changelog** as standalone pages (`/guide/`, `/changelog/`), linked from the footer and opened in their own tab. Their text lives in `src/content/{guide,changelog}/<lang>.js`, one file per language with English as the source of record; both are kept in step with the app (see `CLAUDE.md`).
 
 ## 🌐 Web Application
 

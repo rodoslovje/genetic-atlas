@@ -4,29 +4,11 @@ import { select } from "d3-selection";
 // but they should generally import directly from "d3-..." submodules.
 export const d3 = { json, select };
 
-// English bundled as fallback; all other languages lazy-loaded on first use.
-import enTranslations from "./i18n/en.json";
-
-// Explicit loader map (avoids Vite warning about static + dynamic import of en.json).
-// Adding a new language: drop the JSON in i18n/ and add an entry here + in languageConfig in main.js.
-const langLoaders = {
-    sl: () => import("./i18n/sl.json"),
-    de: () => import("./i18n/de.json"),
-    fr: () => import("./i18n/fr.json"),
-    hr: () => import("./i18n/hr.json"),
-    hu: () => import("./i18n/hu.json"),
-    it: () => import("./i18n/it.json"),
-};
-
-export const translations = { en: enTranslations };
-
-export async function loadTranslation(lang) {
-    if (translations[lang]) return translations[lang];
-    if (!langLoaders[lang]) return null;
-    const mod = await langLoaders[lang]();
-    translations[lang] = mod.default;
-    return translations[lang];
-}
+// Translation loading lives in i18n.js so the standalone guide/changelog pages
+// can reuse it without importing this module (and with it d3 and the data
+// loaders). Re-exported here so app modules keep importing i18n from shared.js.
+import { translations, loadTranslation, preferredLang, translate } from "./i18n.js";
+export { translations, loadTranslation };
 
 
 export const ydnaGroupRoots = {
@@ -149,7 +131,7 @@ export const eraColors = [
 const initialParams = new URLSearchParams(window.location.search);
 
 export const state = {
-    currentLang: localStorage.getItem("preferredLang") || (navigator.language && navigator.language.toLowerCase().startsWith("sl") ? "sl" : "en"),
+    currentLang: preferredLang(),
     showPassthrough: initialParams.get("snp") === "1",
     showLabels: initialParams.get("lbl") === "1",
     showAllMajorGroups: initialParams.get("linea") === "1",
@@ -172,15 +154,7 @@ export const state = {
 };
 
 export function t(key, ...args) {
-    const dict = translations[state.currentLang] || translations.en;
-    let str = dict[key] ?? key;
-    args.forEach((val, i) => { str = str.replace(`{${i}}`, val); });
-    str = str.replace(/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g, (m, name) => {
-        if (name === key) return m;
-        const v = dict[name];
-        return typeof v === "string" ? v : m;
-    });
-    return str;
+    return translate(translations[state.currentLang] || translations.en, key, ...args);
 }
 
 export function currentView() {

@@ -125,6 +125,7 @@ window.setLanguage = async function (e, lang) {
     state.currentLang = lang;
     localStorage.setItem("preferredLang", lang);
     loadVersionInfo();
+    syncPageLinks();
     updateLangIcon();
     applyTranslations();
     initFilters();
@@ -1007,20 +1008,29 @@ async function initApp() {
     applyTranslations();
     handleHashChange();
     loadVersionInfo();
+    syncPageLinks();
 }
 
 function loadVersionInfo() {
-    const versionEl = document.getElementById('version-info');
-    const dataEl = document.getElementById('data-info');
+    const versionEl = document.getElementById('footer-version');
+    const dataEl = document.getElementById('footer-data');
     const formatDate = (iso) => iso.slice(0, 10);
 
-    if (versionEl) {
-        versionEl.innerText = t("versionLabel", formatDate(__BUILD_DATE__));
-        versionEl.style.display = 'block';
-    }
-    if (dataEl) {
-        dataEl.innerText = t("dataUpdateLabel", formatDate(__DATA_DATE__));
-        dataEl.style.display = 'block';
+    if (versionEl) versionEl.innerText = t("versionLabel", formatDate(__BUILD_DATE__));
+    if (dataEl) dataEl.innerText = t("dataUpdateLabel", formatDate(__DATA_DATE__));
+}
+
+// The guide and the changelog are standalone pages in their own tab, built in
+// English and switched over client-side; passing ?lang= means a reader opens
+// them in the language they were just reading the Atlas in.
+function syncPageLinks() {
+    const links = [
+        ["footer-guide-link", "/guide/"],
+        ["footer-changelog-link", "/changelog/"],
+    ];
+    for (const [id, path] of links) {
+        const el = document.getElementById(id);
+        if (el) el.href = `${path}?lang=${encodeURIComponent(state.currentLang)}`;
     }
 }
 

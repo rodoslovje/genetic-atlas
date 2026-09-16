@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Guide - Slovenian Genetic Atlas</title>
+    <meta name="description" content="How to use the Slovenian Genetic Atlas: the map, the Y-DNA and mtDNA lineage trees, the block tree, search, filters and export.">
+
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Design system + the static-page styles only: style.css lays the app out
+         as a fixed-height viewport, which a scrolling document must not be. -->
+    <link rel="stylesheet" href="/src/style/srd-tokens.css">
+    <link rel="stylesheet" href="/src/style/srd.css">
+    <link rel="stylesheet" href="/src/style/page.css">
+
+    <script type="module" src="/src/pages/page.js"></script>
+</head>
+<body class="srd-page" data-page="guide">
+
+    <nav class="srd-navbar">
+        <a href="/" class="srd-brand" aria-label="Slovenski genetski atlas">
+            <img src="/srd-logo-transparent.png" alt="SRD" class="srd-brand-mark">
+            <span class="srd-brand-title">
+                <span class="app" data-i18n="brand">Slovenian Genetic Atlas</span>
+                <span class="org" data-i18n="infoSloGenSoc">Slovenian Genealogical Society</span>
+            </span>
+        </a>
+    </nav>
+
+    <!-- Two columns: the contents stay in view on the left while the guide
+         itself scrolls. Both are filled by /src/pages/page.js. -->
+    <main class="page-main page-main--guide">
+        <aside class="page-side">
+            <a class="page-back" href="/" data-i18n="backToAtlas">&larr; Back to the Atlas</a>
+            <p class="page-side-title" data-i18n="contents">Contents</p>
+            <nav class="page-toc" id="page-toc" aria-label="Contents"></nav>
+        </aside>
+        <div class="page-content" id="page-content">
+            <noscript>The User Guide needs JavaScript to render. The Atlas itself does too — please enable it, or read the project description on <a href="https://github.com/rodoslovje/genetic-atlas">GitHub</a>.</noscript>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <div class="footer-left">
+            <span id="footer-version"></span>
+            <span id="footer-data"></span>
+        </div>
+        <div class="footer-center">
+            <a class="footer-link" id="footer-atlas-link" href="/" data-i18n="brand">Slovenian Genetic Atlas</a>
+            <a class="footer-link" id="footer-changelog-link" href="/changelog/" data-i18n="changelog">Changelog</a>
+        </div>
+        <a class="footer-link footer-right" href="https://github.com/rodoslovje/genetic-atlas" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </footer>
+
+</body>
+</html>
