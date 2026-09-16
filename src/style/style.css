@@ -514,3 +514,276 @@ body:has(#sidebar.open) .tree-minimap {
     box-sizing: border-box;
   }
 }
+
+/* =============================================================
+ * Block tree overlay (Y-DNA): icicle view of one haplogroup with
+ * time on the vertical axis. Covers the tree view + minimap.
+ * ============================================================= */
+
+.blocktree {
+  position: absolute;
+  inset: 0;
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  background: var(--srd-bg);
+  font-family: var(--srd-font-sans);
+}
+
+@media (min-width: 769px) {
+  body:has(#sidebar.open) .blocktree {
+    right: 240px;   /* sidebar overlays the view; keep the header controls visible */
+  }
+}
+
+.blocktree__header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  padding: 8px 60px 8px 12px;   /* floating action buttons stack in the right corner on phones */
+  background: var(--srd-surface);
+  border-bottom: 1px solid var(--srd-line);
+  font-size: 13px;
+  color: var(--srd-ink-muted);
+  flex-shrink: 0;
+}
+
+@media (min-width: 600px) {
+  .blocktree__header {
+    padding-right: 160px;   /* floating action buttons sit in a row in this corner */
+  }
+}
+
+.blocktree__btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--srd-line-strong);
+  background: var(--srd-surface);
+  color: var(--srd-ink-muted);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.blocktree__btn:hover {
+  background: var(--srd-bg-subtle);
+  color: var(--srd-ink);
+}
+
+.blocktree__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.blocktree__crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+}
+
+.blocktree__crumbs a {
+  color: var(--srd-accent);
+  text-decoration: none;
+}
+
+.blocktree__crumbs a:hover {
+  color: var(--srd-accent-strong);
+  text-decoration: underline;
+}
+
+.blocktree__sep,
+.blocktree__ellipsis {
+  color: var(--srd-ink-subtle);
+}
+
+.blocktree__current {
+  font-weight: 600;
+  color: var(--srd-ink);
+}
+
+.blocktree__note {
+  color: var(--srd-ink-subtle);
+  font-style: italic;
+}
+
+.blocktree__scroll {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+.blocktree__inner {
+  display: flex;
+  align-items: flex-start;
+  width: max-content;
+}
+
+.blocktree__axis {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  flex-shrink: 0;
+  display: block;
+  background: var(--srd-bg);
+}
+
+.blocktree__svg {
+  display: block;
+}
+
+.blocktree__msg {
+  padding: 40px 20px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--srd-ink-muted);
+}
+
+.blocktree text {
+  font-family: var(--srd-font-sans);
+  pointer-events: none;
+}
+
+.bt-block {
+  cursor: pointer;
+}
+
+.bt-block--root {
+  cursor: default;
+}
+
+.bt-block rect {
+  stroke-width: 1.5px;
+  transition: fill-opacity 0.15s;
+}
+
+.bt-block--root > rect {
+  stroke-width: 2.5px;
+}
+
+.bt-block:hover > rect {
+  fill-opacity: 0.32 !important;
+}
+
+.bt-block__title {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--srd-ink);
+}
+
+.bt-block__variant {
+  font-size: 11px;
+  fill: var(--srd-ink-muted);
+}
+
+.bt-ci line {
+  stroke-width: 1.5px;
+  opacity: 0.8;
+}
+
+.bt-sample rect {
+  fill: var(--srd-surface);
+  stroke: #94a3b8;
+  stroke-width: 1.5px;
+}
+
+.bt-sample--bigy rect {
+  fill: var(--srd-brand-tint);
+}
+
+.bt-sample:hover rect {
+  stroke: var(--srd-brand);
+}
+
+.bt-sample image {
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.35));
+}
+
+.bt-sample__surname {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--srd-brand);
+}
+
+.bt-sample__line {
+  font-size: 11px;
+  fill: var(--srd-ink-muted);
+}
+
+.bt-sample__sub {
+  font-size: 10px;
+  fill: var(--srd-ink-subtle);
+}
+
+.bt-axis__label {
+  font-size: 11px;
+  fill: var(--srd-ink-muted);
+}
+
+.bt-axis__line {
+  stroke: var(--srd-line-strong);
+  stroke-width: 1px;
+}
+
+.bt-grid {
+  stroke: var(--srd-line);
+  stroke-width: 1px;
+}
+
+.blocktree-link {
+  color: var(--srd-accent);
+  text-decoration: none;
+}
+
+.blocktree-link:hover {
+  color: var(--srd-accent-strong);
+  text-decoration: underline;
+}
+
+/* Y-DNA viewing mode tabs (top of the sidebar) */
+.mode-tabs {
+  display: flex;
+  border: 1px solid var(--srd-line);
+  border-radius: var(--srd-radius);
+  overflow: hidden;
+  background: var(--srd-bg);
+}
+
+.mode-tab {
+  flex: 1;
+  padding: 8px 10px;
+  font-family: var(--srd-font-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--srd-ink-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.mode-tab + .mode-tab {
+  border-left: 1px solid var(--srd-line);
+}
+
+.mode-tab:hover {
+  background: var(--srd-bg-subtle);
+  color: var(--srd-ink);
+}
+
+.mode-tab.active {
+  background: var(--srd-brand);
+  color: #ffffff;
+}
+
+/* Search matches in the block tree use the same highlight as the tree */
+.bt-sample.bt-sample--match rect {
+  fill: var(--srd-warn-bg);
+  stroke: var(--srd-warn);
+}

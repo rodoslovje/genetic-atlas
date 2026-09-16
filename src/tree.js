@@ -509,11 +509,20 @@ export class TreeVisualizer {
                 if (tn._hideTimer) { clearTimeout(tn._hideTimer); tn._hideTimer = null; }
                 this.tooltip.transition().duration(100).style("opacity", 1);
                 const error = d.data.isAutoPlaced ? `<br><span class="error-tag">⚠ ${t("missingPath")}</span>` : "";
+                // Y-DNA only: link to the block tree of this haplogroup (or the
+                // person's terminal haplogroup). Auto-placed nodes have no path
+                // data, so there is nothing to draw for them.
+                const blockHg = this.isSquare && !d.data.isAutoPlaced
+                    ? (d.data.isPerson ? d.data.originalHaplo : d.data.haplogroup)
+                    : null;
+                const blockLink = blockHg && blockHg !== "-"
+                    ? `<br><a href="#ydna" class="blocktree-link" data-hg="${blockHg.replace(/"/g, "")}">▦ ${t("blockTreeOpen")}</a>`
+                    : "";
                 if (d.data.isPerson) {
-                    this.tooltip.html(getPersonTooltip(d.data, error, this.isSquare ? "y" : "mt", "tree"));
+                    this.tooltip.html(getPersonTooltip(d.data, error, this.isSquare ? "y" : "mt", "tree") + blockLink);
                 } else {
                     const notePart = formatNoteSuffix(d.data);
-                    this.tooltip.html(`${t("snpLabel")}: <b>${d.data.haplogroup}${notePart}</b>${error}<br>${t("ageEstimate")}: ${formatAge(d.data.age)}`);
+                    this.tooltip.html(`${t("snpLabel")}: <b>${d.data.haplogroup}${notePart}</b>${error}<br>${t("ageEstimate")}: ${formatAge(d.data.age)}${blockLink}`);
                 }
 
                 let left = event.pageX + 15;

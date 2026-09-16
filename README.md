@@ -6,6 +6,7 @@ Interactive web application and data tooling for the **Slovenian Genetic Atlas**
 
 - **Map view** with two-ring jitter that spreads markers sharing the same address so individual haplogroup colours stay visible.
 - **Y-DNA & mtDNA tree views** rendered with D3, including era bands, lineage filters, prominent-tester highlighting, and SVG export.
+- **Y-DNA block tree**, a second viewing mode of the Y-DNA view (`?ymode=block`): an icicle view with time on the vertical axis, showing each branch's TMRCA with its 68 % range, equivalent SNPs, and project members as one column each below their terminal haplogroup. It follows the lineage filter; the search box picks the starting haplogroup (the first split among the matched members' lines) and highlights matches. Any block can be focused by clicking it, from a haplogroup tooltip, or via `?block=R-BY32501`; both views export to SVG.
 - **Haplogroup-aware search** across kit, surname, ancestor, location, and the full ancestry chain (a search for an upstream SNP matches every downstream tester).
 - **Filterable lineages** with persistent state in the URL; "Ungrouped" is an opt-in filter and is intentionally not persisted.
 - **Localisation** in seven languages — Slovenian, English, Croatian, French, German, Italian, Hungarian — with a single i18n key for every translatable string and `{key}` placeholder substitution.
@@ -92,6 +93,24 @@ python tools/ftdna-get-paths.py
 ```bash
 python tools/ftdna-get-paths.py --mode full
 ```
+
+**Backfill SNP lists (block tree data):**
+
+Each FTDNA response carries the equivalent SNPs (`variants`) only for the haplogroup that was requested, while its ancestors arrive with ages and tester counts but no SNP list. This pass fetches the nodes that still lack `variants`, most useful first (ancestry of Big Y testers, youngest first). Use `--limit` to stay under FTDNA's rate limit and re-run until nothing is left:
+
+```bash
+python tools/ftdna-get-paths.py --kind y --mode variants --limit 200
+```
+
+Every node in `slo-ydna-paths.json` / `slo-mtdna-paths.json` carries:
+
+| Field | Meaning |
+|---|---|
+| `haplogroup`, `parent`, `note` | tree topology and FTDNA historical-event label |
+| `age` | TMRCA mean year (negative = BCE) |
+| `age68`, `age99` | `[oldest, youngest]` TMRCA bounds at 68 % / 99 % confidence |
+| `placements`, `modern`, `ancient` | FTDNA testers placed directly on the node / anywhere below it / ancient samples below it |
+| `variants` | equivalent SNP names of the block; only on nodes fetched directly |
 
 ## 📄 License
 

@@ -2,9 +2,21 @@
 Collects Y-DNA and/or mtDNA haplogroup paths from the FTDNA Discover JSON endpoint.
 
 Usage:
-    python tools/ftdna-get-paths.py                # both lineages, incremental
-    python tools/ftdna-get-paths.py --kind y       # paternal only
-    python tools/ftdna-get-paths.py --mode full    # both, full rebuild
+    python tools/ftdna-get-paths.py                    # both lineages, incremental
+    python tools/ftdna-get-paths.py --kind y           # paternal only
+    python tools/ftdna-get-paths.py --mode full        # both, full rebuild
+    python tools/ftdna-get-paths.py --mode variants    # backfill SNP lists for nodes
+                                                       # that were only seen as ancestors
+    python tools/ftdna-get-paths.py --limit 100        # stop after 100 requests
+
+Each node in the output carries:
+    haplogroup, parent, note      tree topology and FTDNA historical-event label
+    age                           TMRCA mean year (negative = BCE)
+    age68, age99                  [oldest, youngest] TMRCA bounds at 68% / 99%
+    placements, modern, ancient   FTDNA tester counts placed directly on the node /
+                                  anywhere below it / ancient samples below it
+    variants                      equivalent SNP names of the block; present only on
+                                  nodes that were fetched directly (see --mode variants)
 """
 
 import argparse
@@ -75,6 +87,8 @@ CONFIGS = {
         "path_root_sentinels": ["A0000"],
         # Whether the fallback find_path() accepts "parent" in addition to "parentName"
         "accept_parent_field": False,
+        # People whose ancestry is prioritised in --mode variants (Big Y testers)
+        "is_priority_person": lambda p: (p.get("test") or "").startswith("Big Y"),
     },
     "mt": {
         "input": "data/output/slo-mtdna.json",
@@ -84,6 +98,7 @@ CONFIGS = {
         "include_group_in_targets": True,
         "path_root_sentinels": ["Mitochondrial Eve", "L0", "L1"],
         "accept_parent_field": True,
+        "is_priority_person": lambda p: bool(p.get("haplotype")),
     },
 }
 
@@ -95,6 +110,13 @@ HTTP_HEADERS = {
 
 REQUEST_TIMEOUT = 15
 SLEEP_BETWEEN_REQUESTS = 0.5  # be nice to the API
+
+# Canonical key order for the output file (unknown keys are appended after these).
+FIELD_ORDER = [
+    "haplogroup", "parent", "note", "age", "age68", "age99",
+    "placements", "modern", "ancient", "variants",
+]
+COUNT_FIELDS = ("placements", "modern", "ancient")
 
 
 def is_valid_hg(value):
@@ -115,75 +137,129 @@ def collect_targets(people, cfg):
     return targets
 
 
-def parse_age(item):
-    """Extract the best available age from an FTDNA Discover node."""
-    for time_key in ("tmrca", "formation"):
-        block = item.get(time_key)
-        if isinstance(block, dict):
-            return block.get("meanYear") or block.get("mean")
+# ---------------------------------------------------------------------------
+# Payload parsing
+# ---------------------------------------------------------------------------
+
+def parse_time_block(block):
+    """Return {age, age68, age99} from an FTDNA time block such as
+    {mean, oldest, youngest, oldest68, youngest68, oldest99, youngest99}.
+    Keys whose data is absent are omitted."""
+    out = {}
+    if not isinstance(block, dict):
+        return out
+    mean = block.get("meanYear")
+    if mean is None:
+        mean = block.get("mean")
+    if mean is not None:
+        out["age"] = mean
+    for key, lo, hi in (("age68", "oldest68", "youngest68"),
+                        ("age99", "oldest99", "youngest99")):
+        if block.get(lo) is not None and block.get(hi) is not None:
+            out[key] = [block[lo], block[hi]]
+    return out
+
+
+def parse_time(item):
+    """Extract the best available age (and bounds) from an FTDNA Discover node."""
+    for time_key in ("tmrca", "formation", "formed"):
+        parsed = parse_time_block(item.get(time_key))
+        if parsed:
+            return parsed
     age_val = item.get("age")
     if isinstance(age_val, dict):
-        return age_val.get("meanYear") or age_val.get("year") or age_val.get("mean")
-    return age_val if age_val is not None else None
+        mean = age_val.get("meanYear") or age_val.get("year") or age_val.get("mean")
+        return {"age": mean} if mean is not None else {}
+    return {"age": age_val} if age_val is not None else {}
 
 
-def parse_age_legacy(block):
-    """Extract age from the {haplogroup, ancestors, time} response shape."""
-    if isinstance(block, dict):
-        tmrca = block.get("tmrca")
-        if isinstance(tmrca, dict):
-            return tmrca.get("mean")
-        formed = block.get("formed")
-        if isinstance(formed, dict):
-            return formed.get("mean")
-    return None
+def parse_counts(item):
+    return {k: item[k] for k in COUNT_FIELDS if isinstance(item.get(k), int)}
 
 
-def store_modern_response(next_data, nodes_db):
-    """Handle the {haplogroup, ancestors, time} response shape."""
+def parse_variants(item):
+    """Return the list of equivalent SNP names, or None when the payload has no
+    variants list at all (so the caller can tell 'unknown' from 'none')."""
+    raw = item.get("variants")
+    if not isinstance(raw, list):
+        return None
+    names = []
+    for v in raw:
+        name = v.get("name") if isinstance(v, dict) else v
+        if isinstance(name, str) and name:
+            names.append(name)
+    return names
+
+
+def merge_node(nodes_db, name, parent=None, note=None, fields=None, fetched=False):
+    """Create or enrich a node.
+
+    Topology fields (parent, note) are only filled in when missing, so an
+    incremental run never rewires an existing tree. Data fields (age, bounds,
+    counts, variants) are filled in when missing, or overwritten when the node
+    was the direct target of the request (fetched=True) and thus freshest."""
+    node = nodes_db.get(name)
+    if node is None:
+        node = {"haplogroup": name, "parent": parent or "", "note": note or "", "age": None}
+        nodes_db[name] = node
+    else:
+        if parent and not node.get("parent"):
+            node["parent"] = parent
+        if note and not node.get("note"):
+            node["note"] = note
+    for key, value in (fields or {}).items():
+        if value is None:
+            continue
+        if fetched or node.get(key) is None:
+            node[key] = value
+    return node
+
+
+def store_modern_response(next_data, nodes_db, hg):
+    """Handle the {haplogroup, ancestors, time, variants, ...} response shape.
+
+    `ancestors` lists every node from the root down to (and including) the
+    queried haplogroup, each with its own tmrca and tester counts. Variants
+    and the full time block are only given for the queried node."""
     hg_info = next_data["haplogroup"]
-    time_info = next_data.get("time", {})
+    hg_name = hg_info.get("name") or hg
 
     parent_name = ""
+    parent_of_hg = ""
     for anc in next_data["ancestors"]:
         anc_name = anc.get("name")
         if not anc_name:
             continue
-        if anc_name not in nodes_db:
-            age = None
-            if isinstance(anc.get("tmrca"), dict):
-                age = anc["tmrca"].get("mean")
-            nodes_db[anc_name] = {
-                "haplogroup": anc_name,
-                "parent": parent_name,
-                "note": anc.get("note") or "",
-                "age": age,
-            }
+        if anc_name == hg_name:
+            parent_of_hg = parent_name
+        merge_node(nodes_db, anc_name, parent=parent_name, note=anc.get("note"),
+                   fields={**parse_time(anc), **parse_counts(anc)})
         parent_name = anc_name
+    if not parent_of_hg and parent_name != hg_name:
+        parent_of_hg = parent_name
 
-    hg_name = hg_info.get("name")
-    if hg_name and hg_name not in nodes_db:
-        age = parse_age_legacy(time_info)
-        nodes_db[hg_name] = {
-            "haplogroup": hg_name,
-            "parent": hg_info.get("parent_name") or parent_name,
-            "note": "",
-            "age": age,
-        }
+    fields = parse_time(next_data.get("time", {}))
+    variants = parse_variants(next_data)
+    if variants is not None:
+        fields["variants"] = variants
+    merge_node(nodes_db, hg_name,
+               parent=hg_info.get("parent_name") or parent_of_hg,
+               fields=fields, fetched=True)
 
 
-def store_path_data(path_data, nodes_db):
+def store_path_data(path_data, nodes_db, hg):
     for item in path_data:
         node_name = item.get("name")
-        if not node_name or node_name in nodes_db:
+        if not node_name:
             continue
-        note = item.get("historicalEvent") or item.get("note") or ""
-        nodes_db[node_name] = {
-            "haplogroup": node_name,
-            "parent": item.get("parentName") or item.get("parent") or "",
-            "note": note,
-            "age": parse_age(item),
-        }
+        fields = {**parse_time(item), **parse_counts(item)}
+        variants = parse_variants(item)
+        if variants is not None:
+            fields["variants"] = variants
+        merge_node(nodes_db, node_name,
+                   parent=item.get("parentName") or item.get("parent"),
+                   note=item.get("historicalEvent") or item.get("note"),
+                   fields=fields, fetched=(node_name == hg))
 
 
 def find_path_in_json(obj, target_hg, sentinels, accept_parent_field):
@@ -208,10 +284,15 @@ def find_path_in_json(obj, target_hg, sentinels, accept_parent_field):
     return None
 
 
+# ---------------------------------------------------------------------------
+# Fetching
+# ---------------------------------------------------------------------------
+
 def fetch_one(hg, cfg, nodes_db):
     """Fetch and store one haplogroup path.
 
-    Returns "rate_limited" if FTDNA responded with HTTP 429, otherwise None.
+    Returns "ok" on success, "rate_limited" if FTDNA responded with HTTP 429,
+    otherwise None.
     """
     safe_hg = urllib.parse.quote(hg)
     url = cfg["url_template"].format(hg=safe_hg)
@@ -246,8 +327,8 @@ def fetch_one(hg, cfg, nodes_db):
     if (isinstance(next_data, dict)
             and "haplogroup" in next_data
             and "ancestors" in next_data):
-        store_modern_response(next_data, nodes_db)
-        return
+        store_modern_response(next_data, nodes_db, hg)
+        return "ok"
 
     # Shape 2: root JSON object is the haplogroup itself with embedded ancestors
     path_data = None
@@ -269,10 +350,42 @@ def fetch_one(hg, cfg, nodes_db):
         print(f"  Error: {hg} path data not found in JSON payload.")
         return
 
-    store_path_data(path_data, nodes_db)
+    store_path_data(path_data, nodes_db, hg)
+    return "ok"
 
 
-def run_one(kind, mode):
+# ---------------------------------------------------------------------------
+# Run
+# ---------------------------------------------------------------------------
+
+def ancestry_of(hg, nodes_db):
+    """All nodes from hg up to the root, following parent pointers."""
+    out = []
+    seen = set()
+    while hg and hg in nodes_db and hg not in seen:
+        seen.add(hg)
+        out.append(hg)
+        hg = nodes_db[hg].get("parent")
+    return out
+
+
+def plan_variants(people, cfg, nodes_db):
+    """Nodes lacking a variants list, most useful first: those on the ancestry
+    of priority testers (Big Y for Y-DNA), youngest first; then the rest."""
+    priority_nodes = set()
+    for p in people:
+        if cfg["is_priority_person"](p) and is_valid_hg(p.get("haplogroup")):
+            priority_nodes.update(ancestry_of(p["haplogroup"], nodes_db))
+    missing = [h for h, n in nodes_db.items() if "variants" not in n]
+
+    def sort_key(h):
+        age = nodes_db[h].get("age")
+        return (h not in priority_nodes, -(age if age is not None else -10**9), h)
+
+    return sorted(missing, key=sort_key)
+
+
+def run_one(kind, mode, limit):
     cfg = CONFIGS[kind]
     print(f"=== {kind.upper()}-DNA ({mode}) ===")
 
@@ -286,9 +399,9 @@ def run_one(kind, mode):
     target_haplogroups = collect_targets(people, cfg)
     print(f"Found {len(target_haplogroups)} unique haplogroups in {cfg['input']}")
 
-    # Load existing paths if in update mode
+    # Load existing paths unless doing a full rebuild
     existing_nodes = {}
-    if mode == "update" and os.path.exists(cfg["output"]):
+    if mode != "full" and os.path.exists(cfg["output"]):
         with open(cfg["output"], "r", encoding="utf-8") as f:
             try:
                 for node in json.load(f):
@@ -297,22 +410,29 @@ def run_one(kind, mode):
             except Exception as e:
                 print(f"Warning: could not read {cfg['output']}: {e}")
 
-    nodes_db = existing_nodes.copy() if mode == "update" else {}
+    nodes_db = existing_nodes if mode != "full" else {}
 
-    if mode == "full":
-        candidates = list(target_haplogroups)
+    if mode == "variants":
+        missing_hgs = plan_variants(people, cfg, nodes_db)
+        # A node acquires "variants" only when fetched directly, so nothing
+        # gets populated as a side effect of an earlier request.
+        needs_fetch = lambda hg: "variants" not in nodes_db.get(hg, {})
     else:
-        candidates = [hg for hg in target_haplogroups if hg not in nodes_db]
+        if mode == "full":
+            candidates = list(target_haplogroups)
+        else:
+            candidates = [hg for hg in target_haplogroups if hg not in nodes_db]
+        # Fetch order: person-derived (likely deep, leaf-ish SNPs) before major
+        # roots, and longer names before shorter within each bucket. Each FTDNA
+        # response includes the queried node's full ancestry, so fetching the
+        # deepest target first lets the skip-already-populated check eliminate
+        # its ancestors from later iterations — fewer HTTP requests overall.
+        major_roots_set = set(cfg["major_roots"])
+        missing_hgs = sorted(candidates, key=lambda h: (h in major_roots_set, -len(h), h))
+        needs_fetch = lambda hg: hg not in nodes_db
 
-    # Fetch order: person-derived (likely deep, leaf-ish SNPs) before major roots,
-    # and longer names before shorter within each bucket. Each FTDNA response
-    # includes the queried node's full ancestry, so fetching the deepest target
-    # first lets the skip-already-populated check eliminate its ancestors from
-    # later iterations — fewer HTTP requests overall.
-    major_roots_set = set(cfg["major_roots"])
-    missing_hgs = sorted(candidates, key=lambda h: (h in major_roots_set, -len(h), h))
-
-    print(f"Need to fetch paths for {len(missing_hgs)} haplogroups")
+    print(f"Need to fetch paths for {len(missing_hgs)} haplogroups"
+          + (f" (limit {limit} this run)" if limit else ""))
 
     # The on-disk JSON is the source of truth. Write it after every successful
     # fetch (atomically via temp+rename) so kill -9 at any moment leaves a valid
@@ -324,22 +444,34 @@ def run_one(kind, mode):
             nodes_db.values(),
             key=lambda n: (999999 if n.get("age") is None else n["age"], n.get("haplogroup", "")),
         )
+        ordered = [
+            {**{k: n[k] for k in FIELD_ORDER if k in n},
+             **{k: v for k, v in n.items() if k not in FIELD_ORDER}}
+            for n in output_list
+        ]
         tmp_path = cfg["output"] + ".tmp"
         with open(tmp_path, "w", encoding="utf-8") as f:
-            json.dump(output_list, f, indent=4, ensure_ascii=False)
+            json.dump(ordered, f, indent=4, ensure_ascii=False)
         os.replace(tmp_path, cfg["output"])
 
+    requests_made = 0
     for idx, hg in enumerate(missing_hgs, 1):
         # Each FTDNA response includes the full ancestry, so by the time we
         # reach a haplogroup that was an ancestor of an earlier target, it
         # is already in nodes_db — no need to re-fetch it.
-        if hg in nodes_db:
+        if not needs_fetch(hg):
             print(f"[{idx}/{len(missing_hgs)}] {hg} already populated from earlier path; skipping")
             continue
+        if limit and requests_made >= limit:
+            remaining = sum(1 for h in missing_hgs[idx - 1:] if needs_fetch(h))
+            save()
+            print(f"Reached --limit {limit}; {remaining} haplogroups still to fetch. "
+                  f"Saved {len(nodes_db)} nodes to {cfg['output']} (partial)")
+            return "ok"
         print(f"[{idx}/{len(missing_hgs)}] Fetching path for {hg} ...")
-        before = len(nodes_db)
+        requests_made += 1
         status = fetch_one(hg, cfg, nodes_db)
-        if len(nodes_db) > before:
+        if status == "ok":
             save()
         if status == "rate_limited":
             save()
@@ -350,6 +482,7 @@ def run_one(kind, mode):
             return "rate_limited"
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
+    save()
     print(f"Saved {len(nodes_db)} nodes to {cfg['output']}")
     return "ok"
 
@@ -358,14 +491,18 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     parser.add_argument("--kind", choices=["y", "mt"], default=None,
                         help="Lineage to process (omit to process both)")
-    parser.add_argument("--mode", choices=["update", "full"], default="update",
-                        help="Update existing or rebuild full")
+    parser.add_argument("--mode", choices=["update", "full", "variants"], default="update",
+                        help="update: fetch new haplogroups only; full: rebuild everything; "
+                             "variants: fetch nodes that still lack their SNP list")
+    parser.add_argument("--limit", type=int, default=0,
+                        help="Maximum number of HTTP requests per lineage this run "
+                             "(0 = unlimited); useful to stay under FTDNA's rate limit")
     args = parser.parse_args()
 
     kinds = [args.kind] if args.kind else ["y", "mt"]
     ok = True
     for kind in kinds:
-        status = run_one(kind, args.mode)
+        status = run_one(kind, args.mode, args.limit)
         if status == "rate_limited":
             # Don't start the next lineage; FTDNA is throttling us.
             sys.exit(2)

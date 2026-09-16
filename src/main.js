@@ -4,6 +4,7 @@ function currentLangDict() {
     return translations[state.currentLang] || translations.en;
 }
 import { ydna, mtdna } from "./lineage.js";
+import { syncModeToggle } from "./blocktree.js";
 import { mapVis } from "./map.js";
 import { measureTextBounds } from "./tree.js";
 import { prefetchFlags, getFlagDataUri } from "./flags.js";
@@ -163,7 +164,7 @@ window.resetView = function (e) {
     } else if (view === "ydna") {
         state.yzoom = null;
         updateURLState();
-        ydna.reset();
+        ydna.reset();   // tree: reset zoom; block tree: back to the automatic root
     } else if (view === "mtdna") {
         state.mzoom = null;
         updateURLState();
@@ -437,7 +438,7 @@ function rasterizeSvgDataUri(svgDataUri, displayW, displayH) {
 }
 
 async function rasterizePersonFlagsInClone(clone) {
-    const images = Array.from(clone.querySelectorAll(".node--person image"));
+    const images = Array.from(clone.querySelectorAll(".node--person image, .bt-sample image"));
     await Promise.all(images.map(async (img) => {
         const href = img.getAttribute("href") || img.getAttributeNS(XLINK_NS, "href") || "";
         // Only the inlined vector flags need conversion. Remote PNG fallbacks
@@ -589,6 +590,48 @@ async function exportTreeAsSvg(view, overlay) {
     if (overlay) overlay.classList.remove("active");
 }
 
+// The block tree already lays itself out in absolute coordinates, so unlike
+// the pan/zoom tree there is nothing to measure — just frame it with the
+// shared header/footer and serialize.
+async function exportBlockTreeAsSvg(overlay) {
+    const exported = ydna.exportBlockTreeSvg();
+    if (!exported) {
+        if (overlay) overlay.classList.remove("active");
+        return;
+    }
+    const { svg, width, height, root } = exported;
+    const logoDataUri = await getLogoDataUri();
+
+    const minWidth = 1000;
+    const paddingY = 40;
+    const exportX = -40;
+    const exportWidth = Math.max(minWidth, width + 80);
+    const exportY = -60 - paddingY;
+    const exportHeight = height + 110 + paddingY * 2;
+    const footerY = height + paddingY;
+
+    setSvgAttrs(svg, {
+        viewBox: `${exportX} ${exportY} ${exportWidth} ${exportHeight}`,
+        width: exportWidth,
+        height: exportHeight,
+    });
+
+    const labels = getExportLabels("ydna");
+    labels.title = `${t("blockTree")} ${root} - ${t("brand")}`;
+    addSvgHeader(svg, labels, exportX, exportY, exportWidth);
+    addSvgFooter(svg, labels, exportX, footerY, exportWidth, logoDataUri);
+
+    svg.querySelectorAll("text, tspan").forEach(el => {
+        if (!el.getAttribute("font-family")) el.setAttribute("font-family", EXPORT_FONT_FAMILY);
+    });
+    await rasterizePersonFlagsInClone(svg);
+    const svgString = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+    const safeRoot = String(root).replace(/[^A-Za-z0-9_-]/g, "_");
+    triggerDownload(URL.createObjectURL(blob), `Slovenian_YDNA_BlockTree_${safeRoot}.svg`);
+    if (overlay) overlay.classList.remove("active");
+}
+
 window.exportView = function (e) {
     e.preventDefault();
     const view = (window.location.hash || "#map").substring(1);
@@ -598,6 +641,7 @@ window.exportView = function (e) {
     // Delay briefly to allow the browser to paint the loading UI
     setTimeout(() => {
         if (view === "map") exportMapAsPng(overlay);
+        else if (view === "ydna" && ydna.blockTreeOpen) exportBlockTreeAsSvg(overlay);
         else if (view === "ydna" || view === "mtdna") exportTreeAsSvg(view, overlay);
         else if (overlay) overlay.classList.remove("active");
     }, 50);
@@ -683,6 +727,14 @@ window.navigateToSearch = function (view, query) {
 // Delegated click handler for tooltip/popup search links.
 // Use capture phase so Leaflet's popup stopPropagation can't swallow the event.
 document.addEventListener("click", (e) => {
+    const blockLink = e.target.closest(".blocktree-link");
+    if (blockLink) {
+        e.preventDefault();
+        e.stopPropagation();
+        document.querySelectorAll(".tooltip").forEach(el => { el.style.opacity = "0"; });
+        ydna.openBlockTree(blockLink.dataset.hg);
+        return;
+    }
     const link = e.target.closest(".tooltip-link");
     if (!link) return;
     e.preventDefault();
@@ -714,6 +766,7 @@ function handleHashChange() {
     const lineageYdna = document.getElementById("lineage-controls-ydna");
     const lineageMtdna = document.getElementById("lineage-controls-mtdna");
     const treeOptions = document.getElementById("tree-options");
+    const ydnaMode = document.getElementById("ydna-mode-section");
     const mapOptions = document.getElementById("map-options");
     const ydnaEras = document.getElementById("ydna-eras");
     const exportBtn = document.getElementById("export-btn");
@@ -737,6 +790,7 @@ function handleHashChange() {
         if (lineageYdna) lineageYdna.style.display = (isMap || view === "ydna") ? "block" : "none";
         if (lineageMtdna) lineageMtdna.style.display = (isMap || view === "mtdna") ? "block" : "none";
         if (treeOptions) treeOptions.style.display = isTree ? "block" : "none";
+        if (ydnaMode) ydnaMode.style.display = view === "ydna" ? "block" : "none";
         if (mapOptions) mapOptions.style.display = isMap ? "block" : "none";
 
         if (isTree && ydnaEras) ydnaEras.style.display = "block";
@@ -823,6 +877,19 @@ async function initApp() {
             else if (view === "mtdna") mtdna.refresh();
         });
     }
+
+    document.querySelectorAll(".mode-tab").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const mode = btn.dataset.ymode === "block" ? "block" : "tree";
+            if (state.ymode === mode) return;
+            state.ymode = mode;
+            if (mode === "tree") state.block = null;
+            updateURLState();
+            syncModeToggle();
+            ydna.refresh();
+        });
+    });
+    syncModeToggle();
 
     const chkShowLabels = document.getElementById("chk-show-labels");
     if (chkShowLabels) {

@@ -160,6 +160,10 @@ export const state = {
     mtdnaSelectedGroups: new Set(),
     yzoom: initialParams.get("yzoom") || null,
     mzoom: initialParams.get("mzoom") || null,
+    // Y-DNA viewing mode ("tree" | "block") and the block tree's explicit root
+    // haplogroup (null = computed from the current lineage filter and search).
+    ymode: (initialParams.get("ymode") === "block" || initialParams.get("block")) ? "block" : "tree",
+    block: initialParams.get("block") || null,
     ydnaAllSelected: true,
     mtdnaAllSelected: true
 };
@@ -216,6 +220,11 @@ export function updateURLState() {
 
     if (state.mzoom) params.set("mzoom", state.mzoom);
     else params.delete("mzoom");
+
+    if (state.ymode === "block") params.set("ymode", "block");
+    else params.delete("ymode");
+    if (state.ymode === "block" && state.block) params.set("block", state.block);
+    else params.delete("block");
 
     if (state.startgroup) {
         params.set("startgroup", state.startgroup);
