@@ -1,4 +1,4 @@
-import { state, translations, t, loadData, loadTranslation, initFilters, updateURLState, ydnaPeopleData, mtdnaPeopleData, ydnaGroupRoots, mtdnaGroupRoots, matchesSearchQuery } from "./shared.js";
+import { state, translations, t, loadData, loadTranslation, initFilters, updateURLState, ydnaPeopleData, mtdnaPeopleData, ydnaGroupRoots, mtdnaGroupRoots, matchesSearchQuery, currentView, blockStateKeys } from "./shared.js";
 
 function currentLangDict() {
     return translations[state.currentLang] || translations.en;
@@ -8,6 +8,14 @@ import { syncModeToggle } from "./blocktree.js";
 import { mapVis } from "./map.js";
 import { measureTextBounds } from "./tree.js";
 import { prefetchFlags, getFlagDataUri } from "./flags.js";
+
+// The lineage whose view the route currently shows, or null on the map.
+function activeLineage() {
+    const view = currentView();
+    if (view === "ydna") return ydna;
+    if (view === "mtdna") return mtdna;
+    return null;
+}
 
 const languageConfig = {
     de: { flag: "de", text: "DE", fullText: "Deutsch (DE)" },
@@ -593,8 +601,9 @@ async function exportTreeAsSvg(view, overlay) {
 // The block tree already lays itself out in absolute coordinates, so unlike
 // the pan/zoom tree there is nothing to measure — just frame it with the
 // shared header/footer and serialize.
-async function exportBlockTreeAsSvg(overlay) {
-    const exported = ydna.exportBlockTreeSvg();
+async function exportBlockTreeAsSvg(view, overlay) {
+    const lineage = view === "mtdna" ? mtdna : ydna;
+    const exported = lineage.exportBlockTreeSvg();
     if (!exported) {
         if (overlay) overlay.classList.remove("active");
         return;
@@ -616,7 +625,7 @@ async function exportBlockTreeAsSvg(overlay) {
         height: exportHeight,
     });
 
-    const labels = getExportLabels("ydna");
+    const labels = getExportLabels(view);
     labels.title = `${t("blockTree")} ${root} - ${t("brand")}`;
     addSvgHeader(svg, labels, exportX, exportY, exportWidth);
     addSvgFooter(svg, labels, exportX, footerY, exportWidth, logoDataUri);
@@ -628,7 +637,8 @@ async function exportBlockTreeAsSvg(overlay) {
     const svgString = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(svg);
     const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
     const safeRoot = String(root).replace(/[^A-Za-z0-9_-]/g, "_");
-    triggerDownload(URL.createObjectURL(blob), `Slovenian_YDNA_BlockTree_${safeRoot}.svg`);
+    const lineageName = view === "mtdna" ? "mtDNA" : "YDNA";
+    triggerDownload(URL.createObjectURL(blob), `Slovenian_${lineageName}_BlockTree_${safeRoot}.svg`);
     if (overlay) overlay.classList.remove("active");
 }
 
@@ -640,9 +650,10 @@ window.exportView = function (e) {
 
     // Delay briefly to allow the browser to paint the loading UI
     setTimeout(() => {
+        const lineage = activeLineage();
         if (view === "map") exportMapAsPng(overlay);
-        else if (view === "ydna" && ydna.blockTreeOpen) exportBlockTreeAsSvg(overlay);
-        else if (view === "ydna" || view === "mtdna") exportTreeAsSvg(view, overlay);
+        else if (lineage && lineage.blockTreeOpen) exportBlockTreeAsSvg(view, overlay);
+        else if (lineage) exportTreeAsSvg(view, overlay);
         else if (overlay) overlay.classList.remove("active");
     }, 50);
 };
@@ -732,7 +743,7 @@ document.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
         document.querySelectorAll(".tooltip").forEach(el => { el.style.opacity = "0"; });
-        ydna.openBlockTree(blockLink.dataset.hg);
+        (blockLink.dataset.view === "mtdna" ? mtdna : ydna).openBlockTree(blockLink.dataset.hg);
         return;
     }
     const link = e.target.closest(".tooltip-link");
@@ -766,7 +777,7 @@ function handleHashChange() {
     const lineageYdna = document.getElementById("lineage-controls-ydna");
     const lineageMtdna = document.getElementById("lineage-controls-mtdna");
     const treeOptions = document.getElementById("tree-options");
-    const ydnaMode = document.getElementById("ydna-mode-section");
+    const modeSection = document.getElementById("mode-section");
     const mapOptions = document.getElementById("map-options");
     const ydnaEras = document.getElementById("ydna-eras");
     const exportBtn = document.getElementById("export-btn");
@@ -790,7 +801,10 @@ function handleHashChange() {
         if (lineageYdna) lineageYdna.style.display = (isMap || view === "ydna") ? "block" : "none";
         if (lineageMtdna) lineageMtdna.style.display = (isMap || view === "mtdna") ? "block" : "none";
         if (treeOptions) treeOptions.style.display = isTree ? "block" : "none";
-        if (ydnaMode) ydnaMode.style.display = view === "ydna" ? "block" : "none";
+        if (modeSection) modeSection.style.display = isTree ? "block" : "none";
+        // The two lineage views keep their own mode, so the shared tabs have to
+        // re-point at whichever one was just opened.
+        if (isTree) syncModeToggle();
         if (mapOptions) mapOptions.style.display = isMap ? "block" : "none";
 
         if (isTree && ydnaEras) ydnaEras.style.display = "block";
@@ -878,15 +892,20 @@ async function initApp() {
         });
     }
 
+    // One pair of tabs serves both lineage views; each click switches the mode
+    // of whichever view is currently open.
     document.querySelectorAll(".mode-tab").forEach(btn => {
         btn.addEventListener("click", () => {
-            const mode = btn.dataset.ymode === "block" ? "block" : "tree";
-            if (state.ymode === mode) return;
-            state.ymode = mode;
-            if (mode === "tree") state.block = null;
+            const mode = btn.dataset.mode === "block" ? "block" : "tree";
+            const lineage = activeLineage();
+            if (!lineage) return;
+            const keys = blockStateKeys(lineage.kind);
+            if (state[keys.mode] === mode) return;
+            state[keys.mode] = mode;
+            if (mode === "tree") state[keys.root] = null;
             updateURLState();
             syncModeToggle();
-            ydna.refresh();
+            lineage.refresh();
         });
     });
     syncModeToggle();

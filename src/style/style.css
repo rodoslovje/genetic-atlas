@@ -693,7 +693,7 @@ body:has(#sidebar.open) .tree-minimap {
   stroke-width: 1.5px;
 }
 
-.bt-sample--bigy rect {
+.bt-sample--full rect {
   fill: var(--srd-brand-tint);
 }
 

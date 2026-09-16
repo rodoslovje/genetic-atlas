@@ -47,6 +47,7 @@ export class TreeVisualizer {
     constructor(containerSelector, isSquare = false) {
         this.containerSelector = containerSelector;
         this.isSquare = isSquare;
+        this.kind = isSquare ? "y" : "mt";
         const container = d3.select(containerSelector);
         this.svg = container.append("svg").attr("width", "100%").attr("height", "100%");
         this.g = this.svg.append("g");
@@ -233,7 +234,7 @@ export class TreeVisualizer {
             return node.children.length === 1 ? node.children[0] : node;
         };
 
-        const selectedGroups = getSelectedGroups();
+        const selectedGroups = getSelectedGroups(this.kind);
         let filteredPeople = peopleData.filter(p => selectedGroups.has(p.group));
 
         if (state.searchQuery) {
@@ -431,7 +432,7 @@ export class TreeVisualizer {
         }
         const getGroupKey = (hg) => groupKeyByHg.get(hg);
 
-        const selectedGroups = getSelectedGroups();
+        const selectedGroups = getSelectedGroups(this.kind);
         const groupsWithPeople = new Set();
         if (peopleData) {
             for (const p of peopleData) {
@@ -487,7 +488,7 @@ export class TreeVisualizer {
                 const groupKey = getGroupKey(d.data.haplogroup);
 
                 if (groupKey) {
-                    const selectedGroups = getSelectedGroups();
+                    const selectedGroups = getSelectedGroups(this.kind);
                     if (!selectedGroups.has(groupKey)) {
                         const chkId = this.isSquare ? `chk-y-${groupKey}` : `chk-m-${groupKey}`;
                         const chk = document.getElementById(chkId);
@@ -509,17 +510,18 @@ export class TreeVisualizer {
                 if (tn._hideTimer) { clearTimeout(tn._hideTimer); tn._hideTimer = null; }
                 this.tooltip.transition().duration(100).style("opacity", 1);
                 const error = d.data.isAutoPlaced ? `<br><span class="error-tag">⚠ ${t("missingPath")}</span>` : "";
-                // Y-DNA only: link to the block tree of this haplogroup (or the
+                // Link to this lineage's block tree for this haplogroup (or the
                 // person's terminal haplogroup). Auto-placed nodes have no path
                 // data, so there is nothing to draw for them.
-                const blockHg = this.isSquare && !d.data.isAutoPlaced
+                const view = this.isSquare ? "ydna" : "mtdna";
+                const blockHg = !d.data.isAutoPlaced
                     ? (d.data.isPerson ? d.data.originalHaplo : d.data.haplogroup)
                     : null;
                 const blockLink = blockHg && blockHg !== "-"
-                    ? `<br><a href="#ydna" class="blocktree-link" data-hg="${blockHg.replace(/"/g, "")}">▦ ${t("blockTreeOpen")}</a>`
+                    ? `<br><a href="#${view}" class="blocktree-link" data-view="${view}" data-hg="${blockHg.replace(/"/g, "")}">▦ ${t("blockTreeOpen")}</a>`
                     : "";
                 if (d.data.isPerson) {
-                    this.tooltip.html(getPersonTooltip(d.data, error, this.isSquare ? "y" : "mt", "tree") + blockLink);
+                    this.tooltip.html(getPersonTooltip(d.data, error, this.kind, "tree") + blockLink);
                 } else {
                     const notePart = formatNoteSuffix(d.data);
                     this.tooltip.html(`${t("snpLabel")}: <b>${d.data.haplogroup}${notePart}</b>${error}<br>${t("ageEstimate")}: ${formatAge(d.data.age)}${blockLink}`);

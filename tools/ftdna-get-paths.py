@@ -5,7 +5,7 @@ Usage:
     python tools/ftdna-get-paths.py                    # both lineages, incremental
     python tools/ftdna-get-paths.py --kind y           # paternal only
     python tools/ftdna-get-paths.py --mode full        # both, full rebuild
-    python tools/ftdna-get-paths.py --mode variants    # backfill SNP lists for nodes
+    python tools/ftdna-get-paths.py --mode variants    # backfill variant lists for nodes
                                                        # that were only seen as ancestors
     python tools/ftdna-get-paths.py --limit 100        # stop after 100 requests
 
@@ -15,8 +15,13 @@ Each node in the output carries:
     age68, age99                  [oldest, youngest] TMRCA bounds at 68% / 99%
     placements, modern, ancient   FTDNA tester counts placed directly on the node /
                                   anywhere below it / ancient samples below it
-    variants                      equivalent SNP names of the block; present only on
-                                  nodes that were fetched directly (see --mode variants)
+    variants                      the block's variants - equivalent SNP names for Y-DNA,
+                                  mutations for mtDNA; present only on nodes that were
+                                  fetched directly (see --mode variants)
+
+On an HTTP 429 a request is retried once after RATE_LIMIT_RETRY_DELAY; if FTDNA is
+still throttling, the run stops and saves what it has (every successful fetch is
+saved, so re-running picks up where it left off).
 """
 
 import argparse
@@ -110,6 +115,7 @@ HTTP_HEADERS = {
 
 REQUEST_TIMEOUT = 15
 SLEEP_BETWEEN_REQUESTS = 0.5  # be nice to the API
+RATE_LIMIT_RETRY_DELAY = 300  # wait this long (s) and retry once after an HTTP 429
 
 # Canonical key order for the output file (unknown keys are appended after these).
 FIELD_ORDER = [
@@ -177,15 +183,27 @@ def parse_counts(item):
     return {k: item[k] for k in COUNT_FIELDS if isinstance(item.get(k), int)}
 
 
-def parse_variants(item):
-    """Return the list of equivalent SNP names, or None when the payload has no
-    variants list at all (so the caller can tell 'unknown' from 'none')."""
+def parse_variants(item, owner=None):
+    """Return the list of equivalent variant names defining `owner`, or None when
+    the payload has no variants list at all (so the caller can tell 'unknown'
+    from 'none').
+
+    The Y-DNA payload scopes `variants` to the queried node, but the mtDNA one
+    lists the mutations of the whole ancestral path, each tagged with the
+    haplogroup it belongs to. Keep only the owner's own entries — without this
+    every node would inherit its ancestors' mutations as well (70 instead of 3
+    for U2e1b1)."""
     raw = item.get("variants")
     if not isinstance(raw, list):
         return None
     names = []
     for v in raw:
-        name = v.get("name") if isinstance(v, dict) else v
+        if isinstance(v, dict):
+            if owner and isinstance(v.get("haplogroup"), str) and v["haplogroup"] != owner:
+                continue
+            name = v.get("name")
+        else:
+            name = v
         if isinstance(name, str) and name:
             names.append(name)
     return names
@@ -239,7 +257,7 @@ def store_modern_response(next_data, nodes_db, hg):
         parent_of_hg = parent_name
 
     fields = parse_time(next_data.get("time", {}))
-    variants = parse_variants(next_data)
+    variants = parse_variants(next_data, owner=hg_name)
     if variants is not None:
         fields["variants"] = variants
     merge_node(nodes_db, hg_name,
@@ -253,7 +271,7 @@ def store_path_data(path_data, nodes_db, hg):
         if not node_name:
             continue
         fields = {**parse_time(item), **parse_counts(item)}
-        variants = parse_variants(item)
+        variants = parse_variants(item, owner=node_name)
         if variants is not None:
             fields["variants"] = variants
         merge_node(nodes_db, node_name,
@@ -291,20 +309,34 @@ def find_path_in_json(obj, target_hg, sentinels, accept_parent_field):
 def fetch_one(hg, cfg, nodes_db):
     """Fetch and store one haplogroup path.
 
-    Returns "ok" on success, "rate_limited" if FTDNA responded with HTTP 429,
-    otherwise None.
+    A first HTTP 429 is waited out once (RATE_LIMIT_RETRY_DELAY) and the request
+    repeated; FTDNA's throttle is usually short enough that a long run gets
+    through this way instead of stopping a few hundred nodes in. Progress is
+    saved after every successful fetch, so the pause risks nothing.
+
+    Returns "ok" on success, "rate_limited" if FTDNA responded with HTTP 429
+    twice, otherwise None.
     """
     safe_hg = urllib.parse.quote(hg)
     url = cfg["url_template"].format(hg=safe_hg)
 
-    try:
-        response = requests.get(url, headers=HTTP_HEADERS, timeout=REQUEST_TIMEOUT)
-    except Exception as e:
-        print(f"  Error fetching {hg}: {e}")
-        return
+    for attempt in range(2):
+        try:
+            response = requests.get(url, headers=HTTP_HEADERS, timeout=REQUEST_TIMEOUT)
+        except Exception as e:
+            print(f"  Error fetching {hg}: {e}")
+            return
 
-    if response.status_code == 429:
-        print(f"  Rate limited (HTTP 429) while fetching {hg}")
+        if response.status_code != 429:
+            break
+
+        if attempt == 0:
+            mins = RATE_LIMIT_RETRY_DELAY / 60
+            print(f"  Rate limited (HTTP 429) while fetching {hg}; "
+                  f"waiting {mins:.0f} min and retrying once ...")
+            time.sleep(RATE_LIMIT_RETRY_DELAY)
+    else:
+        print(f"  Still rate limited (HTTP 429) after retrying {hg}")
         return "rate_limited"
 
     if response.status_code == 404:
@@ -476,9 +508,9 @@ def run_one(kind, mode, limit):
         if status == "rate_limited":
             save()
             print(f"Saved {len(nodes_db)} nodes to {cfg['output']} (partial)")
-            print("FTDNA is rate limiting requests (HTTP 429). Stopping now to "
-                  "avoid a longer block. Please retry in about 1 hour to fetch "
-                  "the remaining haplogroups.")
+            print("FTDNA is still rate limiting requests (HTTP 429) after a retry. "
+                  "Stopping now to avoid a longer block. Please retry in about "
+                  "1 hour to fetch the remaining haplogroups.")
             return "rate_limited"
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 

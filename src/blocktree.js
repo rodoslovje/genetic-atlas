@@ -1,21 +1,23 @@
-// Block tree: an icicle-style view of one Y-DNA haplogroup and its descendants
-// where the vertical axis is time. Each haplogroup is a block spanning from
-// the TMRCA of its parent (when the branch formed) down to its own TMRCA;
-// project members hang below their terminal haplogroup as one column each,
-// reaching to the present — the span in which their private variants
-// accumulated. Modeled on the FTDNA Big Y Block Tree.
+// Block tree: an icicle-style view of one haplogroup and its descendants where
+// the vertical axis is time. Each haplogroup is a block spanning from the TMRCA
+// of its parent (when the branch formed) down to its own TMRCA; project members
+// hang below their terminal haplogroup as one column each, reaching to the
+// present — the span in which their private variants accumulated. Modeled on
+// the FTDNA Big Y Block Tree.
 //
-// It is the second viewing mode of the Y-DNA view (state.ymode === "block").
-// The people shown follow the lineage filter; the search box picks the
-// starting haplogroup and highlights matches. The root is either explicit
-// (state.block, set by drilling down or a ?block= link) or computed: the
-// first haplogroup below the members' common ancestor where their lines split.
+// One instance serves each lineage (kind "y" / "mt") as that view's second
+// viewing mode (state.ymode / state.mtmode === "block"). The people shown
+// follow the lineage filter; the search box picks the starting haplogroup and
+// highlights matches. The root is either explicit (state.block / state.mblock,
+// set by drilling down or a ?block= / ?mblock= link) or computed: the first
+// haplogroup below the members' common ancestor where their lines split.
 //
-// Data comes from slo-ydna-paths.json (age, age68/age99, variants,
-// placements/modern) and slo-ydna.json (people). See tools/ftdna-get-paths.py.
+// Data comes from slo-{y,mt}dna-paths.json (age, age68/age99, variants,
+// placements/modern) and slo-{y,mt}dna.json (people). Y-DNA variants are
+// equivalent SNPs, mtDNA ones the block's mutations. See tools/ftdna-get-paths.py.
 
 import { select } from "d3-selection";
-import { state, t, getPersonTooltip, eraColors, isProminentPerson, translations, updateURLState, matchesSearchQuery, getSelectedGroups } from "./shared.js";
+import { state, t, getPersonTooltip, eraColors, isProminentPerson, translations, updateURLState, matchesSearchQuery, getSelectedGroups, currentView, kindOfView, blockStateKeys, lineageMode } from "./shared.js";
 import { getFlagDataUri } from "./flags.js";
 
 const COL_W = 150;          // column pitch per sample / leaf
@@ -28,6 +30,8 @@ const AXIS_W = 100;
 const TOP_PAD = 28;
 const BOTTOM_PAD = 24;
 const LINE_H = 14;
+const BLOCK_PAD = 15;       // baseline of a block's name below the block's top edge
+const SAMPLE_PAD = 10;      // top of a sample card's flag below the card's top edge
 const CHAR_W = 6.4;         // approx. glyph width at 11-12px IBM Plex Sans
 const MAX_CRUMBS = 6;
 const MAX_AUTO_COLS = 150;  // wider than this, an automatic root asks for a narrower filter
@@ -108,7 +112,7 @@ function inlineExportStyles(svg) {
     set(".bt-block--root > rect", { "stroke-width": 2.5 });
     set(".bt-ci line", { "stroke-width": 1.5, opacity: 0.8 });
     set(".bt-sample rect", { fill: "#ffffff", stroke: "#94a3b8", "stroke-width": 1.5 });
-    set(".bt-sample--bigy rect", { fill: "#e8eef6" });
+    set(".bt-sample--full rect", { fill: "#e8eef6" });
     set(".bt-sample--match rect", { fill: "#fff8e1" });
     set(".bt-sample__surname", { "font-size": 12, "font-weight": "bold", fill: "#1a365d" });
     set(".bt-sample__line", { "font-size": 11, fill: "#4a5568" });
@@ -118,18 +122,24 @@ function inlineExportStyles(svg) {
     set(".bt-grid", { stroke: "#e2e8f0", "stroke-width": 1 });
 }
 
-// Keep the sidebar Tree / Block tree tabs in step with state.ymode.
+// Keep the sidebar Tree / Block tree tabs in step with the active view's mode.
+// The tabs are shared by both lineage views, so they follow whichever one the
+// route currently shows.
 export function syncModeToggle() {
-    const active = state.ymode === "block" ? "block" : "tree";
+    const active = lineageMode(kindOfView(currentView()));
     document.querySelectorAll(".mode-tab").forEach((btn) => {
-        const on = btn.dataset.ymode === active;
+        const on = btn.dataset.mode === active;
         btn.classList.toggle("active", on);
         btn.setAttribute("aria-pressed", on ? "true" : "false");
     });
 }
 
 export class BlockTree {
-    constructor(containerSelector) {
+    // kind: "y" | "mt" — selects this instance's half of the paired view state
+    // and the lineage passed on to shared tooltip/notes lookups.
+    constructor(containerSelector, kind = "y") {
+        this.kind = kind;
+        this.stateKeys = blockStateKeys(kind);
         const container = select(containerSelector);
         this.el = container.append("div").attr("class", "blocktree").style("display", "none");
 
@@ -167,8 +177,13 @@ export class BlockTree {
         this.peopleData = null;
     }
 
+    // This view's mode ("tree" | "block") and its explicit root haplogroup.
+    get mode() { return lineageMode(this.kind); }
+    get blockRoot() { return state[this.stateKeys.root] || null; }
+    set blockRoot(hg) { state[this.stateKeys.root] = hg; }
+
     // Visible and showing a diagram (as opposed to a message).
-    get isOpen() { return state.ymode === "block" && this.drawn; }
+    get isOpen() { return this.mode === "block" && this.drawn; }
 
     setData(haploData, peopleData) {
         if (haploData === this.haploData && peopleData === this.peopleData) return;
@@ -188,8 +203,8 @@ export class BlockTree {
     // Focus on an explicit haplogroup, switching to block mode if needed.
     open(hg) {
         if (!hg) return;
-        state.block = hg;
-        state.ymode = "block";
+        this.blockRoot = hg;
+        state[this.stateKeys.mode] = "block";
         updateURLState();
         this.scroll.node().scrollTop = 0;
         this.scroll.node().scrollLeft = 0;
@@ -198,7 +213,7 @@ export class BlockTree {
 
     // Back to the automatic starting haplogroup (reset button).
     home() {
-        state.block = null;
+        this.blockRoot = null;
         updateURLState();
         this.scroll.node().scrollTop = 0;
         this.scroll.node().scrollLeft = 0;
@@ -218,7 +233,7 @@ export class BlockTree {
 
     render() {
         if (!this.nodeByHg) return;
-        if (state.ymode !== "block") {
+        if (this.mode !== "block") {
             this.lastQuery = state.searchQuery;
             this.hide();
             return;
@@ -230,8 +245,8 @@ export class BlockTree {
         // drilled into earlier must give way — otherwise the matches stay
         // off-screen. The very first render (lastQuery undefined) keeps an
         // explicit root, so ?block=…&q=… deep links still work.
-        if (this.lastQuery !== undefined && state.searchQuery !== this.lastQuery && state.block) {
-            state.block = null;
+        if (this.lastQuery !== undefined && state.searchQuery !== this.lastQuery && this.blockRoot) {
+            this.blockRoot = null;
             updateURLState();
         }
         this.lastQuery = state.searchQuery;
@@ -243,15 +258,15 @@ export class BlockTree {
 
         // People follow the lineage filter; the search only steers the root
         // and highlights, so relatives of a searched person stay visible.
-        const selected = getSelectedGroups();
+        const selected = getSelectedGroups(this.kind);
         const shown = (this.peopleData || []).filter((p) =>
             selected.has(p.group) && p.haplogroup && this.nodeByHg.has(p.haplogroup));
         const matches = state.searchQuery ? shown.filter((p) => matchesSearchQuery(p, state.searchQuery)) : [];
         this.matchSet = new Set(matches);
         this.indexPeople(shown);
 
-        const explicit = !!state.block;
-        let rootHg = state.block;
+        const explicit = !!this.blockRoot;
+        let rootHg = this.blockRoot;
         if (!explicit) {
             if (!shown.length || (state.searchQuery && !matches.length)) {
                 this.setRoot(null);
@@ -355,7 +370,7 @@ export class BlockTree {
 
     getNote(hg) {
         const dict = translations[state.currentLang] || translations.en;
-        const notes = dict && dict.ydnaNotes;
+        const notes = dict && (this.kind === "mt" ? dict.mtdnaNotes : dict.ydnaNotes);
         const custom = notes && notes[hg];
         if (custom) return custom;
         const data = this.nodeByHg.get(hg);
@@ -521,7 +536,7 @@ export class BlockTree {
         // Replace the character-count estimate of each label's width with its
         // real rendered width. Done in one pass now that the whole diagram is
         // built, so it costs a single layout instead of one per block.
-        this.svg.selectAll(".bt-block__label").each(function () {
+        this.svg.selectAll(".bt-sticky").each(function () {
             const s = this.__sticky;
             if (!s) return;
             let widest = 0;
@@ -534,11 +549,13 @@ export class BlockTree {
         this._updateStickyLabels();
     }
 
-    // Keep every block's name and SNP list visible while the block itself is
-    // on screen. A block spanning many columns or millennia is far larger than
-    // the viewport, so a label pinned to its top-left corner scrolls away and
-    // leaves an anonymous band of colour. Each label slides within its own
-    // block instead, never past the opposite edge.
+    // Keep every block's name and variant list, and every member's card, visible
+    // while its own shape is on screen. A block spanning many columns or
+    // millennia — or a member card reaching back to an old terminal TMRCA — is
+    // far larger than the viewport, so content pinned to its top-left corner
+    // scrolls away and leaves an anonymous band of colour or an empty column.
+    // Each label slides within its own shape instead, never past the opposite
+    // edge, and is clipped to it.
     _updateStickyLabels() {
         const el = this.scroll.node();
         if (!el) return;
@@ -549,11 +566,11 @@ export class BlockTree {
         const vt = el.scrollTop;
         const vb = vt + el.clientHeight;
 
-        this.svg.selectAll(".bt-block__label").each(function () {
+        this.svg.selectAll(".bt-sticky").each(function () {
             const s = this.__sticky;
             if (!s) return;
-            // Put the label in the part of the block that is actually on screen,
-            // never past either edge of the block itself. A block too small for
+            // Put the label in the part of the shape that is actually on screen,
+            // never past either edge of the shape itself. A shape too small for
             // its label keeps the label where it was drawn.
             const ix0 = Math.max(s.left, vl);
             const ix1 = Math.min(s.right, vr);
@@ -573,10 +590,10 @@ export class BlockTree {
                 // edge so its start reads, and let the clip cut the rest.
                 : Math.min(Math.max(ix0 + 2, s.left + 4), Math.max(s.left + 4, s.right - 12));
             const tx = s.centered ? left + s.w / 2 : left;
-            // Only the name line has to fit; whatever follows it is clipped.
-            // Haplogroup names have no descenders, so the baseline can sit
-            // within 3px of the block's lower edge without touching it.
-            const ty = iy0 < vb ? between(iy0 + 15, s.top + 15, s.bottom - 3) : null;
+            // `tail` is how much room the label needs below its anchor: a block
+            // only has to fit its name line (the rest is clipped), a member card
+            // its whole stack of flag, surname, ancestor and place.
+            const ty = iy0 < vb ? between(iy0 + s.pad, s.top + s.pad, s.bottom - s.tail) : null;
 
             const dx = tx === null ? 0 : tx - s.x;
             const dy = ty === null ? 0 : ty - s.y;
@@ -627,15 +644,20 @@ export class BlockTree {
         this.defs.append("clipPath").attr("id", clipId).append("rect")
             .attr("x", x).attr("y", y0).attr("width", w).attr("height", h);
         const labelG = labelLayer.append("g").attr("clip-path", `url(#${clipId})`)
-            .append("g").attr("class", "bt-block__label");
+            .append("g").attr("class", "bt-block__label bt-sticky");
         const title = truncate(node.hg, maxChars);
         let widestChars = title.length;
         labelG.append("text").attr("class", "bt-block__title")
-            .attr("x", tx).attr("y", y0 + 15).attr("text-anchor", anchor)
+            .attr("x", tx).attr("y", y0 + BLOCK_PAD).attr("text-anchor", anchor)
             .text(title);
 
-        // Equivalent SNPs, as many as fit; the defining SNP is already in the name.
-        const defining = node.hg.includes("-") ? node.hg.split("-").slice(1).join("-") : node.hg;
+        // The block's variants, as many as fit: equivalent SNPs for Y-DNA, the
+        // block's mutations for mtDNA. A Y-DNA name carries its defining SNP
+        // ("R-BY32501"), so drop that one; an mtDNA name ("U2e1b1") does not,
+        // and every mutation is worth listing.
+        const defining = this.kind === "mt"
+            ? null
+            : (node.hg.includes("-") ? node.hg.split("-").slice(1).join("-") : node.hg);
         const variants = Array.isArray(node.data.variants)
             ? node.data.variants.filter((v) => v !== defining)
             : null;
@@ -648,16 +670,21 @@ export class BlockTree {
             lines.forEach((line, i) => {
                 widestChars = Math.max(widestChars, line.length);
                 labelG.append("text").attr("class", "bt-block__variant")
-                    .attr("x", tx).attr("y", y0 + 15 + LINE_H * (i + 1)).attr("text-anchor", anchor)
+                    .attr("x", tx).attr("y", y0 + BLOCK_PAD + LINE_H * (i + 1)).attr("text-anchor", anchor)
                     .text(line);
             });
         }
 
         labelG.node().__sticky = {
             centered: !wide,
-            x: tx, y: y0 + 15,      // where the label sits when nothing is scrolled
+            x: tx, y: y0 + BLOCK_PAD,   // where the label sits when nothing is scrolled
             left: x, right: x + w, top: y0, bottom: y1,
             w: widestChars * CHAR_W,
+            pad: BLOCK_PAD,
+            // Only the name line has to fit; whatever follows it is clipped.
+            // Haplogroup names have no descenders, so the baseline can sit
+            // within 3px of the block's lower edge without touching it.
+            tail: 3,
         };
 
         // 68 % confidence interval of the TMRCA, as a thin bar on the left edge.
@@ -687,22 +714,32 @@ export class BlockTree {
         const maxChars = Math.floor((w - 12) / CHAR_W);
 
         const g = layer.append("g")
-            .attr("class", `bt-sample${prominent ? " bt-sample--bigy" : ""}${isMatch ? " bt-sample--match" : ""}`)
-            .on("mouseover", (event) => this.showTooltip(event, getPersonTooltip(person, "", "y", "tree")))
+            .attr("class", `bt-sample${prominent ? " bt-sample--full" : ""}${isMatch ? " bt-sample--match" : ""}`)
+            .on("mouseover", (event) => this.showTooltip(event, getPersonTooltip(person, "", this.kind, "tree")))
             .on("mouseout", () => this.hideTooltip());
 
         g.append("rect")
             .attr("x", x).attr("y", y0).attr("width", w).attr("height", h).attr("rx", 3)
             .style("stroke-dasharray", prominent ? null : "4 3");
 
+        // Who the person is goes in a sliding, clipped group for the same reason
+        // a block's name does: a card reaching back to an old terminal TMRCA is
+        // taller than the viewport, and content pinned to its top would leave an
+        // anonymous empty column behind as soon as it scrolls away.
+        const clipId = `bt-clip-${++this._clipSeq}`;
+        this.defs.append("clipPath").attr("id", clipId).append("rect")
+            .attr("x", x).attr("y", y0).attr("width", w).attr("height", h);
+        const cardG = g.append("g").attr("clip-path", `url(#${clipId})`)
+            .append("g").attr("class", "bt-sample__label bt-sticky");
+
         const code = person.country || "un";
         const href = getFlagDataUri(code) || `https://flagcdn.com/w40/${code}.png`;
-        g.append("image").attr("href", href).attr("xlink:href", href)
+        cardG.append("image").attr("href", href).attr("xlink:href", href)
             .attr("x", x + w / 2 - 12).attr("y", y0 + 10).attr("width", 24).attr("height", 16)
             .attr("preserveAspectRatio", "xMidYMid slice");
 
         let ty = y0 + 44;
-        g.append("text").attr("class", "bt-sample__surname")
+        cardG.append("text").attr("class", "bt-sample__surname")
             .attr("x", x + w / 2).attr("y", ty).attr("text-anchor", "middle")
             .text(truncate(decodeHtmlEntities(person.surname || person.kit || ""), maxChars));
         ty += LINE_H + 2;
@@ -710,17 +747,30 @@ export class BlockTree {
         const linesAvail = Math.max(0, Math.floor((y1 - 14 - ty) / LINE_H));
         const ancestorLines = wrap(decodeHtmlEntities(person.ancestor || ""), maxChars, Math.min(3, linesAvail));
         ancestorLines.forEach((line) => {
-            g.append("text").attr("class", "bt-sample__line")
+            cardG.append("text").attr("class", "bt-sample__line")
                 .attr("x", x + w / 2).attr("y", ty).attr("text-anchor", "middle").text(line);
             ty += LINE_H;
         });
         const remaining = Math.max(0, Math.floor((y1 - 14 - ty) / LINE_H));
         wrap(decodeHtmlEntities(person.location || ""), maxChars + 2, Math.min(2, remaining)).forEach((line) => {
-            g.append("text").attr("class", "bt-sample__sub")
+            cardG.append("text").attr("class", "bt-sample__sub")
                 .attr("x", x + w / 2).attr("y", ty).attr("text-anchor", "middle").text(line);
             ty += LINE_H;
         });
 
+        cardG.node().__sticky = {
+            centered: true,
+            x: x + w / 2, y: y0 + SAMPLE_PAD,
+            left: x, right: x + w, top: y0, bottom: y1,
+            w: w - 12,              // replaced by the measured text width after layout
+            pad: SAMPLE_PAD,
+            // Unlike a block label, whose surplus lines may be clipped, the whole
+            // card has to stay inside the card.
+            tail: ty - y0,
+        };
+
+        // The test name belongs to the present-day end of the column, so it
+        // stays anchored to the bottom edge instead of travelling with the card.
         if (person.test) {
             g.append("text").attr("class", "bt-sample__sub")
                 .attr("x", x + w / 2).attr("y", y1 - 8).attr("text-anchor", "middle")
@@ -758,7 +808,7 @@ export class BlockTree {
 
         // Labels may be scrolled away from their block's corner on screen; the
         // exported file has no viewport, so put them back where they belong.
-        out.querySelectorAll(".bt-block__label").forEach((el) => el.removeAttribute("transform"));
+        out.querySelectorAll(".bt-sticky").forEach((el) => el.removeAttribute("transform"));
         inlineExportStyles(out);
         return { svg: out, width, height, root: this.rootHg };
     }

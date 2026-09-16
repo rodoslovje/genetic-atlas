@@ -1,23 +1,25 @@
 import * as data from "./shared.js";
-import { state } from "./shared.js";
+import { lineageMode } from "./shared.js";
 import { TreeVisualizer } from "./tree.js";
 import { BlockTree } from "./blocktree.js";
 
-function makeLineage(containerId, isSquare, haploKey, peopleKey, rootsKey, withBlockTree = false) {
+function makeLineage(containerId, kind, haploKey, peopleKey, rootsKey) {
+    const isSquare = kind === "y";
     let tree = null;
     let blockTree = null;
     let scheduled = false;
     const api = {
         initialized: false,
+        kind,
         init() {
             api.initialized = true;
             tree = new TreeVisualizer(containerId, isSquare);
-            if (withBlockTree) blockTree = new BlockTree(containerId);
+            blockTree = new BlockTree(containerId, kind);
             api.refresh();
         },
         // Coalesce rapid refresh calls (filter toggles, search input) into a single
         // render per animation frame. The block tree decides for itself whether
-        // it is the active mode (state.ymode) and shows or hides accordingly.
+        // it is the active mode and shows or hides accordingly.
         refresh() {
             if (!api.initialized || scheduled) return;
             scheduled = true;
@@ -33,7 +35,7 @@ function makeLineage(containerId, isSquare, haploKey, peopleKey, rootsKey, withB
         // Reset button: in block mode go back to the automatic starting
         // haplogroup; in tree mode reset pan/zoom.
         reset() {
-            if (blockTree && state.ymode === "block") blockTree.home();
+            if (blockTree && lineageMode(kind) === "block") blockTree.home();
             else if (tree) tree.resetZoom();
         },
         openBlockTree(hg) {
@@ -51,5 +53,5 @@ function makeLineage(containerId, isSquare, haploKey, peopleKey, rootsKey, withB
     return api;
 }
 
-export const ydna = makeLineage("#tree-container-ydna", true, "ydnaHaploData", "ydnaPeopleData", "ydnaGroupRoots", true);
-export const mtdna = makeLineage("#tree-container-mtdna", false, "mtdnaHaploData", "mtdnaPeopleData", "mtdnaGroupRoots");
+export const ydna = makeLineage("#tree-container-ydna", "y", "ydnaHaploData", "ydnaPeopleData", "ydnaGroupRoots");
+export const mtdna = makeLineage("#tree-container-mtdna", "mt", "mtdnaHaploData", "mtdnaPeopleData", "mtdnaGroupRoots");

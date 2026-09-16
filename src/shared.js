@@ -160,10 +160,13 @@ export const state = {
     mtdnaSelectedGroups: new Set(),
     yzoom: initialParams.get("yzoom") || null,
     mzoom: initialParams.get("mzoom") || null,
-    // Y-DNA viewing mode ("tree" | "block") and the block tree's explicit root
-    // haplogroup (null = computed from the current lineage filter and search).
+    // Viewing mode of each lineage view ("tree" | "block") and that view's
+    // explicit block tree root haplogroup (null = computed from the current
+    // lineage filter and search).
     ymode: (initialParams.get("ymode") === "block" || initialParams.get("block")) ? "block" : "tree",
     block: initialParams.get("block") || null,
+    mtmode: (initialParams.get("mtmode") === "block" || initialParams.get("mblock")) ? "block" : "tree",
+    mblock: initialParams.get("mblock") || null,
     ydnaAllSelected: true,
     mtdnaAllSelected: true
 };
@@ -180,17 +183,38 @@ export function t(key, ...args) {
     return str;
 }
 
+export function currentView() {
+    return (window.location.hash || "#map").substring(1);
+}
+
+// The two lineage views mirror each other, so their per-view state comes in
+// Y/mt pairs. `kind` is the short lineage code ("y" / "mt") used by the tree
+// and block tree; `view` is the route name ("ydna" / "mtdna").
+export const kindOfView = (view) => (view === "mtdna" ? "mt" : "y");
+
+export const blockStateKeys = (kind) => (kind === "mt"
+    ? { mode: "mtmode", root: "mblock" }
+    : { mode: "ymode", root: "block" });
+
+// Viewing mode of one lineage; anything but "block" reads as "tree".
+export function lineageMode(kind) {
+    return state[blockStateKeys(kind).mode] === "block" ? "block" : "tree";
+}
+
 export function getActiveData() {
-    const view = (window.location.hash || "#map").substring(1);
+    const view = currentView();
     if (view === "mtdna") {
         return { haplo: mtdnaHaploData, people: mtdnaPeopleData, roots: mtdnaGroupRoots };
     }
     return { haplo: ydnaHaploData, people: ydnaPeopleData, roots: ydnaGroupRoots };
 }
 
-export function getSelectedGroups() {
-    const view = (window.location.hash || "#map").substring(1);
-    return view === "mtdna" ? state.mtdnaSelectedGroups : state.ydnaSelectedGroups;
+// Pass the caller's own lineage whenever it knows it: some actions (a language
+// change) refresh both views at once, and the route alone would then hand the
+// inactive one the other lineage's filter.
+export function getSelectedGroups(kind) {
+    const k = kind || kindOfView(currentView());
+    return k === "mt" ? state.mtdnaSelectedGroups : state.ydnaSelectedGroups;
 }
 
 // Ungrouped (empty string) is deliberately stripped: it's off by default and not
@@ -225,6 +249,11 @@ export function updateURLState() {
     else params.delete("ymode");
     if (state.ymode === "block" && state.block) params.set("block", state.block);
     else params.delete("block");
+
+    if (state.mtmode === "block") params.set("mtmode", "block");
+    else params.delete("mtmode");
+    if (state.mtmode === "block" && state.mblock) params.set("mblock", state.mblock);
+    else params.delete("mblock");
 
     if (state.startgroup) {
         params.set("startgroup", state.startgroup);

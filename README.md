@@ -6,7 +6,7 @@ Interactive web application and data tooling for the **Slovenian Genetic Atlas**
 
 - **Map view** with two-ring jitter that spreads markers sharing the same address so individual haplogroup colours stay visible.
 - **Y-DNA & mtDNA tree views** rendered with D3, including era bands, lineage filters, prominent-tester highlighting, and SVG export.
-- **Y-DNA block tree**, a second viewing mode of the Y-DNA view (`?ymode=block`): an icicle view with time on the vertical axis, showing each branch's TMRCA with its 68 % range, equivalent SNPs, and project members as one column each below their terminal haplogroup. It follows the lineage filter; the search box picks the starting haplogroup (the first split among the matched members' lines) and highlights matches. Any block can be focused by clicking it, from a haplogroup tooltip, or via `?block=R-BY32501`; both views export to SVG.
+- **Block tree**, a second viewing mode of each haplotree view (`?ymode=block`, `?mtmode=block`): an icicle view with time on the vertical axis, showing each branch's TMRCA with its 68 % range, its variants (equivalent SNPs for Y-DNA, the block's mutations for mtDNA), and project members as one column each below their terminal haplogroup. It follows the lineage filter; the search box picks the starting haplogroup (the first split among the matched members' lines) and highlights matches. Any block can be focused by clicking it, from a haplogroup tooltip, or via `?block=R-BY32501` / `?mblock=H5a`; both views export to SVG. The two lineages keep their modes and roots independently.
 - **Haplogroup-aware search** across kit, surname, ancestor, location, and the full ancestry chain (a search for an upstream SNP matches every downstream tester).
 - **Filterable lineages** with persistent state in the URL; "Ungrouped" is an opt-in filter and is intentionally not persisted.
 - **Localisation** in seven languages — Slovenian, English, Croatian, French, German, Italian, Hungarian — with a single i18n key for every translatable string and `{key}` placeholder substitution.
@@ -94,13 +94,16 @@ python tools/ftdna-get-paths.py
 python tools/ftdna-get-paths.py --mode full
 ```
 
-**Backfill SNP lists (block tree data):**
+**Backfill variant lists (block tree data):**
 
-Each FTDNA response carries the equivalent SNPs (`variants`) only for the haplogroup that was requested, while its ancestors arrive with ages and tester counts but no SNP list. This pass fetches the nodes that still lack `variants`, most useful first (ancestry of Big Y testers, youngest first). Use `--limit` to stay under FTDNA's rate limit and re-run until nothing is left:
+Each FTDNA response carries the full `variants` list and the 68 % / 99 % TMRCA bounds only for the haplogroup that was requested, while its ancestors arrive with ages and tester counts alone. This pass fetches the nodes that still lack `variants`, most useful first (ancestry of full-sequence testers — Big Y for Y-DNA, FMS for mtDNA — youngest first). On an HTTP 429 the tool waits five minutes and retries the request once before giving up; progress is saved after every successful fetch, so an interrupted run resumes where it stopped. Use `--limit` to stay well under FTDNA's rate limit and re-run until nothing is left:
 
 ```bash
 python tools/ftdna-get-paths.py --kind y --mode variants --limit 200
+python tools/ftdna-get-paths.py --kind mt --mode variants --limit 200
 ```
+
+The mtDNA payload lists the mutations of the whole ancestral path, each tagged with the haplogroup it belongs to, so only the requested node's own entries are kept.
 
 Every node in `slo-ydna-paths.json` / `slo-mtdna-paths.json` carries:
 
@@ -110,7 +113,7 @@ Every node in `slo-ydna-paths.json` / `slo-mtdna-paths.json` carries:
 | `age` | TMRCA mean year (negative = BCE) |
 | `age68`, `age99` | `[oldest, youngest]` TMRCA bounds at 68 % / 99 % confidence |
 | `placements`, `modern`, `ancient` | FTDNA testers placed directly on the node / anywhere below it / ancient samples below it |
-| `variants` | equivalent SNP names of the block; only on nodes fetched directly |
+| `variants` | the block's variants — equivalent SNP names for Y-DNA, mutations for mtDNA; only on nodes fetched directly |
 
 ## 📄 License
 
