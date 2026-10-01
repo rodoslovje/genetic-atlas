@@ -1,6 +1,6 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { state, ydnaPeopleData, mtdnaPeopleData, getPersonTooltip, getHaploColor, isProminentPerson, matchesSearchQuery } from "./shared.js";
+import { state, ydnaPeopleData, mtdnaPeopleData, getPersonTooltip, getHaploColor, isProminentPerson, matchesSearchQuery, getAncientSamples, getAncientTooltip, eraColorFor } from "./shared.js";
 
 function bindNameLabel(marker, dir) {
     const offset = { right: [6, 0], left: [-6, 0], top: [0, -6], bottom: [0, 6] }[dir] ?? [6, 0];
@@ -32,6 +32,10 @@ export class MapVisualizer {
 
         this.map = L.map(this.containerId, { maxZoom: 19 });
         this.markers = L.featureGroup().addTo(this.map);
+        // Ancient burials live in their own group: they sit at excavation sites
+        // all over Europe, so they must stay out of the project members' bounds
+        // (and out of the jitter rings, which only spread shared addresses).
+        this.ancientMarkers = L.featureGroup().addTo(this.map);
 
         this.addBaseLayer();
         this.refreshMap();
@@ -165,9 +169,12 @@ export class MapVisualizer {
         if (!this.markers || !ydnaPeopleData || !mtdnaPeopleData) return;
         this.precomputeJitter();
         this.markers.clearLayers();
+        this.ancientMarkers.clearLayers();
 
         let bounds = L.latLngBounds();
         let hasResults = false;
+        let ancientBounds = L.latLngBounds();
+        let hasAncientResults = false;
 
         const addPersonToMap = (p, isMtDna) => {
             const selectedGroups = isMtDna ? state.mtdnaSelectedGroups : state.ydnaSelectedGroups;
@@ -214,8 +221,36 @@ export class MapVisualizer {
             hasResults = true;
         };
 
+        // An ancient burial is drawn as a diamond (Y-DNA) or a ring (mtDNA) in the
+        // colour of its era, at the excavation site — never a flag-shaped marker
+        // in a lineage colour, so it can't be mistaken for a project member.
+        const addAncientToMap = (s, isMtDna) => {
+            const color = eraColorFor(s.year);
+            const size = 13;
+            const shape = isMtDna ? "border-radius: 50%;" : "transform: rotate(45deg);";
+            const html = `<div style="background-color: ${color}; border: 2px solid #ffffff; width: ${size}px; height: ${size}px; ${shape} box-sizing: border-box; box-shadow: 0 0 0 1px rgba(26,32,44,0.75);"></div>`;
+            const marker = L.marker([s.latitude, s.longitude], {
+                icon: L.divIcon({
+                    html: html,
+                    className: "ancient-marker",
+                    iconSize: [size, size],
+                    iconAnchor: [size / 2, size / 2],
+                    popupAnchor: [0, -size / 2]
+                })
+            });
+            marker.bindPopup(`<div style="font-size: 13px; line-height: 1.5;">${getAncientTooltip(s, isMtDna ? "mt" : "y")}</div>`);
+            marker._labelName = s.name;
+            marker._labelProminent = false;
+            if (state.showLabels) bindNameLabel(marker, "right");
+            this.ancientMarkers.addLayer(marker);
+            ancientBounds.extend([s.latitude, s.longitude]);
+            hasAncientResults = true;
+        };
+
         ydnaPeopleData.forEach(p => addPersonToMap(p, false));
         mtdnaPeopleData.forEach(p => addPersonToMap(p, true));
+        getAncientSamples("y").forEach(s => addAncientToMap(s, false));
+        getAncientSamples("mt").forEach(s => addAncientToMap(s, true));
 
         const searchChanged = this.lastSearchQuery !== state.searchQuery;
         this.lastSearchQuery = state.searchQuery;
@@ -225,6 +260,11 @@ export class MapVisualizer {
 
             if (state.searchQuery && hasResults) {
                 this.map.fitBounds(bounds, { maxZoom: 14, padding: [40, 40] });
+            } else if (state.searchQuery && hasAncientResults) {
+                // A search that only matches ancient burials ("Avar", "Corded
+                // Ware") would otherwise leave the reader looking at Slovenia
+                // while every match sits off-screen.
+                this.map.fitBounds(ancientBounds, { maxZoom: 9, padding: [40, 40] });
             } else if (!state.searchQuery) {
                 this.map.fitBounds([[45.421, 13.375], [46.876, 16.606]]);
             }

@@ -58,7 +58,10 @@ export default {
         <p><strong>Beschriftungen anzeigen</strong> im Seitenfeld schreibt den Namen des Vorfahren
         (oder den Nachnamen) neben jede Markierung. Fett gesetzte Namen gehören Mitgliedern, die den
         aussagekräftigsten Test ihrer Linie abgelegt haben — Big Y für Y-DNA, die vollständige
-        mitochondriale Sequenz für mtDNA.</p>`,
+        mitochondriale Sequenz für mtDNA.</p>
+        <p>Bei eingeschalteten <strong>antiken Verbindungen</strong> erscheinen Rauten und Ringe in
+        Epochenfarben zwischen den Markern. Das sind ausgegrabene Bestattungen, keine Projektmitglieder
+        – siehe <em>Antike Verbindungen</em> weiter unten.</p>`,
         },
         {
             id: "tree",
@@ -111,6 +114,36 @@ export default {
         Spur daneben am oberen Rand führen wieder zur Wurzel zurück.</p>`,
         },
         {
+            id: "ancient",
+            heading: "Antike Verbindungen",
+            body: `
+        <p><strong>Antike Verbindungen</strong> im Bedienfeld fügt eine Ebene ausgegrabener Bestattungen
+        hinzu, deren DNA veröffentlicht ist und die FamilyTreeDNA einem der im Atlas gezeichneten Zweige
+        zuordnet. Die Ebene ist ausgeschaltet, bis Sie sie einschalten; die Zeile darunter zählt die
+        Bestattungen, die die aktuelle Ansicht zeigt.</p>
+        <p>Es sind keine Projektmitglieder, und sie werden nie wie welche gezeichnet. Auf der Karte ist
+        eine Bestattung eine <strong>Raute</strong> (väterlich) oder ein <strong>Ring</strong>
+        (mütterlich) am Fundort, eingefärbt nach der Epoche, in der der Mensch lebte, nicht nach
+        Haplogruppe. Im Baum hängt sie an dem Zweig, an dem ihre Linie auf unsere trifft, kursiv hinter
+        einem ⚱ und mit der Jahreszahl. Im Blockbaum bekommt sie eine eigene Spalte wie ein Mitglied –
+        eine, die im Todesjahr endet, statt bis in die Gegenwart zu laufen; dieses Jahr steht an ihrer
+        Abschlusskante.</p>
+        <p>Beim Überfahren erscheint, wer es war: die Datierung und ihre Spanne, der Fundort, die
+        archäologische Kultur, die Haplogruppe der Überreste, der Zweig, an dem sich beide Linien
+        treffen, wann dieser gemeinsame Vorfahre lebte, und die Studie, die die DNA veröffentlicht hat.
+        Eine gestrichelte Kontur bedeutet, dass FamilyTreeDNA die Zuordnung als unsicher kennzeichnet –
+        die Überreste tragen die Mutationen dieses Zweigs, aber keine darunter, die Bestattung könnte
+        also irgendwo entlang des Zweigs gehören.</p>
+        <p>Die Ebene folgt den Linienfiltern und der Suche wie alles andere. Die Suche nach einem
+        Nachnamen behält die antiken Verbindungen der Zweige dieser Familie, sodass eine Suche sowohl
+        die getesteten Mitglieder als auch die Bestattungen ihrer Linie zeigt; die Suche nach einer
+        Kultur oder einem Fundort (<code>Avar</code>, <code>Corded Ware</code>, <code>Kunpeszér</code>)
+        findet die Bestattungen selbst.</p>
+        <p>Gezeigt werden nur Bestattungen, die sich zugleich einordnen und verorten lassen – jene, für
+        die FamilyTreeDNA sowohl einen Zweig als auch Koordinaten angibt. Viele veröffentlichte Proben
+        haben weder das eine noch das andere und bleiben außen vor.</p>`,
+        },
+        {
             id: "search",
             heading: "Suchen",
             body: `
@@ -122,7 +155,10 @@ export default {
         <p>Der Zähler unter dem Feld nennt die Zahl der Treffer; gibt es keine, färbt sich der Text
         rot. Die Suche gilt für die geöffnete Ansicht: Auf der Karte filtert sie die Markierungen, im
         Baum beschneidet sie ihn auf die passenden Linien, und im Blockbaum hebt sie die passenden
-        Mitglieder hervor.</p>`,
+        Mitglieder hervor.</p>
+        <p>Bei eingeschalteten antiken Verbindungen behält eine Suche auch die Bestattungen auf den
+        Zweigen der gefundenen Personen und findet Bestattungen über ihren Namen, ihre Kultur oder
+        ihren Fundort.</p>`,
         },
         {
             id: "filters",
@@ -159,7 +195,8 @@ export default {
         <p>Die Adresse im Browser hält den Zustand des Atlas fest — die geöffnete Ansicht, die Suche,
         die gewählten Linien, den Zoom und den Zweig, von dem ein Blockbaum ausgeht. Die Adresse zu
         kopieren teilt daher genau die Ansicht, die Sie vor sich haben, und ein Lesezeichen holt sie
-        später zurück.</p>`,
+        später zurück.</p>
+        <p>Auch ob antike Verbindungen gezeigt werden, steht in der Adresse.</p>`,
         },
         {
             id: "language",

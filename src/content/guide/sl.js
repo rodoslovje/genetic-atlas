@@ -54,7 +54,10 @@ export default {
         poišče vse, ki izhajajo iz njega.</p>
         <p><strong>Prikaži oznake</strong> v plošči izpiše ob vsaki oznaki ime prednika (ali priimek).
         Krepko zapisana imena pripadajo članom, ki so opravili najbolj poveden test za svojo linijo —
-        Big Y za Y-DNK in polno mitohondrijsko zaporedje za mtDNK.</p>`,
+        Big Y za Y-DNK in polno mitohondrijsko zaporedje za mtDNK.</p>
+        <p>Ko so vklopljene <strong>starodavne povezave</strong>, se med oznakami pojavijo rombi in
+        obroči v barvah obdobij. To so izkopani grobovi, ne člani projekta – glejte <em>Starodavne
+        povezave</em> spodaj.</p>`,
         },
         {
             id: "tree",
@@ -103,6 +106,32 @@ export default {
         proti korenu.</p>`,
         },
         {
+            id: "ancient",
+            heading: "Starodavne povezave",
+            body: `
+        <p><strong>Starodavne povezave</strong> v stranski plošči dodajo sloj izkopanih grobov, katerih
+        DNK je bila objavljena in ki jih FamilyTreeDNA umešča na eno od vej, narisanih v atlasu. Sloj
+        je privzeto izklopljen, vrstica pod njim pa šteje grobove, ki jih trenutni pogled prikazuje.</p>
+        <p>To niso člani projekta in nikoli niso narisani kot člani. Na zemljevidu je grob
+        <strong>romb</strong> (očetovska linija) ali <strong>obroč</strong> (materinska linija) na
+        najdišču, obarvan po obdobju, v katerem je človek živel, in ne po rodovni skupini. V drevesu
+        visi ob veji, kjer se njegova linija sreča z našo, v ležeči pisavi za znakom ⚱ in z letnico. V
+        bločnem drevesu dobi svoj stolpec, tako kot član – a takega, ki se ustavi pri letu smrti in ne
+        teče do danes; letnica je zapisana na zaključnem robu.</p>
+        <p>Ob prehodu z miško se pokaže, kdo je bil: datacija in njen razpon, najdišče, arheološka
+        kultura, haploskupina ostankov, veja, kjer se njegova in naša linija srečata, čas skupnega
+        prednika in študija, ki je DNK objavila. Črtkan rob pomeni, da je FamilyTreeDNA umestitev označil
+        kot negotovo – ostanki nosijo mutacije te veje, nobene pod njo pa ne, zato lahko grob pripada
+        kateremu koli mestu vzdolž nje.</p>
+        <p>Sloj upošteva filtre rodovnih skupin in iskanje kot vse drugo. Iskanje priimka ohrani
+        starodavne povezave vej te družine, tako da eno iskanje pokaže tako testirane člane kot grobove,
+        ki jih njihova linija sreča; iskanje kulture ali najdišča (<code>Avar</code>, <code>Corded
+        Ware</code>, <code>Kunpeszér</code>) pa najde grobove same.</p>
+        <p>Prikazani so samo grobovi, ki jih je mogoče umestiti in postaviti na zemljevid – tisti, ki
+        jim FamilyTreeDNA pripiše vejo in koordinate. Mnogo objavljenih vzorcev nima ne enega ne
+        drugega in so izpuščeni.</p>`,
+        },
+        {
             id: "search",
             heading: "Iskanje",
             body: `
@@ -112,7 +141,9 @@ export default {
         najde vse njene potomce, ne le članov, testiranih točno do nje.</p>
         <p>Števec pod poljem pove, koliko ljudi ustreza; kadar ne ustreza nihče, se besedilo obarva
         rdeče. Iskanje velja za odprti pogled: na zemljevidu filtrira oznake, v drevesu obreže veje na
-        ujemajoče se linije, v blokovnem drevesu pa poudari ujemajoče se člane.</p>`,
+        ujemajoče se linije, v blokovnem drevesu pa poudari ujemajoče se člane.</p>
+        <p>Ko so starodavne povezave vklopljene, iskanje ohrani tudi grobove na vejah najdenih oseb,
+        grobove pa najde tudi po njihovem imenu, kulturi ali najdišču.</p>`,
         },
         {
             id: "filters",
@@ -146,7 +177,8 @@ export default {
             body: `
         <p>Naslov v brskalniku hrani stanje atlasa — odprti pogled, iskanje, izbrane linije,
         približanje in vejo, iz katere izhaja blokovno drevo. S kopiranjem naslova torej delite
-        natanko tak pogled, kot ga gledate, z zaznamkom pa ga pozneje prikličete nazaj.</p>`,
+        natanko tak pogled, kot ga gledate, z zaznamkom pa ga pozneje prikličete nazaj.</p>
+        <p>V naslovu se ohrani tudi to, ali so prikazane starodavne povezave.</p>`,
         },
         {
             id: "language",

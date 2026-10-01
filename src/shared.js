@@ -128,6 +128,15 @@ export const eraColors = [
     { start: 1500, color: "#38a169", id: "eraModern" }
 ];
 
+// The era a year falls in, as a colour. Ancient samples are coloured by when the
+// person lived rather than by lineage, which is what sets them apart from
+// project members in every view.
+export function eraColorFor(year) {
+    let color = eraColors[0].color;
+    for (const era of eraColors) if (era.start < year) color = era.color;
+    return color;
+}
+
 const initialParams = new URLSearchParams(window.location.search);
 
 export const state = {
@@ -136,6 +145,9 @@ export const state = {
     showLabels: initialParams.get("lbl") === "1",
     showAllMajorGroups: initialParams.get("linea") === "1",
     showOnlyLineages: initialParams.get("olin") === "1",
+    // Ancient connections: an opt-in extra layer of dated ancient burials in
+    // every view, off unless the reader asks for it.
+    showAncient: initialParams.get("anc") === "1",
     searchQuery: initialParams.get("q") || "",
     startgroup: initialParams.get("startgroup") || null,
     ydnaSelectedGroups: new Set(),
@@ -255,6 +267,11 @@ export function updateURLState() {
     } else {
         params.delete("olin");
     }
+    if (state.showAncient) {
+        params.set("anc", "1");
+    } else {
+        params.delete("anc");
+    }
     if (state.searchQuery) {
         params.set("q", state.searchQuery);
     } else {
@@ -325,6 +342,176 @@ export function getPersonTooltip(person, error = "", kind = null, source = null)
     if (person.location) html += `${t("location")}: <b>${locationCell}</b>`;
 
     return html;
+}
+
+// ---------------------------------------------------------------------------
+// Ancient connections
+//
+// An ancient sample is an excavated burial that FamilyTreeDNA places on one of
+// the haplogroups in our tree: `mrca` is the branch where its line and ours meet
+// and `tmrca` is when that shared ancestor lived. Only burials that can be both
+// placed and mapped are in the data files (see tools/ftdna-get-paths.py), so
+// every sample has a MRCA, coordinates and a date.
+// ---------------------------------------------------------------------------
+
+export function getAncientTooltip(sample, kind) {
+    const view = kind === "mt" ? "mtdna" : "ydna";
+    const place = [sample.site, sample.geography, sample.country].filter(Boolean).join(", ");
+    const culture = [sample.culture, sample.period].filter(Boolean).join(" · ");
+    const dated = sample.years
+        ? `${formatAge(sample.year)} <span class="tooltip-note">(${escHtml(yearLabel(sample.years[0]))} – ${escHtml(yearLabel(sample.years[1]))})</span>`
+        : formatAge(sample.year);
+
+    let html = `${t("ancientSample")}: <b>${escHtml(sample.name)}</b>`;
+    if (sample.code && sample.code !== sample.name) html += ` <span class="tooltip-note">${escHtml(sample.code)}</span>`;
+    html += "<br>";
+    html += `${t("ancientDated")}: ${dated}<br>`;
+    if (place) html += `${t("ancientPlace")}: <b>${escHtml(place)}</b><br>`;
+    if (culture) html += `${t("ancientCulture")}: <b>${escHtml(culture)}</b><br>`;
+    html += `${t("haplogroup")}: <b>${escHtml(sample.haplogroup)}</b><br>`;
+    if (sample.otherHaplogroup) {
+        html += `${t(kind === "mt" ? "ancientOtherY" : "ancientOtherMt")}: <b>${escHtml(sample.otherHaplogroup)}</b><br>`;
+    }
+    html += `${t("ancientJoins")}: <b>${searchLink(view, sample.mrca)}</b><br>`;
+    if (sample.tmrca !== null && sample.tmrca !== undefined) {
+        html += `${t("ancientShared")}: ${formatAge(sample.tmrca)}<br>`;
+    }
+    if (sample.studies && sample.studies.length) {
+        html += `${t("ancientStudy")}: <b>${escHtml(sample.studies.join(", "))}</b><br>`;
+    }
+    if (sample.uncertain) html += `<span class="error-tag">⚠ ${t("ancientUncertain")}</span><br>`;
+    html += `<a href="#${view}" class="blocktree-link" data-view="${view}" data-hg="${escHtml(sample.mrca).replace(/"/g, "")}">▦ ${t("blockTreeOpen")}</a>`;
+    return html;
+}
+
+// Year without the surrounding <b>, for the bounds inside a tooltip line.
+function yearLabel(year) {
+    if (year === null || year === undefined) return "?";
+    const abs = Math.abs(year);
+    const num = abs < 10000 ? String(abs) : abs.toLocaleString(state.currentLang);
+    return `${num} ${t(year < 0 ? "bce" : "ce")}`;
+}
+
+export let ydnaAncientData = null;
+export let mtdnaAncientData = null;
+let ancientPromise = null;
+
+// The two ancient files are larger than everything else the app loads and the
+// layer is off by default, so they are fetched the first time it is switched on
+// (or on load when an ?anc=1 link asks for them).
+export function loadAncientData() {
+    if (!ancientPromise) {
+        const v = encodeURIComponent(__DATA_DATE__);
+        ancientPromise = loadData()
+            .then(() => Promise.all([
+                d3.json(`/data/output/slo-ydna-ancient.json?v=${v}`).catch(() => null),
+                d3.json(`/data/output/slo-mtdna-ancient.json?v=${v}`).catch(() => null)
+            ]))
+            .then(([yAncient, mtAncient]) => {
+                ydnaAncientData = prepareAncient(yAncient, ydnaHaploData, ydnaGroupRoots, ydnaPeopleData);
+                mtdnaAncientData = prepareAncient(mtAncient, mtdnaHaploData, mtdnaGroupRoots, mtdnaPeopleData);
+            });
+    }
+    return ancientPromise;
+}
+
+// A sample inherits the lineage of the haplogroup it is placed on, so the
+// lineage filter and the search work on it exactly as they do on a member: the
+// deepest lineage whose root SNP is on that node's ancestry, preferring one the
+// reader can actually tick in the sidebar. Samples whose MRCA is outside the
+// loaded tree (a ?startgroup link) are dropped.
+function prepareAncient(file, haploData, rootsMap, people) {
+    const samples = file && Array.isArray(file.samples) ? file.samples : [];
+    if (!samples.length || !haploData) return [];
+
+    const parentMap = {};
+    haploData.forEach((d) => { parentMap[d.haplogroup] = d.parent; });
+
+    const groupByRootHg = new Map();
+    for (const [group, rootHg] of Object.entries(rootsMap)) {
+        if (!groupByRootHg.has(rootHg)) groupByRootHg.set(rootHg, group);
+    }
+    const listedGroups = new Set((people || []).map((p) => p.group).filter(Boolean));
+
+    const out = [];
+    for (const s of samples) {
+        if (!s.mrca || !(s.mrca in parentMap)) continue;
+
+        const chain = [];
+        let curr = s.mrca;
+        let depth = 0;
+        while (curr && depth < 1000) {
+            chain.push(curr);
+            curr = parentMap[curr];
+            depth++;
+        }
+        const groups = chain.map((hg) => groupByRootHg.get(hg)).filter(Boolean);
+        const group = groups.find((g) => listedGroups.has(g)) ?? groups[0] ?? "";
+
+        out.push({
+            ...s,
+            group,
+            _ancestry: chain.join("").toLowerCase(),
+            _text: [s.name, s.code, s.haplogroup, s.culture, s.period, s.site, s.geography, s.country]
+                .filter(Boolean).join(" ").toLowerCase()
+        });
+    }
+    return out;
+}
+
+// Free-text search over an ancient sample: its own names and places, plus the
+// haplogroups it hangs below, so a search for an upstream SNP finds it too.
+export function matchesAncientQuery(sample, query) {
+    if (!query) return true;
+    const q = query.toLowerCase();
+    return sample._text.includes(q) || sample._ancestry.includes(q);
+}
+
+// Every haplogroup on the ancestry of a member the search matches, memoized for
+// the current lineage and query.
+let matchedAncestryCache = { kind: null, query: null, set: null };
+function matchedAncestry(kind) {
+    if (matchedAncestryCache.kind === kind && matchedAncestryCache.query === state.searchQuery) {
+        return matchedAncestryCache.set;
+    }
+    const people = kind === "mt" ? mtdnaPeopleData : ydnaPeopleData;
+    const haploData = kind === "mt" ? mtdnaHaploData : ydnaHaploData;
+    const selected = getSelectedGroups(kind);
+    const set = new Set();
+    if (people && haploData) {
+        const parentMap = {};
+        haploData.forEach((d) => { parentMap[d.haplogroup] = d.parent; });
+        for (const p of people) {
+            if (!selected.has(p.group) || !matchesSearchQuery(p, state.searchQuery)) continue;
+            let curr = p.haplogroup;
+            let depth = 0;
+            while (curr && depth < 1000) {
+                set.add(curr);
+                curr = parentMap[curr];
+                depth++;
+            }
+        }
+    }
+    matchedAncestryCache = { kind, query: state.searchQuery, set };
+    return set;
+}
+
+// One lineage's ancient samples for the current lineage filter and search —
+// empty when the layer is off or its data is not loaded yet.
+//
+// A search keeps a burial when the burial itself matches it ("Avar",
+// "Kunpeszér") or when it hangs on a branch that a matching member sits below:
+// searching a surname asks to see that family, and its ancient connections are
+// part of what the reader came for.
+export function getAncientSamples(kind) {
+    if (!state.showAncient) return [];
+    const data = kind === "mt" ? mtdnaAncientData : ydnaAncientData;
+    if (!data) return [];
+    const groups = getSelectedGroups(kind);
+    const inLineage = data.filter((s) => groups.has(s.group));
+    if (!state.searchQuery) return inLineage;
+    const ancestry = matchedAncestry(kind);
+    return inLineage.filter((s) => ancestry.has(s.mrca) || matchesAncientQuery(s, state.searchQuery));
 }
 
 function warnOnDuplicateKits(people, label) {

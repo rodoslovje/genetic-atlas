@@ -57,7 +57,10 @@ export default {
         <p><strong>Mostra etichette</strong>, nel pannello, scrive il nome dell'antenato (o il cognome)
         accanto a ogni segno. I nomi in grassetto appartengono ai membri che hanno svolto il test più
         informativo per il proprio lignaggio — Big Y per l'Y-DNA, la sequenza mitocondriale completa per
-        il mtDNA.</p>`,
+        il mtDNA.</p>
+        <p>Con le <strong>connessioni antiche</strong> attive, tra i marcatori compaiono rombi e anelli
+        nei colori delle epoche. Sono sepolture scavate, non membri del progetto — si veda
+        <em>Connessioni antiche</em> più sotto.</p>`,
         },
         {
             id: "tree",
@@ -108,6 +111,36 @@ export default {
         esso, in cima alla vista, riportano verso la radice.</p>`,
         },
         {
+            id: "ancient",
+            heading: "Connessioni antiche",
+            body: `
+        <p><strong>Connessioni antiche</strong>, nel pannello, aggiunge uno strato di sepolture scavate
+        il cui DNA è stato pubblicato e che FamilyTreeDNA colloca su uno dei rami disegnati nell'Atlante.
+        Lo strato è spento finché non lo si accende, e la riga sottostante conta le sepolture che la
+        vista attuale mostra.</p>
+        <p>Non sono membri del progetto e non vengono mai disegnate come tali. Sulla mappa una sepoltura
+        è un <strong>rombo</strong> (linea paterna) o un <strong>anello</strong> (linea materna) nel
+        luogo dello scavo, colorato secondo l'epoca in cui la persona visse e non secondo l'aplogruppo.
+        Nell'albero pende dal ramo in cui la sua linea incontra la nostra, in corsivo dopo un ⚱ e con la
+        data. Nell'albero a blocchi riceve una colonna propria, come un membro — ma una che si ferma
+        all'anno della morte invece di arrivare fino a oggi, con quell'anno scritto sul bordo di
+        chiusura.</p>
+        <p>Passandoci sopra si vede di chi si tratta: la datazione e il suo intervallo, il sito, la
+        cultura archeologica, l'aplogruppo dei resti, il ramo in cui quella linea e la nostra si
+        incontrano, quando visse quell'antenato comune e lo studio che ha pubblicato il DNA. Un contorno
+        tratteggiato indica che FamilyTreeDNA segnala la collocazione come incerta — i resti portano le
+        mutazioni di quel ramo ma nessuna al di sotto, perciò la sepoltura potrebbe trovarsi in qualsiasi
+        punto lungo di esso.</p>
+        <p>Lo strato segue i filtri delle linee e la ricerca come tutto il resto. Cercando un cognome si
+        mantengono le connessioni antiche dei rami di quella famiglia, così una sola ricerca mostra sia i
+        membri testati sia le sepolture che la loro linea incontra; cercando una cultura o un sito
+        (<code>Avar</code>, <code>Corded Ware</code>, <code>Kunpeszér</code>) si trovano le sepolture
+        stesse.</p>
+        <p>Sono mostrate solo le sepolture che si possono sia collocare sia mappare — quelle per cui
+        FamilyTreeDNA fornisce sia un ramo sia le coordinate. Molti campioni pubblicati non hanno né
+        l'uno né le altre e restano fuori.</p>`,
+        },
+        {
             id: "search",
             heading: "Cercare",
             body: `
@@ -119,7 +152,9 @@ export default {
         <p>Il contatore sotto il campo dice quante persone corrispondono; quando non ne corrisponde
         nessuna il testo diventa rosso. La ricerca vale per la vista aperta: sulla mappa filtra i segni,
         nell'albero lo pota alle linee corrispondenti e nell'albero a blocchi evidenzia i membri
-        trovati.</p>`,
+        trovati.</p>
+        <p>Con le connessioni antiche attive, una ricerca mantiene anche le sepolture poste sui rami
+        delle persone trovate, e trova le sepolture per nome, cultura o sito.</p>`,
         },
         {
             id: "filters",
@@ -155,7 +190,8 @@ export default {
         <p>L'indirizzo nel browser conserva lo stato dell'Atlante — la vista aperta, la ricerca, i
         lignaggi scelti, l'ingrandimento e il ramo da cui parte un albero a blocchi. Copiare l'indirizzo
         condivide quindi esattamente la vista che avete davanti, e un segnalibro la riporta più
-        tardi.</p>`,
+        tardi.</p>
+        <p>Anche il fatto che le connessioni antiche siano mostrate viaggia nell'indirizzo.</p>`,
         },
         {
             id: "language",

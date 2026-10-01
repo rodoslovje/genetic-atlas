@@ -57,7 +57,10 @@ export default {
         <p><strong>Afficher les étiquettes</strong>, dans le panneau, inscrit le nom de l'ancêtre (ou le
         nom de famille) à côté de chaque repère. Les noms en gras appartiennent aux membres ayant passé
         le test le plus complet pour leur lignée — Big Y pour l'Y-DNA, la séquence mitochondriale
-        complète pour le mtDNA.</p>`,
+        complète pour le mtDNA.</p>
+        <p>Lorsque les <strong>connexions anciennes</strong> sont activées, des losanges et des anneaux
+        aux couleurs des époques apparaissent parmi les marqueurs. Ce sont des sépultures fouillées, et
+        non des membres du projet — voir <em>Connexions anciennes</em> plus bas.</p>`,
         },
         {
             id: "tree",
@@ -109,6 +112,35 @@ export default {
         haut de la vue, ramènent vers la racine.</p>`,
         },
         {
+            id: "ancient",
+            heading: "Connexions anciennes",
+            body: `
+        <p><strong>Connexions anciennes</strong>, dans le panneau, ajoute une couche de sépultures
+        fouillées dont l'ADN a été publié et que FamilyTreeDNA rattache à l'une des branches dessinées
+        dans l'Atlas. La couche est désactivée tant que vous ne l'activez pas, et la ligne en dessous
+        compte les sépultures que la vue affiche.</p>
+        <p>Ce ne sont pas des membres du projet, et elles ne sont jamais dessinées comme tels. Sur la
+        carte, une sépulture est un <strong>losange</strong> (lignée paternelle) ou un
+        <strong>anneau</strong> (lignée maternelle) posé sur le site de fouille, coloré selon l'époque
+        où la personne a vécu et non selon l'haplogroupe. Dans l'arbre, elle pend à la branche où sa
+        lignée rejoint la nôtre, en italique derrière un ⚱ et avec sa date. Dans l'arbre en blocs, elle
+        reçoit sa propre colonne, comme un membre — mais une colonne qui s'arrête à l'année du décès au
+        lieu de courir jusqu'à aujourd'hui, cette année étant inscrite sur son bord de fermeture.</p>
+        <p>Le survol montre de qui il s'agit : la datation et son intervalle, le site, la culture
+        archéologique, l'haplogroupe des restes, la branche où cette lignée et la nôtre se rejoignent,
+        l'époque de cet ancêtre commun et l'étude qui a publié l'ADN. Un contour en pointillés signifie
+        que FamilyTreeDNA juge le placement incertain — les restes portent les mutations de cette branche
+        mais aucune en dessous, la sépulture pourrait donc se situer n'importe où le long de celle-ci.</p>
+        <p>La couche suit les filtres de lignées et la recherche comme tout le reste. Chercher un nom de
+        famille conserve les connexions anciennes des branches de cette famille, de sorte qu'une seule
+        recherche montre à la fois les membres testés et les sépultures que leur lignée rencontre ;
+        chercher une culture ou un site (<code>Avar</code>, <code>Corded Ware</code>,
+        <code>Kunpeszér</code>) trouve les sépultures elles-mêmes.</p>
+        <p>Seules les sépultures que l'on peut à la fois rattacher et cartographier sont montrées :
+        celles pour lesquelles FamilyTreeDNA donne une branche et des coordonnées. Beaucoup
+        d'échantillons publiés n'ont ni l'une ni les autres et sont laissés de côté.</p>`,
+        },
+        {
             id: "search",
             heading: "Rechercher",
             body: `
@@ -120,7 +152,10 @@ export default {
         <p>Le compteur sous le champ indique combien de personnes correspondent ; lorsqu'aucune ne
         correspond, le texte passe au rouge. La recherche s'applique à la vue ouverte : sur la carte elle
         filtre les repères, dans l'arbre elle l'élague aux lignées correspondantes, et dans l'arbre en
-        blocs elle met en évidence les membres trouvés.</p>`,
+        blocs elle met en évidence les membres trouvés.</p>
+        <p>Lorsque les connexions anciennes sont activées, une recherche conserve aussi les sépultures
+        situées sur les branches des personnes trouvées, et retrouve les sépultures par leur nom, leur
+        culture ou leur site.</p>`,
         },
         {
             id: "filters",
@@ -154,7 +189,8 @@ export default {
             body: `
         <p>L'adresse dans le navigateur conserve l'état de l'Atlas — la vue ouverte, la recherche, les
         lignées choisies, le zoom et la branche d'où part un arbre en blocs. Copier l'adresse partage donc
-        exactement la vue que vous avez sous les yeux, et un signet la retrouve plus tard.</p>`,
+        exactement la vue que vous avez sous les yeux, et un signet la retrouve plus tard.</p>
+        <p>L'affichage ou non des connexions anciennes voyage également dans l'adresse.</p>`,
         },
         {
             id: "language",

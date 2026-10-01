@@ -14,6 +14,22 @@ export default {
 
     entries: [
         {
+            date: "2026-09-27",
+            items: [
+                {
+                    title: "Starodavne povezave",
+                    text: `U bočnoj ploči nova je mogućnost <strong>Starodavne
+                        povezave</strong>, koja donosi iskopane grobove koje FamilyTreeDNA smješta na
+                        grane atlasa – grobove iz avarskog razdoblja u Donjoj Austriji, grobove kulture
+                        vrpčaste keramike u Češkoj, srednjovjekovnog muškarca iz Istre i još stotine
+                        drugih. Na karti se pojavljuju na nalazištu, u stablu uz granu na kojoj se njihova
+                        linija susreće s vašom, a u blok stablu kao stupac koji završava godinom smrti. Uz
+                        uključenu mogućnost potražite prezime i vidjet ćete koji grobovi leže na liniji te
+                        obitelji.`,
+                },
+            ],
+        },
+        {
             date: "2026-09-16",
             items: [
                 {

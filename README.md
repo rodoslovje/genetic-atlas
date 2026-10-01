@@ -7,6 +7,7 @@ Interactive web application and data tooling for the **Slovenian Genetic Atlas**
 - **Map view** with two-ring jitter that spreads markers sharing the same address so individual haplogroup colours stay visible.
 - **Y-DNA & mtDNA tree views** rendered with D3, including era bands, lineage filters, prominent-tester highlighting, and SVG export.
 - **Block tree**, a second viewing mode of each haplotree view (`?ymode=block`, `?mtmode=block`): an icicle view with time on the vertical axis, showing each branch's TMRCA with its 68 % range, its variants (equivalent SNPs for Y-DNA, the block's mutations for mtDNA), and project members as one column each below their terminal haplogroup. It follows the lineage filter; the search box picks the starting haplogroup (the first split among the matched members' lines) and highlights matches. Any block can be focused by clicking it, from a haplogroup tooltip, or via `?block=R-BY32501` / `?mblock=H5a`; both views export to SVG. The two lineages keep their modes and roots independently.
+- **Ancient connections** (`?anc=1`), an opt-in layer of excavated burials that FamilyTreeDNA places on the branches of the tree: diamonds and rings at their excavation site on the map, italic leaves under the branch they join in the tree, and a column ending at the year of death in the block tree. Coloured by era rather than lineage, so they never read as project members. The layer follows the lineage filters, and a search for a surname keeps the burials on that family's branches.
 - **Haplogroup-aware search** across kit, surname, ancestor, location, and the full ancestry chain (a search for an upstream SNP matches every downstream tester).
 - **Filterable lineages** with persistent state in the URL; "Ungrouped" is an opt-in filter and is intentionally not persisted.
 - **Localisation** in seven languages — Slovenian, English, Croatian, French, German, Italian, Hungarian — with a single i18n key for every translatable string and `{key}` placeholder substitution.
@@ -105,6 +106,28 @@ python tools/ftdna-get-paths.py --kind mt --mode variants --limit 200
 ```
 
 The mtDNA payload lists the mutations of the whole ancestral path, each tagged with the haplogroup it belongs to, so only the requested node's own entries are kept.
+
+**Backfill ancient connections:**
+
+Every Discover response also carries an `ancient` list — the excavated burials FTDNA connects to the requested haplogroup — but, like `variants`, only for the node actually requested. Any run collects what it sees; this pass fetches the nodes whose own list has not been read yet, in the same "most useful first" order as `--mode variants`:
+
+```bash
+python tools/ftdna-get-paths.py --kind y --mode ancient --limit 200
+python tools/ftdna-get-paths.py --kind mt --mode ancient --limit 200
+```
+
+The results go to `slo-ydna-ancient.json` / `slo-mtdna-ancient.json` as `{fetched, samples}` — the haplogroups already read, and one record per burial. Only burials the app can both place and map are kept: they need a `haplogroup_mrca` that is in the paths file (the branch where their line joins ours), coordinates, a date and a haplogroup of their own for that lineage. A burial reached from several haplogroups is stored once, on the deepest MRCA seen for it. Each record carries:
+
+| Field | Meaning |
+|---|---|
+| `code`, `name` | FTDNA's sample code and the name it is published under |
+| `mrca`, `tmrca` | the haplogroup where its line meets ours, and when that shared ancestor lived |
+| `haplogroup`, `otherHaplogroup` | its own haplogroup for this lineage, and for the other one |
+| `year`, `years` | the mean date and the `[oldest, youngest]` bounds (negative = BCE) |
+| `latitude`, `longitude`, `site`, `geography`, `country` | where it was excavated |
+| `culture`, `period`, `sex` | archaeological culture, time period, sex of the remains |
+| `uncertain` | FTDNA flags the placement as uncertain (no subclade below the branch) |
+| `studies` | the published study or studies the DNA comes from |
 
 Every node in `slo-ydna-paths.json` / `slo-mtdna-paths.json` carries:
 

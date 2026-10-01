@@ -4,7 +4,7 @@ import { zoom, zoomTransform, zoomIdentity } from "d3-zoom";
 import { drag } from "d3-drag";
 import { hierarchy } from "d3-hierarchy";
 const d3 = { select, zoom, zoomTransform, zoomIdentity, drag, hierarchy };
-import { state, t, formatAge, getPersonTooltip, getHaploColor, eraColors, getSelectedGroups, translations, isProminentPerson, matchesSearchQuery } from "./shared.js";
+import { state, t, formatAge, getPersonTooltip, getHaploColor, eraColors, eraColorFor, getSelectedGroups, translations, isProminentPerson, matchesSearchQuery, getAncientSamples, matchesAncientQuery, getAncientTooltip } from "./shared.js";
 import { getFlagDataUri } from "./flags.js";
 
 const NODE_ROW_HEIGHT = 45;
@@ -116,6 +116,7 @@ export class TreeVisualizer {
 
     getNodeClass(d, allRoots) {
         let cls = "node";
+        if (d.data.isAncient) return cls + " node--ancient" + (d.data.isSearchMatch ? " node--search-match" : "");
         if (d.data.isPerson) cls += " node--person";
         if (d.data.isAutoPlaced) cls += " node--autoplaced";
         if (d.data.isSearchMatch) cls += " node--search-match";
@@ -155,7 +156,7 @@ export class TreeVisualizer {
             return customNote || defaultNote;
         };
 
-        const buildHierarchy = (nodes, leaves) => {
+        const buildHierarchy = (nodes, leaves, ancients) => {
             const dataMap = nodes.reduce((m, d) => {
                 m[d.haplogroup] = { ...d, note: getCustomNote(d.haplogroup, d.note), id: d.haplogroup, children: [] };
                 return m;
@@ -203,6 +204,20 @@ export class TreeVisualizer {
                     });
                 }
             });
+
+            // Ancient burials hang off the haplogroup where their line meets
+            // ours, next to the members of that branch. A sample whose MRCA is
+            // not in this tree has nowhere to hang and is dropped — never
+            // re-parented to a node it does not descend from.
+            (ancients || []).forEach((s) => {
+                if (dataMap[s.mrca]) {
+                    dataMap[s.mrca].children.push({
+                        id: `ancient-${s.code}`, isAncient: true, sample: s,
+                        haplogroup: s.mrca, isSearchMatch: s.isSearchMatch
+                    });
+                }
+            });
+
             return dataMap[rootNode.haplogroup];
         };
 
@@ -215,7 +230,7 @@ export class TreeVisualizer {
             if (state.showOnlyLineages) keepIfEmpty = false;
 
             if (!node.children || node.children.length === 0) {
-                return node.isPerson || keepIfEmpty ? node : null;
+                return node.isPerson || node.isAncient || keepIfEmpty ? node : null;
             }
 
             node.children = node.children.map(pruneTree).filter((n) => n !== null);
@@ -227,7 +242,8 @@ export class TreeVisualizer {
             if (state.showPassthrough) return node;
             if (
                 node.parent === "" || node.isPerson || (!state.showOnlyLineages && isGroupRoot) ||
-                node.isAutoPlaced || hasNote || node.children.some((c) => c.isPerson) || node.children.length > 1
+                node.isAutoPlaced || hasNote || node.children.some((c) => c.isPerson || c.isAncient) ||
+                node.children.length > 1
             ) {
                 return node;
             }
@@ -247,7 +263,14 @@ export class TreeVisualizer {
             filteredPeople.forEach(p => p.isSearchMatch = false);
         }
 
-        const processedData = pruneTree(buildHierarchy(haploData, filteredPeople));
+        // The lineage filter and the search are already applied; a burial that
+        // matches the search itself is highlighted like a matching member.
+        const ancientSamples = getAncientSamples(this.kind);
+        ancientSamples.forEach((s) => {
+            s.isSearchMatch = state.searchQuery ? matchesAncientQuery(s, state.searchQuery) : false;
+        });
+
+        const processedData = pruneTree(buildHierarchy(haploData, filteredPeople, ancientSamples));
 
         if (!processedData) {
             this.g.selectAll(".node").remove();
@@ -258,11 +281,13 @@ export class TreeVisualizer {
 
         const newRoot = d3.hierarchy(processedData);
 
-        newRoot.sort((a, b) => {
-            const nameA = a.data.isPerson ? (a.data.ancestor || a.data.surname) : a.data.haplogroup;
-            const nameB = b.data.isPerson ? (b.data.ancestor || b.data.surname) : b.data.haplogroup;
-            return (nameA || "").localeCompare(nameB || "");
-        });
+        // Ancient burials sort after the living, oldest burial first, so a branch
+        // reads as "who tested" and then "who was dug up".
+        const sortName = (d) => {
+            if (d.data.isAncient) return `\uffff${String(1e7 + d.data.sample.year).padStart(9, "0")}`;
+            return (d.data.isPerson ? (d.data.ancestor || d.data.surname) : d.data.haplogroup) || "";
+        };
+        newRoot.sort((a, b) => sortName(a).localeCompare(sortName(b)));
 
         const findAllDescendants = (node, arr = []) => {
             arr.push(node);
@@ -480,10 +505,10 @@ export class TreeVisualizer {
             .attr("class", getNodeClass)
             .attr("transform", (d) => `translate(${d.y},${d.x})`)
             .style("opacity", 0)
-            .style("cursor", d => d.data.isPerson ? "default" : "pointer")
+            .style("cursor", d => (d.data.isPerson || d.data.isAncient) ? "default" : "pointer")
             .on("click", (event, d) => {
                 event.stopPropagation();
-                if (d.data.isPerson) return;
+                if (d.data.isPerson || d.data.isAncient) return;
 
                 const groupKey = getGroupKey(d.data.haplogroup);
 
@@ -520,7 +545,11 @@ export class TreeVisualizer {
                 const blockLink = blockHg && blockHg !== "-"
                     ? `<br><a href="#${view}" class="blocktree-link" data-view="${view}" data-hg="${blockHg.replace(/"/g, "")}">▦ ${t("blockTreeOpen")}</a>`
                     : "";
-                if (d.data.isPerson) {
+                if (d.data.isAncient) {
+                    // The ancient tooltip carries its own block tree link, at the
+                    // haplogroup where the sample joins the tree.
+                    this.tooltip.html(getAncientTooltip(d.data.sample, this.kind));
+                } else if (d.data.isPerson) {
                     this.tooltip.html(getPersonTooltip(d.data, error, this.kind, "tree") + blockLink);
                 } else {
                     const notePart = formatNoteSuffix(d.data);
@@ -554,7 +583,24 @@ export class TreeVisualizer {
 
         nodeEnter.each(function (d) {
             const el = d3.select(this);
-            if (d.data.isPerson) {
+            if (d.data.isAncient) {
+                // A diamond in the colour of the era the person lived in — the
+                // same mark in both lineage views, and unlike any marker a
+                // project member gets.
+                const size = 11;
+                const color = eraColorFor(d.data.sample.year);
+                el.append("rect").attr("class", "halo")
+                    .attr("x", -size / 2).attr("y", -size / 2)
+                    .attr("width", size).attr("height", size)
+                    .attr("transform", "rotate(45)")
+                    .style("fill", "none").style("stroke", "#ffffff").style("stroke-width", "5.5px");
+                el.append("rect").attr("class", "shape shape--ancient")
+                    .attr("x", -size / 2).attr("y", -size / 2)
+                    .attr("width", size).attr("height", size)
+                    .attr("transform", "rotate(45)")
+                    .style("fill", color).style("stroke", "#1a202c")
+                    .style("stroke-dasharray", d.data.sample.uncertain ? "2.5 1.5" : null);
+            } else if (d.data.isPerson) {
                 const code = d.data.country || "un";
                 const href = getFlagDataUri(code) || `https://flagcdn.com/w40/${code}.png`;
                 el.append("image").attr("href", href).attr("xlink:href", href)
@@ -603,6 +649,7 @@ export class TreeVisualizer {
         nodeEnter.append("text")
             .attr("dy", (d) => {
                 if (d.data.isPerson) return d.data.location ? "-0.15em" : ".35em";
+                if (d.data.isAncient) return "-0.15em";
                 return ".35em";
             })
             .attr("x", (d) => (d.data.isPerson ? 18 : 16))
@@ -614,7 +661,21 @@ export class TreeVisualizer {
             .text("")
             .each(function (d) {
                 const el = d3.select(this);
-                if (d.data.isPerson) {
+                if (d.data.isAncient) {
+                    const s = d.data.sample;
+                    const abs = Math.abs(s.year);
+                    const year = `${abs < 10000 ? abs : abs.toLocaleString(state.currentLang)} ${t(s.year < 0 ? "bce" : "ce")}`;
+                    el.append("tspan").text(`⚱ ${decodeHtmlEntities(s.name)}, ${year}`);
+                    const where = [s.culture, s.country].filter(Boolean).join(" · ");
+                    if (where) {
+                        el.append("tspan")
+                            .attr("x", 16)
+                            .attr("dy", "1.2em")
+                            .style("font-size", "10px")
+                            .style("fill", "#718096")
+                            .text(decodeHtmlEntities(where));
+                    }
+                } else if (d.data.isPerson) {
                     el.append("tspan").text(decodeHtmlEntities(d.data.ancestor || d.data.surname));
                     if (d.data.location) {
                         el.append("tspan")
@@ -638,7 +699,7 @@ export class TreeVisualizer {
         mergedNode.each(function (d) {
             const el = d3.select(this);
             let bg = el.select("rect.search-highlight-bg");
-            if (!d.data.isPerson || !d.data.isSearchMatch) {
+            if (!(d.data.isPerson || d.data.isAncient) || !d.data.isSearchMatch) {
                 if (!bg.empty()) bg.remove();
                 return;
             }
@@ -671,6 +732,7 @@ export class TreeVisualizer {
 
         mergedNode.select(".shape").transition().duration(TRANSITION_DURATION)
             .style("fill", d => {
+                if (d.data.isAncient) return eraColorFor(d.data.sample.year);
                 const groupKey = getGroupKey(d.data.haplogroup);
                 const color = d.data.isAutoPlaced ? "#e53e3e" : groupKey ? getHaploColor(groupKey) : "#cbd5e0";
 
@@ -681,6 +743,7 @@ export class TreeVisualizer {
                 return isSolid ? color : "#ffffff";
             })
             .style("stroke", d => {
+                if (d.data.isAncient) return "#1a202c";
                 const groupKey = getGroupKey(d.data.haplogroup);
                 return d.data.isAutoPlaced ? "#9b2c2c" : groupKey ? getHaploColor(groupKey) : "#cbd5e0";
             });
@@ -692,6 +755,7 @@ export class TreeVisualizer {
         const link = this.g.selectAll(".link").data(links, (d) => d.target.data.id);
 
         const getLinkColor = (d) => {
+            if (d.target.data.isAncient) return eraColorFor(d.target.data.sample.year);
             if (d.target.data.isPerson) return eraColors[eraColors.length - 1].color;
             let age = d.target.data.age;
             if (age === null || age === undefined) age = d.source.data.age;

@@ -17,7 +17,7 @@
 // equivalent SNPs, mtDNA ones the block's mutations. See tools/ftdna-get-paths.py.
 
 import { select } from "d3-selection";
-import { state, t, getPersonTooltip, eraColors, isProminentPerson, translations, updateURLState, matchesSearchQuery, getSelectedGroups, currentView, kindOfView, blockStateKeys, lineageMode } from "./shared.js";
+import { state, t, getPersonTooltip, eraColors, isProminentPerson, translations, updateURLState, matchesSearchQuery, getSelectedGroups, currentView, kindOfView, blockStateKeys, lineageMode, getAncientSamples, matchesAncientQuery, getAncientTooltip } from "./shared.js";
 import { getFlagDataUri } from "./flags.js";
 
 const COL_W = 150;          // column pitch per sample / leaf
@@ -117,6 +117,11 @@ function inlineExportStyles(svg) {
     set(".bt-sample__surname", { "font-size": 12, "font-weight": "bold", fill: "#1a365d" });
     set(".bt-sample__line", { "font-size": 11, fill: "#4a5568" });
     set(".bt-sample__sub", { "font-size": 10, fill: "#718096" });
+    set(".bt-anc rect", { "stroke-width": 1.5 });
+    set(".bt-anc__edge", { "stroke-width": 2.5 });
+    set(".bt-anc__code", { "font-size": 10, "font-weight": "bold", fill: "#4a5568" });
+    set(".bt-anc__name", { "font-size": 12, "font-weight": "bold", fill: "#1a202c" });
+    set(".bt-anc__year", { "font-size": 10, "font-weight": "bold" });
     set(".bt-axis__label", { "font-size": 11, fill: "#4a5568" });
     set(".bt-axis__line", { stroke: "#cbd5e0", "stroke-width": 1 });
     set(".bt-grid", { stroke: "#e2e8f0", "stroke-width": 1 });
@@ -264,6 +269,7 @@ export class BlockTree {
         const matches = state.searchQuery ? shown.filter((p) => matchesSearchQuery(p, state.searchQuery)) : [];
         this.matchSet = new Set(matches);
         this.indexPeople(shown);
+        this.indexAncient();
 
         const explicit = !!this.blockRoot;
         let rootHg = this.blockRoot;
@@ -288,7 +294,7 @@ export class BlockTree {
             return;
         }
         this.layout(tree, rootData);
-        if (!explicit && tree.cols > MAX_AUTO_COLS) {
+        if (!explicit && tree.cols - this.ancientCols > MAX_AUTO_COLS) {
             this.showMessage(t("blockTreeTooWide", tree.peopleCount));
             return;
         }
@@ -322,6 +328,22 @@ export class BlockTree {
                 this.subtreeCounts.set(hg, (this.subtreeCounts.get(hg) || 0) + 1);
             }
         }
+    }
+
+    // Ancient burials by the haplogroup they join the tree at. They never bring a
+    // branch into the diagram that members alone wouldn't fill, so switching the
+    // layer on adds columns without redrawing the tree; the search highlights
+    // them, as it does members.
+    indexAncient() {
+        this.ancientByHg = new Map();
+        this.ancientMatchSet = new Set();
+        for (const s of getAncientSamples(this.kind)) {
+            if (!this.nodeByHg.has(s.mrca)) continue;
+            if (!this.ancientByHg.has(s.mrca)) this.ancientByHg.set(s.mrca, []);
+            this.ancientByHg.get(s.mrca).push(s);
+            if (state.searchQuery && matchesAncientQuery(s, state.searchQuery)) this.ancientMatchSet.add(s);
+        }
+        for (const list of this.ancientByHg.values()) list.sort((a, b) => a.year - b.year);
     }
 
     ancestryOf(hg) {
@@ -421,7 +443,8 @@ export class BlockTree {
                 (b.peopleCount - a.peopleCount) ||
                 ((a.data.age ?? Infinity) - (b.data.age ?? Infinity)) ||
                 a.hg.localeCompare(b.hg));
-            return { data, hg: data.haplogroup, people, children, peopleCount };
+            const ancient = (this.ancientByHg && this.ancientByHg.get(data.haplogroup)) || [];
+            return { data, hg: data.haplogroup, people, children, peopleCount, ancient };
         };
         return build(rootData);
     }
@@ -451,10 +474,16 @@ export class BlockTree {
 
         // 2. Columns: children first, then one column per person placed
         //    directly on the node.
+        //    Ancient burials take a column each after the members, and are
+        //    counted separately so a wide ancient layer can't trip the
+        //    "narrow your filter" guard that protects automatic roots.
+        this.ancientCols = 0;
         const assignCols = (node, start) => {
             let cursor = start;
             node.children.forEach((c) => { assignCols(c, cursor); cursor += c.cols; });
             node.samples = node.people.map((person) => ({ person, node, col: cursor++ }));
+            node.ancientSamples = node.ancient.map((sample) => ({ sample, node, col: cursor++ }));
+            this.ancientCols += node.ancientSamples.length;
             node.col0 = start;
             node.cols = Math.max(1, cursor - start);
         };
@@ -529,6 +558,7 @@ export class BlockTree {
         const visit = (node) => {
             this.drawBlock(blocks, bars, labels, node, node === tree);
             node.samples.forEach((s) => this.drawSample(samples, s));
+            node.ancientSamples.forEach((a) => this.drawAncient(samples, a));
             node.children.forEach(visit);
         };
         visit(tree);
@@ -778,6 +808,99 @@ export class BlockTree {
         }
     }
 
+    // An ancient burial, drawn like a member column but stopping at the year the
+    // man or woman died instead of running to the present: the column covers the
+    // span in which that line's own variants accumulated, and its closing edge
+    // carries the date. Era colour, not lineage colour, so it never reads as a
+    // project member.
+    drawAncient(layer, item) {
+        const { sample, node, col } = item;
+        const Y = this.yearToY;
+        const x = col * COL_W + INSET;
+        const w = COL_W - INSET * 2;
+        const yBranch = Y(node.tmrca);
+        const yDied = Y(sample.year);
+        // A burial dated older than the branch's own TMRCA (overlapping
+        // estimates — FTDNA flags these as uncertain placements) reaches up
+        // instead of down, so the conflict shows rather than being clamped away.
+        const predates = yDied < yBranch;
+        const y0 = predates ? yDied : yBranch;
+        const y1 = Math.max(y0 + 16, predates ? yBranch : yDied);
+        const h = y1 - y0;
+        const dateY = predates ? y0 : y1;
+        const color = eraColorFor(sample.year);
+        const isMatch = this.ancientMatchSet.has(sample);
+        const maxChars = Math.floor((w - 12) / CHAR_W);
+
+        const g = layer.append("g")
+            .attr("class", `bt-anc${isMatch ? " bt-anc--match" : ""}`)
+            .on("mouseover", (event) => this.showTooltip(event, getAncientTooltip(sample, this.kind)))
+            .on("mouseout", () => this.hideTooltip());
+
+        g.append("rect")
+            .attr("x", x).attr("y", y0).attr("width", w).attr("height", h).attr("rx", 3)
+            .style("fill", color).style("fill-opacity", isMatch ? 0.3 : 0.14)
+            .style("stroke", color)
+            .style("stroke-dasharray", sample.uncertain ? "4 3" : null);
+
+        g.append("line").attr("class", "bt-anc__edge")
+            .attr("x1", x).attr("x2", x + w).attr("y1", dateY).attr("y2", dateY)
+            .style("stroke", color);
+        g.append("circle").attr("cx", x + w / 2).attr("cy", dateY).attr("r", 3).style("fill", color);
+
+        // Who it was, in a sliding clipped group for the same reason a member
+        // card has one: a column reaching back millennia is taller than the
+        // viewport.
+        const clipId = `bt-clip-${++this._clipSeq}`;
+        this.defs.append("clipPath").attr("id", clipId).append("rect")
+            .attr("x", x).attr("y", y0).attr("width", w).attr("height", h);
+        const cardG = g.append("g").attr("clip-path", `url(#${clipId})`)
+            .append("g").attr("class", "bt-anc__label bt-sticky");
+
+        // Leave the dated edge clear of the text when it is the top one.
+        const pad = predates ? 30 : SAMPLE_PAD + 6;
+        let ty = y0 + pad;
+        cardG.append("text").attr("class", "bt-anc__code")
+            .attr("x", x + w / 2).attr("y", ty).attr("text-anchor", "middle")
+            .text(truncate(`⚱ ${sample.code}`, maxChars));
+        ty += LINE_H;
+
+        wrap(decodeHtmlEntities(sample.name), maxChars, 2).forEach((line) => {
+            cardG.append("text").attr("class", "bt-anc__name")
+                .attr("x", x + w / 2).attr("y", ty).attr("text-anchor", "middle").text(line);
+            ty += LINE_H;
+        });
+        const linesLeft = Math.max(0, Math.floor((y1 - 16 - ty) / LINE_H));
+        wrap(decodeHtmlEntities(sample.culture || sample.period || ""), maxChars, Math.min(2, linesLeft)).forEach((line) => {
+            cardG.append("text").attr("class", "bt-sample__line")
+                .attr("x", x + w / 2).attr("y", ty).attr("text-anchor", "middle").text(line);
+            ty += LINE_H;
+        });
+        const placeLines = Math.max(0, Math.floor((y1 - 16 - ty) / LINE_H));
+        const place = [sample.geography, sample.country].filter(Boolean).join(", ");
+        wrap(decodeHtmlEntities(place), maxChars + 2, Math.min(2, placeLines)).forEach((line) => {
+            cardG.append("text").attr("class", "bt-sample__sub")
+                .attr("x", x + w / 2).attr("y", ty).attr("text-anchor", "middle").text(line);
+            ty += LINE_H;
+        });
+
+        cardG.node().__sticky = {
+            centered: true,
+            x: x + w / 2, y: y0 + pad,
+            left: x, right: x + w, top: y0, bottom: y1,
+            w: w - 12,
+            pad,
+            tail: ty - y0,
+        };
+
+        // The year belongs to the dated edge, so it stays there while the card
+        // above it slides.
+        g.append("text").attr("class", "bt-anc__year")
+            .attr("x", x + w / 2).attr("y", predates ? dateY + 13 : dateY - 5)
+            .attr("text-anchor", "middle").style("fill", color)
+            .text(fmtYear(sample.year));
+    }
+
     // ------------------------------------------------------------------
     // Export
     // ------------------------------------------------------------------
@@ -843,6 +966,11 @@ export class BlockTree {
             lines.push(t("blockFtdnaTesters", d.placements, d.modern));
         }
         lines.push(t("blockProjectMembers", node.peopleCount));
+        // FTDNA's own count of ancient samples anywhere below this branch, and
+        // how many of them the Atlas can place and map on this very block.
+        if (typeof d.ancient === "number" && d.ancient > 0) {
+            lines.push(t("blockAncient", d.ancient, node.ancient.length));
+        }
         if (!isRoot) lines.push(`<i>${t("blockClickHint")}</i>`);
         return lines.join("<br>");
     }

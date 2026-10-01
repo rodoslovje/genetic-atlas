@@ -53,7 +53,10 @@ export default {
         térképen keresi meg mindazokat, akik onnan származnak.</p>
         <p>A <strong>Címkék megjelenítése</strong> az oldalsávban minden jelölő mellé kiírja az ős nevét
         (vagy a vezetéknevet). A félkövér nevek azoké a tagoké, akik a vonalukra nézve a legtöbbet eláruló
-        tesztet végezték el — Y-DNS esetén a Big Y-t, mtDNS esetén a teljes mitokondriális szekvenciát.</p>`,
+        tesztet végezték el — Y-DNS esetén a Big Y-t, mtDNS esetén a teljes mitokondriális szekvenciát.</p>
+        <p>Bekapcsolt <strong>ősi kapcsolatok</strong> mellett korszínekben rajzolt rombuszok és gyűrűk
+        jelennek meg a jelölők között. Ezek feltárt temetkezések, nem a projekt tagjai – lásd lentebb az
+        <em>Ősi kapcsolatok</em> részt.</p>`,
         },
         {
             id: "tree",
@@ -103,6 +106,34 @@ export default {
         húzódó útvonal vezet vissza a gyökér felé.</p>`,
         },
         {
+            id: "ancient",
+            heading: "Ősi kapcsolatok",
+            body: `
+        <p>Az oldalsávban található <strong>Ősi kapcsolatok</strong> olyan feltárt temetkezések rétegét
+        adja hozzá, amelyek DNS-ét közzétették, és amelyeket a FamilyTreeDNA az Atlaszban megrajzolt
+        ágak valamelyikére helyez. A réteg alapértelmezés szerint ki van kapcsolva, az alatta lévő sor
+        pedig megszámolja az éppen látható temetkezéseket.</p>
+        <p>Ezek nem a projekt tagjai, és soha nem is úgy jelennek meg. A térképen egy temetkezés
+        <strong>rombusz</strong> (apai vonal) vagy <strong>gyűrű</strong> (anyai vonal) a lelőhelyén, és
+        nem a haplocsoport, hanem az a kor adja a színét, amelyben az illető élt. A fában annál az ágnál
+        lóg, ahol a vonala találkozik a miénkkel, dőlt betűvel, egy ⚱ jel után, az évszámmal együtt. A
+        blokkfában saját oszlopot kap, mint egy tag – de olyat, amely a halál événél megáll, és nem fut
+        el a jelenig; ez az évszám a lezáró élén olvasható.</p>
+        <p>Fölé mutatva látszik, ki volt: a kormeghatározás és annak tartománya, a lelőhely, a régészeti
+        kultúra, a maradványok haplocsoportja, az az ág, ahol a két vonal találkozik, a közös ős kora,
+        valamint a DNS-t közlő tanulmány. A szaggatott körvonal azt jelenti, hogy a FamilyTreeDNA
+        bizonytalannak jelöli a besorolást – a maradványok az adott ág mutációit hordozzák, de az alatta
+        lévőket nem, így a temetkezés az ág bármely pontjához tartozhat.</p>
+        <p>A réteg ugyanúgy követi a vonalszűrőket és a keresést, mint minden más. Egy vezetéknévre
+        keresve megmaradnak az adott család ágainak ősi kapcsolatai, így egyetlen keresés megmutatja a
+        tesztelt tagokat és a vonaluk által érintett temetkezéseket is; egy kultúrára vagy lelőhelyre
+        keresve (<code>Avar</code>, <code>Corded Ware</code>, <code>Kunpeszér</code>) pedig maguk a
+        temetkezések kerülnek elő.</p>
+        <p>Csak azok a temetkezések jelennek meg, amelyek egyszerre elhelyezhetők és térképre tehetők –
+        azok, amelyekhez a FamilyTreeDNA ágat és koordinátákat is megad. Sok közzétett minta egyiket sem
+        kapja meg, ezek kimaradnak.</p>`,
+        },
+        {
             id: "search",
             heading: "Keresés",
             body: `
@@ -112,7 +143,10 @@ export default {
         annak minden leszármazottja előkerül, nem csak azok a tagok, akiket pontosan addig teszteltek.</p>
         <p>A mező alatti számláló mutatja, hányan felelnek meg; ha senki, a szöveg pirosra vált. A keresés
         a megnyitott nézetre vonatkozik: a térképen szűri a jelölőket, a fán a megfelelő vonalakra metszi,
-        a blokkfában pedig kiemeli a megtalált tagokat.</p>`,
+        a blokkfában pedig kiemeli a megtalált tagokat.</p>
+        <p>Bekapcsolt ősi kapcsolatok mellett a keresés megtartja a megtalált személyek ágain lévő
+        temetkezéseket is, a temetkezéseket pedig nevük, kultúrájuk vagy lelőhelyük alapján is
+        megtalálja.</p>`,
         },
         {
             id: "filters",
@@ -146,7 +180,8 @@ export default {
             body: `
         <p>A böngésző címsora őrzi az atlasz állapotát — a megnyitott nézetet, a keresést, a kiválasztott
         vonalakat, a nagyítást és azt az ágat, amelyből a blokkfa indul. A cím másolásával tehát pontosan
-        azt a nézetet osztja meg, amelyet maga is lát, könyvjelzővel pedig később visszatalál hozzá.</p>`,
+        azt a nézetet osztja meg, amelyet maga is lát, könyvjelzővel pedig később visszatalál hozzá.</p>
+        <p>Az is a címben utazik, hogy az ősi kapcsolatok látszanak-e.</p>`,
         },
         {
             id: "language",

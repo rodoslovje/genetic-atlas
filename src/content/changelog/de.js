@@ -16,6 +16,23 @@ export default {
 
     entries: [
         {
+            date: "2026-09-27",
+            items: [
+                {
+                    title: "Antike Verbindungen",
+                    text: `Im Bedienfeld gibt es die neue Option <strong>Antike
+                        Verbindungen</strong>, die die ausgegrabenen Bestattungen hereinholt, die
+                        FamilyTreeDNA den Zweigen des Atlas zuordnet – awarenzeitliche Gräber in
+                        Niederösterreich, Schnurkeramik-Bestattungen in Böhmen, einen mittelalterlichen
+                        Mann aus Istrien und hunderte mehr. Auf der Karte erscheinen sie an ihrem Fundort,
+                        im Baum an dem Zweig, an dem ihre Linie auf Ihre trifft, und im Blockbaum als
+                        Spalte, die im Todesjahr endet. Suchen Sie bei eingeschalteter Option nach einem
+                        Nachnamen, um zu sehen, welche Bestattungen auf der Linie dieser Familie
+                        liegen.`,
+                },
+            ],
+        },
+        {
             date: "2026-09-16",
             items: [
                 {

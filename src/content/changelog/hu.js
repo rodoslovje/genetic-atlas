@@ -16,6 +16,22 @@ export default {
 
     entries: [
         {
+            date: "2026-09-27",
+            items: [
+                {
+                    title: "Ősi kapcsolatok",
+                    text: `Az oldalsávban új <strong>Ősi kapcsolatok</strong> lehetőség jelent
+                        meg, amely behozza azokat a feltárt temetkezéseket, amelyeket a FamilyTreeDNA az
+                        Atlasz ágaira helyez: avar kori sírokat Alsó-Ausztriából, zsinegdíszes kerámia
+                        kultúrájú temetkezéseket Csehországból, egy középkori férfit Isztriából és még
+                        több százat. A térképen a lelőhelyükön jelennek meg, a fában annál az ágnál, ahol
+                        a vonaluk találkozik az önével, a blokkfában pedig olyan oszlopként, amely a halál
+                        événél véget ér. Bekapcsolt lehetőség mellett keressen rá egy vezetéknévre, és
+                        látni fogja, mely temetkezések esnek az adott család vonalára.`,
+                },
+            ],
+        },
+        {
             date: "2026-09-16",
             items: [
                 {

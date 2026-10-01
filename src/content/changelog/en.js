@@ -31,6 +31,21 @@ export default {
 
     entries: [
         {
+            date: "2026-09-27",
+            items: [
+                {
+                    title: "Ancient connections",
+                    text: `The panel has a new <strong>Ancient connections</strong> option
+                        that brings in the excavated burials FamilyTreeDNA places on the branches of the
+                        Atlas — Avar-period graves in Lower Austria, Corded Ware burials in Bohemia, a
+                        medieval man from Istria, and hundreds more. They appear on the map at the site
+                        they were dug up, in the tree beside the branch where their line meets yours, and
+                        in the block tree as a column that ends at the year the person died. Search a
+                        surname with the option on to see which burials sit on that family's line.`,
+                },
+            ],
+        },
+        {
             date: "2026-09-16",
             items: [
                 {

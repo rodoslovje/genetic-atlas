@@ -1,4 +1,4 @@
-import { state, translations, t, loadData, loadTranslation, initFilters, updateURLState, ydnaPeopleData, mtdnaPeopleData, ydnaGroupRoots, mtdnaGroupRoots, matchesSearchQuery, currentView, blockStateKeys } from "./shared.js";
+import { state, translations, t, loadData, loadAncientData, loadTranslation, initFilters, updateURLState, ydnaPeopleData, mtdnaPeopleData, ydnaGroupRoots, mtdnaGroupRoots, matchesSearchQuery, matchesAncientQuery, getAncientSamples, currentView, kindOfView, blockStateKeys } from "./shared.js";
 
 function currentLangDict() {
     return translations[state.currentLang] || translations.en;
@@ -685,6 +685,17 @@ function validateSearch() {
             matchCount += checkPeople(mtdnaPeopleData, state.mtdnaSelectedGroups, mtdnaGroupRoots);
         }
 
+        // With the ancient layer on, a search for a culture or a dig site ("Avar",
+        // "Kunpeszér") matches burials and nothing else — a real result, so it
+        // counts and the box must not turn red. Only burials that match the text
+        // count; the ones a matching member drags in are shown, not found.
+        const ancientKinds = currentView === "map" ? ["y", "mt"]
+            : (currentView === "ydna" || currentView === "mtdna") ? [kindOfView(currentView)] : [];
+        for (const kind of ancientKinds) {
+            matchCount += getAncientSamples(kind)
+                .filter((s) => matchesAncientQuery(s, state.searchQuery)).length;
+        }
+
         hasResults = matchCount > 0;
         if (searchCounter) {
             searchCounter.innerText = t("searchMatches", matchCount);
@@ -696,12 +707,39 @@ function validateSearch() {
     searchInput.style.color = hasResults ? "" : "#e53e3e";
 }
 
+// Redraw whichever view is on screen. The map redraws itself on filterChanged /
+// searchChanged; this is for the changes that are neither (the ancient layer).
+function refreshCurrentView() {
+    const view = (window.location.hash || "#map").substring(1);
+    if (view === "ydna") ydna.refresh();
+    else if (view === "mtdna") mtdna.refresh();
+    else if (view === "map" && mapVis.mapInitialized) mapVis.refreshMap();
+}
+
+// How many ancient burials the current view is showing, under the checkbox. The
+// map shows both lineages at once, a lineage view only its own.
+function updateAncientCount() {
+    const el = document.getElementById("ancient-count");
+    if (!el) return;
+    if (!state.showAncient) {
+        el.innerText = "";
+        return;
+    }
+    const view = (window.location.hash || "#map").substring(1);
+    const kinds = view === "map" ? ["y", "mt"] : [kindOfView(view)];
+    const count = kinds.reduce((sum, kind) => sum + getAncientSamples(kind).length, 0);
+    el.innerText = t("ancientShown", count.toLocaleString(state.currentLang));
+}
+
 window.addEventListener("filterChanged", () => {
     validateSearch();
+    updateAncientCount();
     const view = (window.location.hash || "#map").substring(1);
     if (view === "ydna") ydna.refresh();
     else if (view === "mtdna") mtdna.refresh();
 });
+
+window.addEventListener("searchChanged", updateAncientCount);
 
 function applySearchToCurrentView() {
     validateSearch();
@@ -780,6 +818,7 @@ function handleHashChange() {
     const treeOptions = document.getElementById("tree-options");
     const modeSection = document.getElementById("mode-section");
     const mapOptions = document.getElementById("map-options");
+    const ancientOptions = document.getElementById("ancient-options");
     const ydnaEras = document.getElementById("ydna-eras");
     const exportBtn = document.getElementById("export-btn");
     const resetBtn = document.getElementById("reset-btn");
@@ -807,6 +846,7 @@ function handleHashChange() {
         // re-point at whichever one was just opened.
         if (isTree) syncModeToggle();
         if (mapOptions) mapOptions.style.display = isMap ? "block" : "none";
+        if (ancientOptions) ancientOptions.style.display = "block";
 
         if (isTree && ydnaEras) ydnaEras.style.display = "block";
         else if (ydnaEras) ydnaEras.style.display = "none";
@@ -817,6 +857,9 @@ function handleHashChange() {
 
         loadData().then(async () => {
             initFilters();
+            // An ?anc=1 link opens straight into the layer, so its data has to be
+            // there before the view is first drawn.
+            if (state.showAncient) await loadAncientData();
             const codes = [
                 ...(ydnaPeopleData || []).map(p => p.country),
                 ...(mtdnaPeopleData || []).map(p => p.country),
@@ -832,6 +875,7 @@ function handleHashChange() {
                 setTimeout(() => mapVis.initMap(), 50);
             }
             validateSearch();
+            updateAncientCount();
         });
     } else {
         if (lineageYdna) lineageYdna.style.display = "none";
@@ -910,6 +954,28 @@ async function initApp() {
         });
     });
     syncModeToggle();
+
+    const chkShowAncient = document.getElementById("chk-show-ancient");
+    if (chkShowAncient) {
+        chkShowAncient.checked = state.showAncient;
+        chkShowAncient.addEventListener("change", async (e) => {
+            state.showAncient = e.target.checked;
+            updateURLState();
+            // The ancient files are only fetched once, the first time the layer
+            // is asked for; the checkbox is disabled while that is in flight so
+            // it can't be toggled into a half-loaded state.
+            if (state.showAncient) {
+                chkShowAncient.disabled = true;
+                try {
+                    await loadAncientData();
+                } finally {
+                    chkShowAncient.disabled = false;
+                }
+            }
+            refreshCurrentView();
+            updateAncientCount();
+        });
+    }
 
     const chkShowLabels = document.getElementById("chk-show-labels");
     if (chkShowLabels) {

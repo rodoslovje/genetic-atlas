@@ -176,10 +176,16 @@ body {
 }
 
 #lineage-count-ydna,
-#lineage-count-mtdna {
+#lineage-count-mtdna,
+#ancient-count {
   font-size: 11px;
   color: var(--srd-ink-subtle);
   margin: 4px 0 6px;
+}
+
+#ancient-count {
+  margin-bottom: 0;
+  padding-left: 22px;
 }
 
 /* --- Era list ------------------------------------------------- */
@@ -250,6 +256,14 @@ body {
   font-size: 13px;
 }
 
+/* Ancient connections in the tree: an excavated burial, not a project member,
+   so the label is set apart in italics rather than in the member navy. */
+.node--ancient text {
+  font-size: 12px;
+  font-style: italic;
+  fill: var(--srd-ink-muted);
+}
+
 .node--autoplaced text {
   fill: var(--srd-error) !important;
   font-weight: bold;
@@ -274,6 +288,11 @@ body {
 }
 
 .ydna-square-marker {
+  background: none;
+  border: none;
+}
+
+.ancient-marker {
   background: none;
   border: none;
 }
@@ -341,6 +360,11 @@ body {
 .tooltip b {
   color: var(--srd-ink);
   font-weight: 600;
+}
+
+/* Secondary detail inside a tooltip: a sample code, a date range. */
+.tooltip-note {
+  color: var(--srd-ink-subtle);
 }
 
 .tooltip-link {
@@ -776,4 +800,40 @@ body:has(#sidebar.open) .tree-minimap {
 .bt-sample.bt-sample--match rect {
   fill: var(--srd-warn-bg);
   stroke: var(--srd-warn);
+}
+
+/* Ancient connections: a column that stops at the burial's own date. Fill and
+   stroke colours are the era colours, set inline where the column is drawn. */
+.bt-anc rect {
+  stroke-width: 1.5px;
+  transition: fill-opacity 0.15s;
+}
+
+.bt-anc:hover rect {
+  fill-opacity: 0.34 !important;
+}
+
+.bt-anc__edge {
+  stroke-width: 2.5px;
+}
+
+.bt-anc__code {
+  font-size: 10px;
+  font-weight: 600;
+  fill: var(--srd-ink-muted);
+}
+
+.bt-anc__name {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--srd-ink);
+}
+
+.bt-anc__year {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.bt-anc.bt-anc--match .bt-anc__name {
+  fill: var(--srd-brand);
 }

@@ -56,7 +56,10 @@ export default {
         that branch, and the <strong>place</strong> searches the map for everyone from it.</p>
         <p><strong>Show labels</strong>, in the panel, writes the ancestor's name (or the surname)
         beside each marker. Names in bold belong to members who took the most informative test for
-        their lineage — Big Y for Y-DNA, the full mitochondrial sequence for mtDNA.</p>`,
+        their lineage — Big Y for Y-DNA, the full mitochondrial sequence for mtDNA.</p>
+        <p>With <strong>Ancient connections</strong> switched on, diamonds and rings in era colours
+        appear among the markers. Those are excavated burials, not project members — see <em>Ancient
+        connections</em> below.</p>`,
         },
         {
             id: "tree",
@@ -107,6 +110,33 @@ export default {
         at the top of the view, lead back up towards the root.</p>`,
         },
         {
+            id: "ancient",
+            heading: "Ancient connections",
+            body: `
+        <p><strong>Ancient connections</strong>, in the panel, adds a layer of excavated burials whose
+        DNA has been published and which FamilyTreeDNA places on one of the branches drawn in the
+        Atlas. It is off until you switch it on, and the line under it counts the burials the current
+        view is showing.</p>
+        <p>These are not project members, and they are never drawn as one. On the map a burial is a
+        <strong>diamond</strong> (paternal) or a <strong>ring</strong> (maternal) at the excavation
+        site, coloured by the era the person lived in rather than by lineage. In the tree it hangs off
+        the branch where its line meets ours, in italics behind a ⚱ and with its date. In the block
+        tree it gets a column of its own, like a member — but one that stops at the year the person
+        died instead of running on to the present, with that year written on its closing edge.</p>
+        <p>Hovering over one shows who it was: the date and the range around it, the site, the
+        archaeological culture, the haplogroup the remains carry, the branch where that line and ours
+        meet, when that shared ancestor lived, and the study that published the DNA. A dashed outline
+        means FamilyTreeDNA marks the placement as uncertain — the remains carry the mutations of that
+        branch but none below it, so the burial could belong anywhere along it.</p>
+        <p>The layer follows the lineage filters and the search like everything else. Searching for a
+        surname keeps the ancient connections of that family's branches, so one search shows both the
+        tested members and the burials their line meets; searching for a culture or a site
+        (<code>Avar</code>, <code>Corded Ware</code>, <code>Kunpeszér</code>) finds the burials
+        themselves.</p>
+        <p>Only burials that can be both placed and mapped are shown — the ones FamilyTreeDNA gives
+        both a branch and coordinates for. Many published samples have neither and are left out.</p>`,
+        },
+        {
             id: "search",
             heading: "Searching",
             body: `
@@ -117,7 +147,9 @@ export default {
         members tested exactly to it.</p>
         <p>The counter under the box says how many people match; when nothing does, the text turns
         red. The search applies to whichever view is open: it filters the markers on the map, prunes
-        the tree to the matching lines, and highlights the matching members in the block tree.</p>`,
+        the tree to the matching lines, and highlights the matching members in the block tree.</p>
+        <p>With ancient connections switched on, a search also keeps the burials that sit on the
+        branches of the people it matched, and finds burials by their own name, culture or site.</p>`,
         },
         {
             id: "filters",
@@ -153,7 +185,8 @@ export default {
             body: `
         <p>The address in the browser keeps the state of the Atlas — the open view, the search, the
         chosen lineages, the zoom, and which branch a block tree starts from. Copying the address
-        therefore shares the exact view you are looking at, and a bookmark brings it back later.</p>`,
+        therefore shares the exact view you are looking at, and a bookmark brings it back later.</p>
+        <p>Whether ancient connections are shown travels in the address as well.</p>`,
         },
         {
             id: "language",

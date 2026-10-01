@@ -16,6 +16,23 @@ export default {
 
     entries: [
         {
+            date: "2026-09-27",
+            items: [
+                {
+                    title: "Connexions anciennes",
+                    text: `Le panneau propose une nouvelle option <strong>Connexions
+                        anciennes</strong> qui fait apparaître les sépultures fouillées que FamilyTreeDNA
+                        rattache aux branches de l'Atlas : tombes de l'époque avare en Basse-Autriche,
+                        sépultures de la céramique cordée en Bohême, un homme médiéval d'Istrie, et des
+                        centaines d'autres. Elles apparaissent sur la carte à l'endroit de la fouille,
+                        dans l'arbre à côté de la branche où leur lignée rejoint la vôtre, et dans l'arbre
+                        en blocs sous forme de colonne qui s'arrête à l'année du décès. Avec l'option
+                        activée, cherchez un nom de famille pour voir quelles sépultures se trouvent sur
+                        la lignée de cette famille.`,
+                },
+            ],
+        },
+        {
             date: "2026-09-16",
             items: [
                 {

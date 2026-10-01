@@ -7,6 +7,8 @@ Usage:
     python tools/ftdna-get-paths.py --mode full        # both, full rebuild
     python tools/ftdna-get-paths.py --mode variants    # backfill variant lists for nodes
                                                        # that were only seen as ancestors
+    python tools/ftdna-get-paths.py --mode ancient     # backfill ancient connections for
+                                                       # nodes never fetched directly
     python tools/ftdna-get-paths.py --limit 100        # stop after 100 requests
 
 Each node in the output carries:
@@ -18,6 +20,17 @@ Each node in the output carries:
     variants                      the block's variants - equivalent SNP names for Y-DNA,
                                   mutations for mtDNA; present only on nodes that were
                                   fetched directly (see --mode variants)
+
+Every run also writes the ancient connections it saw to
+data/output/slo-{y,mt}dna-ancient.json:
+
+    fetched                       haplogroups whose own ancient list has been read
+    samples                       one record per ancient burial, keyed by FTDNA's code
+
+A burial is kept only when the app can both place and map it: it needs a
+haplogroup_mrca that is in the paths file (the branch where it joins our tree),
+coordinates, and a haplogroup of its own for this lineage. A burial reached from
+several haplogroups is stored once, on the deepest MRCA seen for it.
 
 On an HTTP 429 a request is retried once after RATE_LIMIT_RETRY_DELAY; if FTDNA is
 still throttling, the run stops and saves what it has (every successful fetch is
@@ -85,6 +98,11 @@ CONFIGS = {
     "y": {
         "input": "data/output/slo-ydna.json",
         "output": "data/output/slo-ydna-paths.json",
+        "ancient_output": "data/output/slo-ydna-ancient.json",
+        # Which haplogroup of an ancient sample belongs to this lineage, and
+        # which one is worth keeping as a side note.
+        "ancient_hg_field": "haplogroup_y",
+        "ancient_other_field": "haplogroup_mt",
         "url_template": "https://discover.familytreedna.com/resources/y-dna/{hg}.json",
         "major_roots": YDNA_MAJOR_ROOTS,
         "include_group_in_targets": False,
@@ -98,6 +116,9 @@ CONFIGS = {
     "mt": {
         "input": "data/output/slo-mtdna.json",
         "output": "data/output/slo-mtdna-paths.json",
+        "ancient_output": "data/output/slo-mtdna-ancient.json",
+        "ancient_hg_field": "haplogroup_mt",
+        "ancient_other_field": "haplogroup_y",
         "url_template": "https://discover.familytreedna.com/resources/mtdna/{hg}.json",
         "major_roots": MTDNA_MAJOR_ROOTS,
         "include_group_in_targets": True,
@@ -123,6 +144,14 @@ FIELD_ORDER = [
     "placements", "modern", "ancient", "variants",
 ]
 COUNT_FIELDS = ("placements", "modern", "ancient")
+
+
+# Canonical key order for one ancient sample.
+ANCIENT_FIELD_ORDER = [
+    "code", "name", "mrca", "haplogroup", "otherHaplogroup", "year", "years",
+    "tmrca", "latitude", "longitude", "site", "geography", "country", "culture",
+    "period", "sex", "uncertain", "studies",
+]
 
 
 def is_valid_hg(value):
@@ -280,6 +309,115 @@ def store_path_data(path_data, nodes_db, hg):
                    fields=fields, fetched=(node_name == hg))
 
 
+# ---------------------------------------------------------------------------
+# Ancient connections
+# ---------------------------------------------------------------------------
+
+def parse_ancient_entry(item, cfg, nodes_db):
+    """One record from the payload's `ancient` list, or None when the app could
+    not use it: it has to be placeable (a MRCA haplogroup that is in the paths
+    file), mappable (coordinates) and dated, and it has to carry a haplogroup of
+    its own for this lineage."""
+    if not isinstance(item, dict):
+        return None
+    mrca = item.get("haplogroup_mrca")
+    own = item.get(cfg["ancient_hg_field"])
+    lat, lon = item.get("latitude"), item.get("longitude")
+    year = item.get("age_estimate_mean")
+    if not (is_valid_hg(mrca) and mrca in nodes_db and is_valid_hg(own)):
+        return None
+    if not (isinstance(lat, (int, float)) and isinstance(lon, (int, float))):
+        return None
+    if not isinstance(year, (int, float)):
+        return None
+    code = item.get("code")
+    if not code:
+        return None
+
+    rec = {
+        "code": code,
+        "name": item.get("name") or code,
+        "mrca": mrca,
+        "haplogroup": own,
+        "otherHaplogroup": item.get(cfg["ancient_other_field"]),
+        "year": round(year),
+        # [oldest, youngest], the same order as the nodes' age68 / age99 bounds.
+        "years": [item["age_estimate_upper"], item["age_estimate_lower"]]
+                 if item.get("age_estimate_upper") is not None
+                 and item.get("age_estimate_lower") is not None else None,
+        "tmrca": (item.get("time_mrca") or {}).get("mean"),
+        "latitude": round(lat, 6),
+        "longitude": round(lon, 6),
+        "site": item.get("site"),
+        "geography": item.get("geography"),
+        "country": item.get("country_name"),
+        "culture": item.get("culture"),
+        "period": item.get("time_period"),
+        "sex": item.get("sex"),
+        "uncertain": True if item.get("uncertain_placement") else None,
+        "studies": item.get("studies") or None,
+    }
+    return {k: v for k, v in rec.items() if v is not None and v != ""}
+
+
+def merge_ancient(ancient_db, rec, nodes_db):
+    """Store one burial, preferring the deepest MRCA it has been seen with: the
+    same sample appears in the list of every haplogroup it connects to, and the
+    deepest of those is where it belongs on our tree."""
+    prev = ancient_db["samples"].get(rec["code"])
+    if prev is not None and len(ancestry_of(prev["mrca"], nodes_db)) >= len(ancestry_of(rec["mrca"], nodes_db)):
+        return
+    ancient_db["samples"][rec["code"]] = rec
+
+
+def collect_ancient(payload, ancient_db, hg, cfg, nodes_db):
+    """The payload's `ancient` list belongs to the haplogroup that was requested,
+    so the node counts as read even when nothing in the list is usable."""
+    if ancient_db is None or not isinstance(payload, dict):
+        return
+    ancient_db["fetched"].add(hg)
+    for item in payload.get("ancient") or []:
+        rec = parse_ancient_entry(item, cfg, nodes_db)
+        if rec:
+            merge_ancient(ancient_db, rec, nodes_db)
+
+
+def load_ancient(cfg):
+    db = {"fetched": set(), "samples": {}}
+    path = cfg["ancient_output"]
+    if not os.path.exists(path):
+        return db
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            stored = json.load(f)
+        db["fetched"] = set(stored.get("fetched") or [])
+        for rec in stored.get("samples") or []:
+            if rec.get("code"):
+                db["samples"][rec["code"]] = rec
+        print(f"Loaded {len(db['samples'])} ancient samples from {path} "
+              f"({len(db['fetched'])} haplogroups read)")
+    except Exception as e:
+        print(f"Warning: could not read {path}: {e}")
+    return db
+
+
+def save_ancient(cfg, ancient_db):
+    path = cfg["ancient_output"]
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    samples = sorted(ancient_db["samples"].values(),
+                     key=lambda r: (r.get("year", 0), r.get("code", "")))
+    ordered = [
+        {**{k: r[k] for k in ANCIENT_FIELD_ORDER if k in r},
+         **{k: v for k, v in r.items() if k not in ANCIENT_FIELD_ORDER}}
+        for r in samples
+    ]
+    tmp_path = path + ".tmp"
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        json.dump({"fetched": sorted(ancient_db["fetched"]), "samples": ordered},
+                  f, indent=4, ensure_ascii=False)
+    os.replace(tmp_path, path)
+
+
 def find_path_in_json(obj, target_hg, sentinels, accept_parent_field):
     """Walk arbitrary JSON looking for a list of {name, parentName} dicts that
     represents the path containing target_hg or one of the known root sentinels."""
@@ -306,7 +444,7 @@ def find_path_in_json(obj, target_hg, sentinels, accept_parent_field):
 # Fetching
 # ---------------------------------------------------------------------------
 
-def fetch_one(hg, cfg, nodes_db):
+def fetch_one(hg, cfg, nodes_db, ancient_db=None):
     """Fetch and store one haplogroup path.
 
     A first HTTP 429 is waited out once (RATE_LIMIT_RETRY_DELAY) and the request
@@ -360,6 +498,9 @@ def fetch_one(hg, cfg, nodes_db):
             and "haplogroup" in next_data
             and "ancestors" in next_data):
         store_modern_response(next_data, nodes_db, hg)
+        # After the path, so the MRCA of an ancient sample on a node first seen
+        # in this very response is already known to be in the tree.
+        collect_ancient(next_data, ancient_db, hg, cfg, nodes_db)
         return "ok"
 
     # Shape 2: root JSON object is the haplogroup itself with embedded ancestors
@@ -383,6 +524,7 @@ def fetch_one(hg, cfg, nodes_db):
         return
 
     store_path_data(path_data, nodes_db, hg)
+    collect_ancient(next_data, ancient_db, hg, cfg, nodes_db)
     return "ok"
 
 
@@ -401,14 +543,14 @@ def ancestry_of(hg, nodes_db):
     return out
 
 
-def plan_variants(people, cfg, nodes_db):
-    """Nodes lacking a variants list, most useful first: those on the ancestry
-    of priority testers (Big Y for Y-DNA), youngest first; then the rest."""
+def plan_backfill(missing, people, cfg, nodes_db):
+    """Order a backfill, most useful first: nodes on the ancestry of priority
+    testers (Big Y for Y-DNA, full sequence for mtDNA), youngest first; then the
+    rest. Used by both --mode variants and --mode ancient."""
     priority_nodes = set()
     for p in people:
         if cfg["is_priority_person"](p) and is_valid_hg(p.get("haplogroup")):
             priority_nodes.update(ancestry_of(p["haplogroup"], nodes_db))
-    missing = [h for h, n in nodes_db.items() if "variants" not in n]
 
     def sort_key(h):
         age = nodes_db[h].get("age")
@@ -443,12 +585,20 @@ def run_one(kind, mode, limit):
                 print(f"Warning: could not read {cfg['output']}: {e}")
 
     nodes_db = existing_nodes if mode != "full" else {}
+    ancient_db = load_ancient(cfg) if mode != "full" else {"fetched": set(), "samples": {}}
 
     if mode == "variants":
-        missing_hgs = plan_variants(people, cfg, nodes_db)
+        missing_hgs = plan_backfill([h for h, n in nodes_db.items() if "variants" not in n],
+                                    people, cfg, nodes_db)
         # A node acquires "variants" only when fetched directly, so nothing
         # gets populated as a side effect of an earlier request.
         needs_fetch = lambda hg: "variants" not in nodes_db.get(hg, {})
+    elif mode == "ancient":
+        missing_hgs = plan_backfill([h for h in nodes_db if h not in ancient_db["fetched"]],
+                                    people, cfg, nodes_db)
+        # Same as variants: a node's own ancient list only arrives when that
+        # node is the one requested.
+        needs_fetch = lambda hg: hg not in ancient_db["fetched"]
     else:
         if mode == "full":
             candidates = list(target_haplogroups)
@@ -485,6 +635,7 @@ def run_one(kind, mode, limit):
         with open(tmp_path, "w", encoding="utf-8") as f:
             json.dump(ordered, f, indent=4, ensure_ascii=False)
         os.replace(tmp_path, cfg["output"])
+        save_ancient(cfg, ancient_db)
 
     requests_made = 0
     for idx, hg in enumerate(missing_hgs, 1):
@@ -502,7 +653,7 @@ def run_one(kind, mode, limit):
             return "ok"
         print(f"[{idx}/{len(missing_hgs)}] Fetching path for {hg} ...")
         requests_made += 1
-        status = fetch_one(hg, cfg, nodes_db)
+        status = fetch_one(hg, cfg, nodes_db, ancient_db)
         if status == "ok":
             save()
         if status == "rate_limited":
@@ -516,6 +667,7 @@ def run_one(kind, mode, limit):
 
     save()
     print(f"Saved {len(nodes_db)} nodes to {cfg['output']}")
+    print(f"Saved {len(ancient_db['samples'])} ancient samples to {cfg['ancient_output']}")
     return "ok"
 
 
@@ -523,9 +675,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     parser.add_argument("--kind", choices=["y", "mt"], default=None,
                         help="Lineage to process (omit to process both)")
-    parser.add_argument("--mode", choices=["update", "full", "variants"], default="update",
+    parser.add_argument("--mode", choices=["update", "full", "variants", "ancient"], default="update",
                         help="update: fetch new haplogroups only; full: rebuild everything; "
-                             "variants: fetch nodes that still lack their SNP list")
+                             "variants: fetch nodes that still lack their SNP list; "
+                             "ancient: fetch nodes whose ancient connections are not read yet")
     parser.add_argument("--limit", type=int, default=0,
                         help="Maximum number of HTTP requests per lineage this run "
                              "(0 = unlimited); useful to stay under FTDNA's rate limit")

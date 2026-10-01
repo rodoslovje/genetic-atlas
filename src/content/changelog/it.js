@@ -16,6 +16,22 @@ export default {
 
     entries: [
         {
+            date: "2026-09-27",
+            items: [
+                {
+                    title: "Connessioni antiche",
+                    text: `Nel pannello c'è una nuova opzione <strong>Connessioni
+                        antiche</strong> che porta le sepolture scavate che FamilyTreeDNA colloca sui rami
+                        dell'Atlante: tombe di epoca avara in Bassa Austria, sepolture della cultura della
+                        ceramica cordata in Boemia, un uomo medievale dall'Istria e centinaia di altre.
+                        Sulla mappa compaiono nel luogo dello scavo, nell'albero accanto al ramo in cui la
+                        loro linea incontra la vostra, e nell'albero a blocchi come una colonna che
+                        termina nell'anno della morte. Con l'opzione attiva, cercate un cognome per vedere
+                        quali sepolture si trovano sulla linea di quella famiglia.`,
+                },
+            ],
+        },
+        {
             date: "2026-09-16",
             items: [
                 {

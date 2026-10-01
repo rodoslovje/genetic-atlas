@@ -53,7 +53,10 @@ export default {
         sve koji iz njega potječu.</p>
         <p><strong>Prikaži oznake</strong> u ploči ispisuje uz svaku oznaku ime pretka (ili prezime).
         Podebljana imena pripadaju članovima koji su obavili najpotpuniji test za svoju liniju — Big Y
-        za Y-DNK i puni mitohondrijski slijed za mtDNK.</p>`,
+        za Y-DNK i puni mitohondrijski slijed za mtDNK.</p>
+        <p>Kad su <strong>starodavne povezave</strong> uključene, među oznakama se pojavljuju rombovi i
+        prstenovi u bojama razdoblja. To su iskopani grobovi, a ne članovi projekta – vidjeti
+        <em>Starodavne povezave</em> niže.</p>`,
         },
         {
             id: "tree",
@@ -103,6 +106,32 @@ export default {
         korijenu.</p>`,
         },
         {
+            id: "ancient",
+            heading: "Starodavne povezave",
+            body: `
+        <p><strong>Starodavne povezave</strong> u bočnoj ploči dodaju sloj iskopanih grobova čija je DNA
+        objavljena i koje FamilyTreeDNA smješta na jednu od grana nacrtanih u atlasu. Sloj je isključen
+        dok ga ne uključite, a redak ispod njega broji grobove koje trenutni prikaz pokazuje.</p>
+        <p>To nisu članovi projekta i nikada se ne crtaju kao članovi. Na karti je grob
+        <strong>romb</strong> (očinska linija) ili <strong>prsten</strong> (majčinska linija) na
+        nalazištu, obojen prema razdoblju u kojem je osoba živjela, a ne prema haplogrupi. U stablu visi
+        uz granu na kojoj se njegova linija susreće s našom, kurzivom iza znaka ⚱ i s godinom. U blok
+        stablu dobiva vlastiti stupac, poput člana – ali takav koji staje na godini smrti umjesto da
+        teče do danas, a ta je godina ispisana na njegovu završnom rubu.</p>
+        <p>Prelaskom miša pokazuje se tko je bio: datacija i njezin raspon, nalazište, arheološka
+        kultura, haplogrupa ostataka, grana na kojoj se ta i naša linija susreću, vrijeme zajedničkog
+        pretka i studija koja je DNA objavila. Iscrtkani rub znači da FamilyTreeDNA smještaj označava kao
+        nesiguran – ostaci nose mutacije te grane, ali nijednu ispod nje, pa grob može pripadati bilo
+        kojem mjestu uzduž nje.</p>
+        <p>Sloj slijedi filtre haplogrupa i pretraživanje kao i sve ostalo. Pretraživanje prezimena
+        zadržava starodavne povezave grana te obitelji, pa jedno pretraživanje pokazuje i testirane
+        članove i grobove koje njihova linija susreće; pretraživanje kulture ili nalazišta
+        (<code>Avar</code>, <code>Corded Ware</code>, <code>Kunpeszér</code>) pronalazi same grobove.</p>
+        <p>Prikazani su samo grobovi koje je moguće i smjestiti i staviti na kartu – oni kojima
+        FamilyTreeDNA daje i granu i koordinate. Mnogi objavljeni uzorci nemaju ni jedno ni drugo i
+        izostavljeni su.</p>`,
+        },
+        {
             id: "search",
             heading: "Pretraživanje",
             body: `
@@ -113,7 +142,9 @@ export default {
         nje.</p>
         <p>Brojač ispod polja kaže koliko ljudi odgovara; kada ne odgovara nitko, tekst pocrveni.
         Pretraživanje vrijedi za otvoreni prikaz: na karti filtrira oznake, u stablu obrezuje grane na
-        odgovarajuće linije, a u blokovnom stablu ističe članove koji odgovaraju.</p>`,
+        odgovarajuće linije, a u blokovnom stablu ističe članove koji odgovaraju.</p>
+        <p>Kad su starodavne povezave uključene, pretraživanje zadržava i grobove na granama pronađenih
+        osoba, a grobove pronalazi i po njihovu imenu, kulturi ili nalazištu.</p>`,
         },
         {
             id: "filters",
@@ -145,7 +176,8 @@ export default {
             body: `
         <p>Adresa u pregledniku čuva stanje atlasa — otvoreni prikaz, pretraživanje, odabrane linije,
         približenje i granu iz koje polazi blokovno stablo. Kopiranjem adrese stoga dijelite točno onaj
-        prikaz koji gledate, a zabilješkom ga poslije vraćate.</p>`,
+        prikaz koji gledate, a zabilješkom ga poslije vraćate.</p>
+        <p>U adresi se čuva i to jesu li prikazane starodavne povezave.</p>`,
         },
         {
             id: "language",
