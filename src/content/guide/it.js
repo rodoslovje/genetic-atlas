@@ -131,11 +131,12 @@ export default {
         tratteggiato indica che FamilyTreeDNA segnala la collocazione come incerta — i resti portano le
         mutazioni di quel ramo ma nessuna al di sotto, perciò la sepoltura potrebbe trovarsi in qualsiasi
         punto lungo di esso.</p>
-        <p>Lo strato segue i filtri delle linee e la ricerca come tutto il resto. Cercando un cognome si
-        mantengono le connessioni antiche dei rami di quella famiglia, così una sola ricerca mostra sia i
-        membri testati sia le sepolture che la loro linea incontra; cercando una cultura o un sito
-        (<code>Avar</code>, <code>Corded Ware</code>, <code>Kunpeszér</code>) si trovano le sepolture
-        stesse.</p>
+        <p>Lo strato segue i filtri delle linee e la ricerca come tutto il resto. Cercando una
+        cultura o un sito (<code>Avar</code>, <code>Corded Ware</code>, <code>Kunpeszér</code>) si
+        evidenziano le sepolture stesse. Con <strong>Mostra solo i risultati</strong> spuntato,
+        cercando un cognome si mantengono le connessioni antiche dei rami di quella famiglia, così
+        una sola ricerca mostra sia i membri testati sia le sepolture che la loro linea
+        incontra.</p>
         <p>Sono mostrate solo le sepolture che si possono sia collocare sia mappare — quelle per cui
         FamilyTreeDNA fornisce sia un ramo sia le coordinate. Molti campioni pubblicati non hanno né
         l'uno né le altre e restano fuori.</p>`,
@@ -150,11 +151,18 @@ export default {
         come <code>R-M420</code> trova quindi tutti i suoi discendenti, non soltanto i membri testati
         esattamente fino a quel punto.</p>
         <p>Il contatore sotto il campo dice quante persone corrispondono; quando non ne corrisponde
-        nessuna il testo diventa rosso. La ricerca vale per la vista aperta: sulla mappa filtra i segni,
-        nell'albero lo pota alle linee corrispondenti e nell'albero a blocchi evidenzia i membri
-        trovati.</p>
-        <p>Con le connessioni antiche attive, una ricerca mantiene anche le sepolture poste sui rami
-        delle persone trovate, e trova le sepolture per nome, cultura o sito.</p>`,
+        nessuna il testo diventa rosso. La ricerca <strong>evidenzia</strong> ciò che trova e lascia
+        in vista tutti gli altri, così parenti e vicini di un membro cercato restano attorno a lui.
+        Sulla mappa i segni corrispondenti mantengono il colore pieno mentre gli altri sbiadiscono.
+        Nell'albero si aprono i rami che portano a un risultato, con tutti i membri che vi si
+        trovano e i risultati segnati in ambra, mentre gli altri rami si chiudono. Nell'albero a
+        blocchi le schede dei membri trovati diventano ambrate.</p>
+        <p>Spuntando <strong>Mostra solo i risultati</strong>, sotto il campo, si nasconde in ogni
+        vista tutto ciò che la ricerca non trova: la mappa conserva solo i segni corrispondenti e
+        l'albero solo le linee corrispondenti.</p>
+        <p>Con le connessioni antiche attivate, la ricerca trova le sepolture anche per nome,
+        cultura o sito. Con <strong>Mostra solo i risultati</strong> spuntato, mantiene anche le
+        sepolture che si trovano sui rami delle persone trovate.</p>`,
         },
         {
             id: "filters",

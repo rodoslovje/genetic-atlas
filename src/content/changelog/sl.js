@@ -14,6 +14,19 @@ export default {
 
     entries: [
         {
+            date: "2026-10-01",
+            items: [
+                {
+                    title: "Iskanje poudari, namesto da skrije",
+                    text: `Iskanje zdaj poudari najdene osebe in vse ostale pusti na ogled, tako da
+                        sorodniki in sosedje iskane družine ostanejo ob njej — zbledeli na
+                        zemljevidu, na istih odprtih vejah v drevesu. Obkljukajte <strong>Prikaži
+                        samo zadetke</strong> pod iskalnim poljem, da pogled kot doslej zožite le na
+                        zadetke.`,
+                },
+            ],
+        },
+        {
             date: "2026-09-27",
             items: [
                 {

@@ -4,7 +4,7 @@ import { zoom, zoomTransform, zoomIdentity } from "d3-zoom";
 import { drag } from "d3-drag";
 import { hierarchy } from "d3-hierarchy";
 const d3 = { select, zoom, zoomTransform, zoomIdentity, drag, hierarchy };
-import { state, t, formatAge, getPersonTooltip, getHaploColor, eraColors, eraColorFor, getSelectedGroups, translations, isProminentPerson, matchesSearchQuery, getAncientSamples, matchesAncientQuery, getAncientTooltip } from "./shared.js";
+import { state, t, formatAge, getPersonTooltip, getHaploColor, eraColors, eraColorFor, getSelectedGroups, translations, isProminentPerson, matchesSearchQuery, searchFilters, getAncientSamples, matchesAncientQuery, getAncientTooltip } from "./shared.js";
 import { getFlagDataUri } from "./flags.js";
 
 const NODE_ROW_HEIGHT = 45;
@@ -253,15 +253,13 @@ export class TreeVisualizer {
         const selectedGroups = getSelectedGroups(this.kind);
         let filteredPeople = peopleData.filter(p => selectedGroups.has(p.group));
 
-        if (state.searchQuery) {
-            filteredPeople = filteredPeople.filter(p => {
-                const isMatch = matchesSearchQuery(p, state.searchQuery);
-                if (isMatch) p.isSearchMatch = true;
-                return isMatch;
-            });
-        } else {
-            filteredPeople.forEach(p => p.isSearchMatch = false);
-        }
+        // A search highlights its matches; the branches they sit on open below
+        // (markMatches), and everyone else on those branches stays in view.
+        // Only "Show only matches" drops the rest.
+        filteredPeople.forEach(p => {
+            p.isSearchMatch = !!state.searchQuery && matchesSearchQuery(p, state.searchQuery);
+        });
+        if (searchFilters()) filteredPeople = filteredPeople.filter(p => p.isSearchMatch);
 
         // The lineage filter and the search are already applied; a burial that
         // matches the search itself is highlighted like a matching member.
@@ -314,8 +312,12 @@ export class TreeVisualizer {
         let zoomTargetNode = null;
         let currentZoomGroup = this.isSquare ? state.yzoom : state.mzoom;
 
-        if (state.searchQuery) {
-            zoomTargetNode = allNodes.find((d) => d.data.isSearchMatch);
+        // A search that matches nobody leaves the tree as it was rather than
+        // folding every branch shut.
+        const firstMatch = state.searchQuery ? allNodes.find((d) => d.data.isSearchMatch) : null;
+
+        if (firstMatch) {
+            zoomTargetNode = firstMatch;
 
             const markMatches = (node) => {
                 let hasMatch = !!node.data.isSearchMatch;
@@ -444,6 +446,13 @@ export class TreeVisualizer {
 
         const nodes = this.root.descendants();
         const links = this.root.links();
+
+        // What the sidebar reports for this view. descendants() leaves out
+        // collapsed branches, so the number follows what is on screen rather
+        // than what the lineage holds — including after a branch is folded away
+        // by hand, which is why the event is fired here and not only on render.
+        this.ancientDrawn = nodes.filter((d) => d.data.isAncient).length;
+        window.dispatchEvent(new CustomEvent("viewRendered"));
         const isSquare = this.isSquare;
         const peopleData = this.peopleData;
 

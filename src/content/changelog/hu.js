@@ -16,6 +16,19 @@ export default {
 
     entries: [
         {
+            date: "2026-10-01",
+            items: [
+                {
+                    title: "A keresés kiemel, nem rejt el",
+                    text: `A keresés mostantól kiemeli a megtalált személyeket, és mindenki mást
+                        látható helyen hagy, így a keresett család rokonai és szomszédai körülötte
+                        maradnak — a térképen elhalványítva, a fán ugyanazokon a megnyitott ágakon.
+                        A keresőmező alatti <strong>Csak a találatok mutatása</strong> bejelölésével
+                        a nézet a korábbiakhoz hasonlóan a találatokra szűkíthető.`,
+                },
+            ],
+        },
+        {
             date: "2026-09-27",
             items: [
                 {

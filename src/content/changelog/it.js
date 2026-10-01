@@ -16,6 +16,19 @@ export default {
 
     entries: [
         {
+            date: "2026-10-01",
+            items: [
+                {
+                    title: "La ricerca evidenzia invece di nascondere",
+                    text: `Ora una ricerca evidenzia le persone trovate e lascia in vista tutti gli
+                        altri, così parenti e vicini di una famiglia cercata restano attorno a lei —
+                        sbiaditi sulla mappa, sugli stessi rami aperti nell'albero. Spuntate
+                        <strong>Mostra solo i risultati</strong>, sotto il campo di ricerca, per
+                        restringere la vista ai soli risultati come prima.`,
+                },
+            ],
+        },
+        {
             date: "2026-09-27",
             items: [
                 {

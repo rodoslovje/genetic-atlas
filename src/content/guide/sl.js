@@ -123,10 +123,11 @@ export default {
         prednika in študija, ki je DNK objavila. Črtkan rob pomeni, da je FamilyTreeDNA umestitev označil
         kot negotovo – ostanki nosijo mutacije te veje, nobene pod njo pa ne, zato lahko grob pripada
         kateremu koli mestu vzdolž nje.</p>
-        <p>Sloj upošteva filtre rodovnih skupin in iskanje kot vse drugo. Iskanje priimka ohrani
-        starodavne povezave vej te družine, tako da eno iskanje pokaže tako testirane člane kot grobove,
-        ki jih njihova linija sreča; iskanje kulture ali najdišča (<code>Avar</code>, <code>Corded
-        Ware</code>, <code>Kunpeszér</code>) pa najde grobove same.</p>
+        <p>Sloj upošteva filtre rodovnih skupin in iskanje kot vse drugo. Iskanje kulture ali
+        najdišča (<code>Avar</code>, <code>Corded Ware</code>, <code>Kunpeszér</code>) poudari
+        grobove same. Ko je obkljukano <strong>Prikaži samo zadetke</strong>, iskanje priimka ohrani
+        starodavne povezave vej te družine, tako da eno iskanje pokaže tako testirane člane kot
+        grobove, ki jih njihova linija sreča.</p>
         <p>Prikazani so samo grobovi, ki jih je mogoče umestiti in postaviti na zemljevid – tisti, ki
         jim FamilyTreeDNA pripiše vejo in koordinate. Mnogo objavljenih vzorcev nima ne enega ne
         drugega in so izpuščeni.</p>`,
@@ -140,10 +141,17 @@ export default {
         haploskupino na članovi liniji. Iskanje po nadrejeni veji, na primer <code>R-M420</code>, zato
         najde vse njene potomce, ne le članov, testiranih točno do nje.</p>
         <p>Števec pod poljem pove, koliko ljudi ustreza; kadar ne ustreza nihče, se besedilo obarva
-        rdeče. Iskanje velja za odprti pogled: na zemljevidu filtrira oznake, v drevesu obreže veje na
-        ujemajoče se linije, v blokovnem drevesu pa poudari ujemajoče se člane.</p>
-        <p>Ko so starodavne povezave vklopljene, iskanje ohrani tudi grobove na vejah najdenih oseb,
-        grobove pa najde tudi po njihovem imenu, kulturi ali najdišču.</p>`,
+        rdeče. Iskanje najdeno <strong>poudari</strong>, vse ostale pa pusti na ogled, tako da
+        sorodniki in sosedje iskanega člana ostanejo ob njem. Na zemljevidu ujemajoče se oznake
+        obdržijo polno barvo, ostale pa zbledijo. V drevesu se odprejo veje, ki vodijo do zadetkov,
+        z vsemi člani na njih in zadetki, označenimi jantarno, druge veje pa se zaprejo. V blokovnem
+        drevesu se kartice ujemajočih se članov obarvajo jantarno.</p>
+        <p>Če pod poljem obkljukate <strong>Prikaži samo zadetke</strong>, se v vseh pogledih skrije
+        vse, česar iskanje ne ujame: zemljevid obdrži le ujemajoče se oznake, drevo pa le ujemajoče
+        se linije.</p>
+        <p>Ko so starodavne povezave vklopljene, iskanje najde grobove tudi po njihovem imenu,
+        kulturi ali najdišču. Ko je obkljukano <strong>Prikaži samo zadetke</strong>, ohrani tudi
+        grobove na vejah najdenih oseb.</p>`,
         },
         {
             id: "filters",

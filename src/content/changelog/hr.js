@@ -14,6 +14,19 @@ export default {
 
     entries: [
         {
+            date: "2026-10-01",
+            items: [
+                {
+                    title: "Pretraživanje ističe umjesto da skriva",
+                    text: `Pretraživanje sada ističe pronađene osobe i sve ostale ostavlja na prikazu,
+                        pa rođaci i susjedi tražene obitelji ostaju uz nju — izblijedjeli na karti,
+                        na istim otvorenim granama u stablu. Označite <strong>Prikaži samo
+                        pogotke</strong> ispod polja za pretraživanje da biste, kao dosad, suzili
+                        prikaz samo na pogotke.`,
+                },
+            ],
+        },
+        {
             date: "2026-09-27",
             items: [
                 {

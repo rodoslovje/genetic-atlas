@@ -134,11 +134,12 @@ export default {
         Eine gestrichelte Kontur bedeutet, dass FamilyTreeDNA die Zuordnung als unsicher kennzeichnet –
         die Überreste tragen die Mutationen dieses Zweigs, aber keine darunter, die Bestattung könnte
         also irgendwo entlang des Zweigs gehören.</p>
-        <p>Die Ebene folgt den Linienfiltern und der Suche wie alles andere. Die Suche nach einem
-        Nachnamen behält die antiken Verbindungen der Zweige dieser Familie, sodass eine Suche sowohl
-        die getesteten Mitglieder als auch die Bestattungen ihrer Linie zeigt; die Suche nach einer
-        Kultur oder einem Fundort (<code>Avar</code>, <code>Corded Ware</code>, <code>Kunpeszér</code>)
-        findet die Bestattungen selbst.</p>
+        <p>Die Ebene folgt den Linienfiltern und der Suche wie alles andere. Die Suche nach einer
+        Kultur oder einem Fundort (<code>Avar</code>, <code>Corded Ware</code>,
+        <code>Kunpeszér</code>) hebt die Bestattungen selbst hervor. Ist <strong>Nur Treffer
+        anzeigen</strong> angekreuzt, behält die Suche nach einem Nachnamen die antiken Verbindungen
+        der Zweige dieser Familie, sodass eine Suche sowohl die getesteten Mitglieder als auch die
+        Bestattungen ihrer Linie zeigt.</p>
         <p>Gezeigt werden nur Bestattungen, die sich zugleich einordnen und verorten lassen – jene, für
         die FamilyTreeDNA sowohl einen Zweig als auch Koordinaten angibt. Viele veröffentlichte Proben
         haben weder das eine noch das andere und bleiben außen vor.</p>`,
@@ -153,12 +154,18 @@ export default {
         übergeordneten Zweig wie <code>R-M420</code> findet daher alle seine Nachkommen, nicht nur die
         genau bis dorthin getesteten Mitglieder.</p>
         <p>Der Zähler unter dem Feld nennt die Zahl der Treffer; gibt es keine, färbt sich der Text
-        rot. Die Suche gilt für die geöffnete Ansicht: Auf der Karte filtert sie die Markierungen, im
-        Baum beschneidet sie ihn auf die passenden Linien, und im Blockbaum hebt sie die passenden
-        Mitglieder hervor.</p>
-        <p>Bei eingeschalteten antiken Verbindungen behält eine Suche auch die Bestattungen auf den
-        Zweigen der gefundenen Personen und findet Bestattungen über ihren Namen, ihre Kultur oder
-        ihren Fundort.</p>`,
+        rot. Die Suche <strong>hebt hervor</strong>, was sie findet, und lässt alle anderen
+        sichtbar, sodass Verwandte und Nachbarn eines gesuchten Mitglieds um es herum bleiben. Auf
+        der Karte behalten die passenden Markierungen ihre volle Farbe, die übrigen verblassen. Im
+        Baum öffnen sich die Zweige, die zu einem Treffer führen, mit allen Mitgliedern darauf und
+        den Treffern bernsteinfarben markiert; die anderen Zweige klappen zu. Im Blockbaum werden
+        die Karten der passenden Mitglieder bernsteinfarben.</p>
+        <p>Wer unter dem Feld <strong>Nur Treffer anzeigen</strong> ankreuzt, blendet in jeder
+        Ansicht alles aus, was die Suche nicht findet: Die Karte behält nur die passenden
+        Markierungen, der Baum nur die passenden Linien.</p>
+        <p>Mit eingeschalteten antiken Verbindungen findet die Suche Bestattungen auch über ihren
+        Namen, ihre Kultur oder ihren Fundort. Ist <strong>Nur Treffer anzeigen</strong> angekreuzt,
+        behält sie außerdem die Bestattungen auf den Zweigen der gefundenen Personen.</p>`,
         },
         {
             id: "filters",

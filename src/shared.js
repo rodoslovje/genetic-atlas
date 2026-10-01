@@ -149,6 +149,9 @@ export const state = {
     // every view, off unless the reader asks for it.
     showAncient: initialParams.get("anc") === "1",
     searchQuery: initialParams.get("q") || "",
+    // A search highlights its matches among everyone else; this narrows every
+    // view down to the matches alone.
+    searchOnly: initialParams.get("qonly") === "1",
     startgroup: initialParams.get("startgroup") || null,
     ydnaSelectedGroups: new Set(),
     mtdnaSelectedGroups: new Set(),
@@ -277,6 +280,11 @@ export function updateURLState() {
     } else {
         params.delete("q");
     }
+    if (state.searchOnly) {
+        params.set("qonly", "1");
+    } else {
+        params.delete("qonly");
+    }
 
     const newUrl = window.location.pathname + "?" + params.toString().replace(/%2C/g, ",") + (window.location.hash || "#map");
     window.history.replaceState(null, "", newUrl);
@@ -286,6 +294,12 @@ export function formatAge(age) {
     if (age === null || age === undefined) return "Unknown";
     const era = age < 0 ? t("bce") : t("ce");
     return `<b>${Math.abs(age).toLocaleString(state.currentLang)} ${era}</b>`;
+}
+
+// Whether the search hides what it doesn't match. By default it only
+// highlights, so a searched person's relatives and neighbours stay in view.
+export function searchFilters() {
+    return !!state.searchQuery && state.searchOnly;
 }
 
 // Single source of truth for the free-text search predicate. Used by the
@@ -499,17 +513,18 @@ function matchedAncestry(kind) {
 // One lineage's ancient samples for the current lineage filter and search —
 // empty when the layer is off or its data is not loaded yet.
 //
-// A search keeps a burial when the burial itself matches it ("Avar",
-// "Kunpeszér") or when it hangs on a branch that a matching member sits below:
-// searching a surname asks to see that family, and its ancient connections are
-// part of what the reader came for.
+// A highlighting search keeps every burial in the lineage; the views mark the
+// ones it matches. With "Show only matches", a search keeps a burial when the
+// burial itself matches it ("Avar", "Kunpeszér") or when it hangs on a branch
+// that a matching member sits below: searching a surname asks to see that
+// family, and its ancient connections are part of what the reader came for.
 export function getAncientSamples(kind) {
     if (!state.showAncient) return [];
     const data = kind === "mt" ? mtdnaAncientData : ydnaAncientData;
     if (!data) return [];
     const groups = getSelectedGroups(kind);
     const inLineage = data.filter((s) => groups.has(s.group));
-    if (!state.searchQuery) return inLineage;
+    if (!searchFilters()) return inLineage;
     const ancestry = matchedAncestry(kind);
     return inLineage.filter((s) => ancestry.has(s.mrca) || matchesAncientQuery(s, state.searchQuery));
 }

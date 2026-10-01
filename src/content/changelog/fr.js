@@ -16,6 +16,20 @@ export default {
 
     entries: [
         {
+            date: "2026-10-01",
+            items: [
+                {
+                    title: "La recherche met en évidence au lieu de masquer",
+                    text: `Une recherche met désormais en évidence les personnes trouvées et laisse
+                        tous les autres visibles, de sorte que les parents et voisins d'une famille
+                        recherchée restent autour d'elle — pâlis sur la carte, sur les mêmes
+                        branches ouvertes dans l'arbre. Cochez <strong>Afficher uniquement les
+                        résultats</strong>, sous le champ de recherche, pour ne garder que les
+                        résultats comme auparavant.`,
+                },
+            ],
+        },
+        {
             date: "2026-09-27",
             items: [
                 {

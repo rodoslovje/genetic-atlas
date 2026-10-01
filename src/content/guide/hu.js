@@ -124,11 +124,12 @@ export default {
         valamint a DNS-t közlő tanulmány. A szaggatott körvonal azt jelenti, hogy a FamilyTreeDNA
         bizonytalannak jelöli a besorolást – a maradványok az adott ág mutációit hordozzák, de az alatta
         lévőket nem, így a temetkezés az ág bármely pontjához tartozhat.</p>
-        <p>A réteg ugyanúgy követi a vonalszűrőket és a keresést, mint minden más. Egy vezetéknévre
-        keresve megmaradnak az adott család ágainak ősi kapcsolatai, így egyetlen keresés megmutatja a
-        tesztelt tagokat és a vonaluk által érintett temetkezéseket is; egy kultúrára vagy lelőhelyre
-        keresve (<code>Avar</code>, <code>Corded Ware</code>, <code>Kunpeszér</code>) pedig maguk a
-        temetkezések kerülnek elő.</p>
+        <p>A réteg ugyanúgy követi a vonalszűrőket és a keresést, mint minden más. Egy kultúrára
+        vagy lelőhelyre keresve (<code>Avar</code>, <code>Corded Ware</code>,
+        <code>Kunpeszér</code>) maguk a temetkezések kapnak kiemelést. Ha a <strong>Csak a találatok
+        mutatása</strong> be van jelölve, egy vezetéknévre keresve megmaradnak az adott család
+        ágainak ősi kapcsolatai, így egyetlen keresés megmutatja a tesztelt tagokat és a vonaluk
+        által érintett temetkezéseket is.</p>
         <p>Csak azok a temetkezések jelennek meg, amelyek egyszerre elhelyezhetők és térképre tehetők –
         azok, amelyekhez a FamilyTreeDNA ágat és koordinátákat is megad. Sok közzétett minta egyiket sem
         kapja meg, ezek kimaradnak.</p>`,
@@ -141,12 +142,18 @@ export default {
         ős</strong> nevét, a <strong>készlet számát</strong>, a <strong>helyet</strong>, valamint minden
         haplocsoportot a tag vonalán. Egy feljebbi ágra, például az <code>R-M420</code>-ra keresve tehát
         annak minden leszármazottja előkerül, nem csak azok a tagok, akiket pontosan addig teszteltek.</p>
-        <p>A mező alatti számláló mutatja, hányan felelnek meg; ha senki, a szöveg pirosra vált. A keresés
-        a megnyitott nézetre vonatkozik: a térképen szűri a jelölőket, a fán a megfelelő vonalakra metszi,
-        a blokkfában pedig kiemeli a megtalált tagokat.</p>
-        <p>Bekapcsolt ősi kapcsolatok mellett a keresés megtartja a megtalált személyek ágain lévő
-        temetkezéseket is, a temetkezéseket pedig nevük, kultúrájuk vagy lelőhelyük alapján is
-        megtalálja.</p>`,
+        <p>A mező alatti számláló mutatja, hányan felelnek meg; ha senki, a szöveg pirosra vált. A
+        keresés <strong>kiemeli</strong>, amit talál, és mindenki mást látható helyen hagy, így a
+        keresett tag rokonai és szomszédai körülötte maradnak. A térképen a megfelelő jelölők
+        megtartják teljes színüket, a többiek elhalványulnak. A fán megnyílnak a találatokhoz vezető
+        ágak, rajtuk minden taggal és borostyánsárgával jelölt találatokkal, a többi ág pedig
+        becsukódik. A blokkfában a megtalált tagok kártyái borostyánsárgák lesznek.</p>
+        <p>A mező alatti <strong>Csak a találatok mutatása</strong> bejelölésével minden nézetben
+        elrejthető mindaz, amit a keresés nem talál: a térképen csak a megfelelő jelölők, a fán csak
+        a megfelelő vonalak maradnak.</p>
+        <p>Bekapcsolt ősi kapcsolatok mellett a keresés a temetkezéseket nevük, kultúrájuk vagy
+        lelőhelyük alapján is megtalálja. Ha a <strong>Csak a találatok mutatása</strong> be van
+        jelölve, a megtalált személyek ágain lévő temetkezéseket is megtartja.</p>`,
         },
         {
             id: "filters",

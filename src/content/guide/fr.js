@@ -131,11 +131,12 @@ export default {
         l'époque de cet ancêtre commun et l'étude qui a publié l'ADN. Un contour en pointillés signifie
         que FamilyTreeDNA juge le placement incertain — les restes portent les mutations de cette branche
         mais aucune en dessous, la sépulture pourrait donc se situer n'importe où le long de celle-ci.</p>
-        <p>La couche suit les filtres de lignées et la recherche comme tout le reste. Chercher un nom de
-        famille conserve les connexions anciennes des branches de cette famille, de sorte qu'une seule
-        recherche montre à la fois les membres testés et les sépultures que leur lignée rencontre ;
-        chercher une culture ou un site (<code>Avar</code>, <code>Corded Ware</code>,
-        <code>Kunpeszér</code>) trouve les sépultures elles-mêmes.</p>
+        <p>La couche suit les filtres de lignées et la recherche comme tout le reste. Chercher une
+        culture ou un site (<code>Avar</code>, <code>Corded Ware</code>, <code>Kunpeszér</code>) met
+        en évidence les sépultures elles-mêmes. Lorsque <strong>Afficher uniquement les
+        résultats</strong> est coché, chercher un nom de famille conserve les connexions anciennes
+        des branches de cette famille, de sorte qu'une seule recherche montre à la fois les membres
+        testés et les sépultures que leur lignée rencontre.</p>
         <p>Seules les sépultures que l'on peut à la fois rattacher et cartographier sont montrées :
         celles pour lesquelles FamilyTreeDNA donne une branche et des coordonnées. Beaucoup
         d'échantillons publiés n'ont ni l'une ni les autres et sont laissés de côté.</p>`,
@@ -150,12 +151,20 @@ export default {
         branche en amont telle que <code>R-M420</code> trouve donc tous ses descendants, et pas seulement
         les membres testés exactement jusque-là.</p>
         <p>Le compteur sous le champ indique combien de personnes correspondent ; lorsqu'aucune ne
-        correspond, le texte passe au rouge. La recherche s'applique à la vue ouverte : sur la carte elle
-        filtre les repères, dans l'arbre elle l'élague aux lignées correspondantes, et dans l'arbre en
-        blocs elle met en évidence les membres trouvés.</p>
-        <p>Lorsque les connexions anciennes sont activées, une recherche conserve aussi les sépultures
-        situées sur les branches des personnes trouvées, et retrouve les sépultures par leur nom, leur
-        culture ou leur site.</p>`,
+        correspond, le texte passe au rouge. La recherche <strong>met en évidence</strong> ce
+        qu'elle trouve et laisse tous les autres visibles, de sorte que les parents et voisins d'un
+        membre recherché restent autour de lui. Sur la carte, les repères correspondants gardent
+        leur pleine couleur tandis que les autres pâlissent. Dans l'arbre, les branches menant à un
+        résultat s'ouvrent, avec tous leurs membres affichés et les résultats marqués en ambre, et
+        les autres branches se replient. Dans l'arbre en blocs, les fiches des membres trouvés
+        deviennent ambrées.</p>
+        <p>Cocher <strong>Afficher uniquement les résultats</strong>, sous le champ, masque dans
+        toutes les vues ce que la recherche ne trouve pas : la carte ne garde que les repères
+        correspondants et l'arbre que les lignées correspondantes.</p>
+        <p>Lorsque les connexions anciennes sont activées, la recherche trouve aussi les sépultures
+        par leur nom, leur culture ou leur site. Lorsque <strong>Afficher uniquement les
+        résultats</strong> est coché, elle conserve également les sépultures situées sur les
+        branches des personnes trouvées.</p>`,
         },
         {
             id: "filters",

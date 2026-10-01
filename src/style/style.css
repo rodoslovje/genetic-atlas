@@ -95,16 +95,24 @@ body {
   position: relative;
 }
 
+/* Below the input rather than inside it, where it covered the search text */
 #search-counter {
-  position: absolute;
-  right: 28px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-family: var(--srd-font-sans);
   font-size: 11px;
   color: var(--srd-ink-subtle);
-  pointer-events: none;
+  margin-top: 4px;
   display: none;
+}
+
+#search-only-item {
+  margin-top: 8px;
+}
+
+/* The checkboxes under the search box read as one list: the sections they sit
+   in keep only the gap between two checkboxes, and the full section gap opens
+   again after the last of them (Ancient connections). */
+#search-section,
+.option-section {
+  margin-bottom: 8px;
 }
 
 #search-clear {
@@ -316,6 +324,11 @@ body {
 
 .marker-name-label.prominent {
   font-weight: bold;
+}
+
+/* Label of a marker the search doesn't match, while it highlights */
+.marker-name-label.dimmed {
+  opacity: 0.45;
 }
 
 .marker-name-label::before {

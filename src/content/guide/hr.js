@@ -123,10 +123,11 @@ export default {
         pretka i studija koja je DNA objavila. Iscrtkani rub znači da FamilyTreeDNA smještaj označava kao
         nesiguran – ostaci nose mutacije te grane, ali nijednu ispod nje, pa grob može pripadati bilo
         kojem mjestu uzduž nje.</p>
-        <p>Sloj slijedi filtre haplogrupa i pretraživanje kao i sve ostalo. Pretraživanje prezimena
+        <p>Sloj slijedi filtre haplogrupa i pretraživanje kao i sve ostalo. Pretraživanje kulture
+        ili nalazišta (<code>Avar</code>, <code>Corded Ware</code>, <code>Kunpeszér</code>) ističe
+        same grobove. Kad je označeno <strong>Prikaži samo pogotke</strong>, pretraživanje prezimena
         zadržava starodavne povezave grana te obitelji, pa jedno pretraživanje pokazuje i testirane
-        članove i grobove koje njihova linija susreće; pretraživanje kulture ili nalazišta
-        (<code>Avar</code>, <code>Corded Ware</code>, <code>Kunpeszér</code>) pronalazi same grobove.</p>
+        članove i grobove koje njihova linija susreće.</p>
         <p>Prikazani su samo grobovi koje je moguće i smjestiti i staviti na kartu – oni kojima
         FamilyTreeDNA daje i granu i koordinate. Mnogi objavljeni uzorci nemaju ni jedno ni drugo i
         izostavljeni su.</p>`,
@@ -141,10 +142,17 @@ export default {
         <code>R-M420</code>, stoga pronalazi sve njezine potomke, a ne samo članove testirane točno do
         nje.</p>
         <p>Brojač ispod polja kaže koliko ljudi odgovara; kada ne odgovara nitko, tekst pocrveni.
-        Pretraživanje vrijedi za otvoreni prikaz: na karti filtrira oznake, u stablu obrezuje grane na
-        odgovarajuće linije, a u blokovnom stablu ističe članove koji odgovaraju.</p>
-        <p>Kad su starodavne povezave uključene, pretraživanje zadržava i grobove na granama pronađenih
-        osoba, a grobove pronalazi i po njihovu imenu, kulturi ili nalazištu.</p>`,
+        Pretraživanje <strong>ističe</strong> ono što pronađe, a sve ostale ostavlja na prikazu, pa
+        rođaci i susjedi traženog člana ostaju uz njega. Na karti oznake koje odgovaraju zadržavaju
+        punu boju, a ostale izblijede. U stablu se otvaraju grane koje vode do pogodaka, sa svim
+        članovima na njima i pogocima označenima jantarnom bojom, a ostale se grane sklapaju. U
+        blokovnom stablu kartice članova koji odgovaraju postaju jantarne.</p>
+        <p>Označite li <strong>Prikaži samo pogotke</strong> ispod polja, u svim se prikazima skriva
+        sve što pretraživanje ne pronađe: karta zadržava samo oznake koje odgovaraju, a stablo samo
+        odgovarajuće linije.</p>
+        <p>Kad su starodavne povezave uključene, pretraživanje pronalazi i grobove po njihovu imenu,
+        kulturi ili nalazištu. Kad je označeno <strong>Prikaži samo pogotke</strong>, zadržava i
+        grobove na granama pronađenih osoba.</p>`,
         },
         {
             id: "filters",

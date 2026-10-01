@@ -46,6 +46,7 @@
     "infoButton": "Dodatne informacije",
     "exporting": "Izvoz...",
     "searchMatches": "Pronađeno: {0}",
+    "searchOnlyMatches": "Prikaži samo pogotke",
     "selectionCount": "Prikazano: {0} od {1}",
     "showLabels": "Prikaži oznake",
     "showAllMajorGroups": "Prikaži sve glavne genetske grupe",

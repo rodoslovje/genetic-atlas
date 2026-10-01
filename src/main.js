@@ -726,8 +726,15 @@ function updateAncientCount() {
         return;
     }
     const view = (window.location.hash || "#map").substring(1);
-    const kinds = view === "map" ? ["y", "mt"] : [kindOfView(view)];
-    const count = kinds.reduce((sum, kind) => sum + getAncientSamples(kind).length, 0);
+    const lineage = activeLineage();
+    // A lineage view reports what it drew — a burial sits on the branch where it
+    // joins the tree, which a drilled-in block tree or a pruned tree may not
+    // show. The map draws every burial of both lineages.
+    const drawn = lineage ? lineage.ancientDrawn : null;
+    const count = drawn !== null && drawn !== undefined
+        ? drawn
+        : (view === "map" ? ["y", "mt"] : [kindOfView(view)])
+            .reduce((sum, kind) => sum + getAncientSamples(kind).length, 0);
     el.innerText = t("ancientShown", count.toLocaleString(state.currentLang));
 }
 
@@ -740,6 +747,7 @@ window.addEventListener("filterChanged", () => {
 });
 
 window.addEventListener("searchChanged", updateAncientCount);
+window.addEventListener("viewRendered", updateAncientCount);
 
 function applySearchToCurrentView() {
     validateSearch();
@@ -756,7 +764,7 @@ window.navigateToSearch = function (view, query) {
     const searchClear = document.getElementById("search-clear");
     if (searchInput) {
         searchInput.value = query;
-        searchInput.style.paddingRight = query ? "75px" : "6px";
+        searchInput.style.paddingRight = query ? "26px" : "6px";
     }
     if (searchClear) searchClear.style.display = query ? "block" : "none";
     updateURLState();
@@ -977,6 +985,19 @@ async function initApp() {
         });
     }
 
+    // Off, a search highlights its matches among everyone else; on, every view
+    // keeps only the matches.
+    const chkSearchOnly = document.getElementById("chk-search-only");
+    if (chkSearchOnly) {
+        chkSearchOnly.checked = state.searchOnly;
+        chkSearchOnly.addEventListener("change", (e) => {
+            state.searchOnly = e.target.checked;
+            updateURLState();
+            refreshCurrentView();
+            updateAncientCount();
+        });
+    }
+
     const chkShowLabels = document.getElementById("chk-show-labels");
     if (chkShowLabels) {
         chkShowLabels.checked = state.showLabels;
@@ -1042,7 +1063,7 @@ async function initApp() {
         searchInput.value = state.searchQuery;
         if (state.searchQuery) {
             searchClear.style.display = "block";
-            searchInput.style.paddingRight = "75px";
+            searchInput.style.paddingRight = "26px";
         } else {
             searchInput.style.paddingRight = "6px";
         }
@@ -1050,7 +1071,7 @@ async function initApp() {
         const updateSearch = (val) => {
             state.searchQuery = val;
             searchClear.style.display = val ? "block" : "none";
-            searchInput.style.paddingRight = val ? "75px" : "6px";
+            searchInput.style.paddingRight = val ? "26px" : "6px";
             validateSearch();
             updateURLState();
 

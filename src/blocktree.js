@@ -17,7 +17,7 @@
 // equivalent SNPs, mtDNA ones the block's mutations. See tools/ftdna-get-paths.py.
 
 import { select } from "d3-selection";
-import { state, t, getPersonTooltip, eraColors, isProminentPerson, translations, updateURLState, matchesSearchQuery, getSelectedGroups, currentView, kindOfView, blockStateKeys, lineageMode, getAncientSamples, matchesAncientQuery, getAncientTooltip } from "./shared.js";
+import { state, t, getPersonTooltip, eraColors, isProminentPerson, translations, updateURLState, matchesSearchQuery, searchFilters, getSelectedGroups, currentView, kindOfView, blockStateKeys, lineageMode, getAncientSamples, matchesAncientQuery, getAncientTooltip } from "./shared.js";
 import { getFlagDataUri } from "./flags.js";
 
 const COL_W = 150;          // column pitch per sample / leaf
@@ -261,12 +261,14 @@ export class BlockTree {
         this.axisSvg.selectAll("*").remove();
         this.drawn = false;
 
-        // People follow the lineage filter; the search only steers the root
-        // and highlights, so relatives of a searched person stay visible.
+        // People follow the lineage filter; the search steers the root and
+        // highlights, so relatives of a searched person stay visible — unless
+        // the reader asked to see only the matches.
         const selected = getSelectedGroups(this.kind);
-        const shown = (this.peopleData || []).filter((p) =>
+        let shown = (this.peopleData || []).filter((p) =>
             selected.has(p.group) && p.haplogroup && this.nodeByHg.has(p.haplogroup));
         const matches = state.searchQuery ? shown.filter((p) => matchesSearchQuery(p, state.searchQuery)) : [];
+        if (searchFilters()) shown = matches;
         this.matchSet = new Set(matches);
         this.indexPeople(shown);
         this.indexAncient();
@@ -299,6 +301,7 @@ export class BlockTree {
             return;
         }
         this.showMessage(null);
+        this.ancientDrawn = this.ancientCols;
         this.draw(tree);
         this.drawn = true;
     }
@@ -312,6 +315,7 @@ export class BlockTree {
     }
 
     showMessage(text) {
+        if (text) this.ancientDrawn = 0;
         this.msg.style("display", text ? "block" : "none").text(text || "");
         this.inner.style("display", text ? "none" : "flex");
     }

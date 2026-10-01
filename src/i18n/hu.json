@@ -46,6 +46,7 @@
     "infoButton": "További információk",
     "exporting": "Exportálás...",
     "searchMatches": "Találatok: {0}",
+    "searchOnlyMatches": "Csak a találatok mutatása",
     "selectionCount": "Megjelenítve: {0} / {1}",
     "showLabels": "Címkék megjelenítése",
     "showAllMajorGroups": "Minden fő genetikai csoport megjelenítése",

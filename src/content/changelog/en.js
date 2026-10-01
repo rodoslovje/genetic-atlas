@@ -31,6 +31,19 @@ export default {
 
     entries: [
         {
+            date: "2026-10-01",
+            items: [
+                {
+                    title: "Search highlights instead of hiding",
+                    text: `A search now highlights the people it finds and keeps everyone else in
+                        view, so the relatives and neighbours of a searched family stay around it —
+                        faded on the map, on the same open branches in the tree. Tick
+                        <strong>Show only matches</strong>, under the search box, to narrow the view
+                        down to the matches as before.`,
+                },
+            ],
+        },
+        {
             date: "2026-09-27",
             items: [
                 {

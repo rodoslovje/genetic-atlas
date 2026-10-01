@@ -30,6 +30,9 @@ function makeLineage(containerId, kind, haploKey, peopleKey, rootsKey) {
                     blockTree.setData(data[haploKey], data[peopleKey]);
                     blockTree.render();
                 }
+                // Counts that depend on what was actually drawn (the ancient
+                // layer) can only be updated once the render has happened.
+                window.dispatchEvent(new CustomEvent("viewRendered"));
             });
         },
         // Reset button: in block mode go back to the automatic starting
@@ -45,6 +48,15 @@ function makeLineage(containerId, kind, haploKey, peopleKey, rootsKey) {
         },
         get blockTreeOpen() {
             return !!(blockTree && blockTree.isOpen);
+        },
+        // Ancient burials this lineage's active mode put on screen. A burial
+        // hangs on the branch where it joins the tree, so a view that starts
+        // below that branch — or a tree pruned past it — draws fewer than the
+        // lineage holds.
+        get ancientDrawn() {
+            if (!api.initialized) return null;
+            const view = lineageMode(kind) === "block" ? blockTree : tree;
+            return view && typeof view.ancientDrawn === "number" ? view.ancientDrawn : null;
         },
         exportBlockTreeSvg() {
             return blockTree ? blockTree.exportSvg() : null;

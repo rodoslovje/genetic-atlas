@@ -16,6 +16,19 @@ export default {
 
     entries: [
         {
+            date: "2026-10-01",
+            items: [
+                {
+                    title: "Die Suche hebt hervor, statt auszublenden",
+                    text: `Eine Suche hebt die gefundenen Personen jetzt hervor und lässt alle anderen
+                        sichtbar, sodass Verwandte und Nachbarn einer gesuchten Familie um sie herum
+                        bleiben — verblasst auf der Karte, auf denselben geöffneten Zweigen im Baum.
+                        Mit <strong>Nur Treffer anzeigen</strong> unter dem Suchfeld wird die
+                        Ansicht wie bisher auf die Treffer beschränkt.`,
+                },
+            ],
+        },
+        {
             date: "2026-09-27",
             items: [
                 {

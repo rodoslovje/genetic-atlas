@@ -46,6 +46,7 @@
     "infoButton": "Informazioni aggiuntive",
     "exporting": "Esportazione...",
     "searchMatches": "Trovati: {0}",
+    "searchOnlyMatches": "Mostra solo i risultati",
     "selectionCount": "Mostrati: {0} di {1}",
     "showLabels": "Mostra etichette",
     "showAllMajorGroups": "Mostra tutti i principali gruppi genetici",

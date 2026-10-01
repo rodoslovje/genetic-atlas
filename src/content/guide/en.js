@@ -129,10 +129,10 @@ export default {
         means FamilyTreeDNA marks the placement as uncertain — the remains carry the mutations of that
         branch but none below it, so the burial could belong anywhere along it.</p>
         <p>The layer follows the lineage filters and the search like everything else. Searching for a
-        surname keeps the ancient connections of that family's branches, so one search shows both the
-        tested members and the burials their line meets; searching for a culture or a site
-        (<code>Avar</code>, <code>Corded Ware</code>, <code>Kunpeszér</code>) finds the burials
-        themselves.</p>
+        culture or a site (<code>Avar</code>, <code>Corded Ware</code>, <code>Kunpeszér</code>)
+        highlights the burials themselves. With <strong>Show only matches</strong> ticked, searching
+        for a surname keeps the ancient connections of that family's branches, so one search shows
+        both the tested members and the burials their line meets.</p>
         <p>Only burials that can be both placed and mapped are shown — the ones FamilyTreeDNA gives
         both a branch and coordinates for. Many published samples have neither and are left out.</p>`,
         },
@@ -146,10 +146,17 @@ export default {
         branch such as <code>R-M420</code> therefore finds everyone descended from it, not only the
         members tested exactly to it.</p>
         <p>The counter under the box says how many people match; when nothing does, the text turns
-        red. The search applies to whichever view is open: it filters the markers on the map, prunes
-        the tree to the matching lines, and highlights the matching members in the block tree.</p>
-        <p>With ancient connections switched on, a search also keeps the burials that sit on the
-        branches of the people it matched, and finds burials by their own name, culture or site.</p>`,
+        red. A search <strong>highlights</strong> what it finds and leaves everyone else in view, so
+        the relatives and neighbours of a searched member stay around them. On the map the matching
+        markers keep their full colour while the rest fade. In the tree the branches leading to a
+        match open, with every member on them shown and the matches marked in amber, and the other
+        branches fold shut. In the block tree the matching members' cards turn amber.</p>
+        <p>Ticking <strong>Show only matches</strong>, under the box, hides everything the search
+        does not match, in every view: the map keeps only the matching markers and the tree only the
+        matching lines.</p>
+        <p>With ancient connections switched on, a search also finds burials by their own name,
+        culture or site. With <strong>Show only matches</strong> ticked, it also keeps the burials
+        that sit on the branches of the people it matched.</p>`,
         },
         {
             id: "filters",

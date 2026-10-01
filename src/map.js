@@ -1,10 +1,10 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { state, ydnaPeopleData, mtdnaPeopleData, getPersonTooltip, getHaploColor, isProminentPerson, matchesSearchQuery, getAncientSamples, getAncientTooltip, eraColorFor } from "./shared.js";
+import { state, ydnaPeopleData, mtdnaPeopleData, getPersonTooltip, getHaploColor, isProminentPerson, matchesSearchQuery, matchesAncientQuery, searchFilters, getAncientSamples, getAncientTooltip, eraColorFor } from "./shared.js";
 
 function bindNameLabel(marker, dir) {
     const offset = { right: [6, 0], left: [-6, 0], top: [0, -6], bottom: [0, 6] }[dir] ?? [6, 0];
-    const className = marker._labelProminent ? "marker-name-label prominent" : "marker-name-label";
+    const className = "marker-name-label" + (marker._labelProminent ? " prominent" : "") + (marker._dimmed ? " dimmed" : "");
     marker.bindTooltip(marker._labelName, {
         permanent: true, direction: dir, offset,
         className, interactive: false,
@@ -14,6 +14,12 @@ function bindNameLabel(marker, dir) {
 // Base spread radius in degrees latitude (~270 m near Slovenia). Markers sharing a
 // coordinate are placed on a circle whose radius scales with sqrt(group size).
 const JITTER_BASE_DEG = 0.0024;
+
+// Opacity of a marker the search doesn't match, while it highlights.
+const DIMMED_OPACITY = 0.25;
+
+// Step between ancient burials sharing an excavation site (~130 m near Slovenia).
+const ANCIENT_NUDGE_DEG = 0.0012;
 
 export class MapVisualizer {
     constructor(containerId) {
@@ -31,6 +37,9 @@ export class MapVisualizer {
         this.mapInitialized = true;
 
         this.map = L.map(this.containerId, { maxZoom: 19 });
+        // Markers a search doesn't match sit in their own pane below every
+        // other marker, so a dimmed square never covers a highlighted circle.
+        this.map.createPane("dimmed").style.zIndex = 390;
         this.markers = L.featureGroup().addTo(this.map);
         // Ancient burials live in their own group: they sit at excavation sites
         // all over Europe, so they must stay out of the project members' bounds
@@ -175,27 +184,39 @@ export class MapVisualizer {
         let hasResults = false;
         let ancientBounds = L.latLngBounds();
         let hasAncientResults = false;
+        // A burial whose paternal and maternal lines both reach the project is in
+        // both lists at the very same coordinate. Count what has already been
+        // placed on each spot so the second mark can be nudged off the first
+        // instead of hiding under it — the ancient equivalent of the jitter rings.
+        const ancientSeenAt = new Map();
 
         const addPersonToMap = (p, isMtDna) => {
             const selectedGroups = isMtDna ? state.mtdnaSelectedGroups : state.ydnaSelectedGroups;
             if (!selectedGroups.has(p.group)) return;
 
-            if (!matchesSearchQuery(p, state.searchQuery)) return;
+            // A search highlights its matches and dims everyone else; with
+            // "Show only matches" the rest are left off the map.
+            const isMatch = matchesSearchQuery(p, state.searchQuery);
+            if (!isMatch && searchFilters()) return;
+            const dimmed = !isMatch;
 
             const coords = this.jitteredCoords.get(p);
             if (!coords) return;
             const { lat, lon } = coords;
 
             const color = getHaploColor(p.group);
+            const pane = dimmed ? { pane: "dimmed" } : {};
             let marker;
             if (isMtDna) {
                 marker = L.circleMarker([lat, lon], {
-                    radius: 6, fillColor: color, color: "#ffffff",
-                    weight: 1.5, opacity: 1, fillOpacity: 0.9
+                    radius: 6, fillColor: color, color: "#ffffff", weight: 1.5,
+                    opacity: dimmed ? DIMMED_OPACITY : 1,
+                    fillOpacity: dimmed ? DIMMED_OPACITY : 0.9,
+                    ...pane
                 });
             } else {
                 const size = 12;
-                const html = `<div style="background-color: ${color}; border: 1.5px solid #ffffff; width: ${size}px; height: ${size}px; opacity: 0.9; box-sizing: border-box; box-shadow: 0 0 1px rgba(0,0,0,0.5);"></div>`;
+                const html = `<div style="background-color: ${color}; border: 1.5px solid #ffffff; width: ${size}px; height: ${size}px; opacity: ${dimmed ? DIMMED_OPACITY : 0.9}; box-sizing: border-box; box-shadow: 0 0 1px rgba(0,0,0,0.5);"></div>`;
                 const icon = L.divIcon({
                     html: html,
                     className: 'ydna-square-marker',
@@ -203,8 +224,9 @@ export class MapVisualizer {
                     iconAnchor: [size / 2, size / 2],
                     popupAnchor: [0, -size / 2]
                 });
-                marker = L.marker([lat, lon], { icon: icon });
+                marker = L.marker([lat, lon], { icon: icon, ...pane });
             }
+            marker._dimmed = dimmed;
 
             const popupContent = `<div style="font-size: 13px; line-height: 1.5;">${getPersonTooltip(p, "", isMtDna ? "mt" : "y", "map")}</div>`;
             marker.bindPopup(popupContent);
@@ -217,33 +239,51 @@ export class MapVisualizer {
             }
 
             this.markers.addLayer(marker);
-            bounds.extend([lat, lon]);
-            hasResults = true;
+            if (isMatch) {
+                bounds.extend([lat, lon]);
+                hasResults = true;
+            }
         };
 
         // An ancient burial is drawn as a diamond (Y-DNA) or a ring (mtDNA) in the
         // colour of its era, at the excavation site — never a flag-shaped marker
         // in a lineage colour, so it can't be mistaken for a project member.
         const addAncientToMap = (s, isMtDna) => {
+            const key = `${s.latitude.toFixed(5)},${s.longitude.toFixed(5)}`;
+            const placed = ancientSeenAt.get(key) || 0;
+            ancientSeenAt.set(key, placed + 1);
+            // First mark stays on the site; each further one steps down-right by
+            // a marker's width, which at any zoom keeps both clickable.
+            const step = placed * ANCIENT_NUDGE_DEG;
+            const lat = s.latitude - step;
+            const lon = s.longitude + step / Math.cos(s.latitude * Math.PI / 180);
+
+            // With "Show only matches", getAncientSamples has already kept just
+            // the burials the search found or reached through a matching member,
+            // so all are drawn in full; otherwise those the text misses are dimmed.
+            const dimmed = !!state.searchQuery && !searchFilters() && !matchesAncientQuery(s, state.searchQuery);
             const color = eraColorFor(s.year);
             const size = 13;
             const shape = isMtDna ? "border-radius: 50%;" : "transform: rotate(45deg);";
-            const html = `<div style="background-color: ${color}; border: 2px solid #ffffff; width: ${size}px; height: ${size}px; ${shape} box-sizing: border-box; box-shadow: 0 0 0 1px rgba(26,32,44,0.75);"></div>`;
-            const marker = L.marker([s.latitude, s.longitude], {
+            const html = `<div style="background-color: ${color}; border: 2px solid #ffffff; width: ${size}px; height: ${size}px; ${shape} box-sizing: border-box; box-shadow: 0 0 0 1px rgba(26,32,44,0.75);${dimmed ? ` opacity: ${DIMMED_OPACITY};` : ""}"></div>`;
+            const marker = L.marker([lat, lon], {
                 icon: L.divIcon({
                     html: html,
                     className: "ancient-marker",
                     iconSize: [size, size],
                     iconAnchor: [size / 2, size / 2],
                     popupAnchor: [0, -size / 2]
-                })
+                }),
+                ...(dimmed ? { pane: "dimmed" } : {})
             });
+            marker._dimmed = dimmed;
             marker.bindPopup(`<div style="font-size: 13px; line-height: 1.5;">${getAncientTooltip(s, isMtDna ? "mt" : "y")}</div>`);
             marker._labelName = s.name;
             marker._labelProminent = false;
             if (state.showLabels) bindNameLabel(marker, "right");
             this.ancientMarkers.addLayer(marker);
-            ancientBounds.extend([s.latitude, s.longitude]);
+            if (dimmed) return;
+            ancientBounds.extend([lat, lon]);
             hasAncientResults = true;
         };
 
