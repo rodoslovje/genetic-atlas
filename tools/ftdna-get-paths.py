@@ -5,11 +5,15 @@ Usage:
     python tools/ftdna-get-paths.py                    # both lineages, incremental
     python tools/ftdna-get-paths.py --kind y           # paternal only
     python tools/ftdna-get-paths.py --mode full        # both, full rebuild
-    python tools/ftdna-get-paths.py --mode variants    # backfill variant lists for nodes
-                                                       # that were only seen as ancestors
-    python tools/ftdna-get-paths.py --mode ancient     # backfill ancient connections for
-                                                       # nodes never fetched directly
+    python tools/ftdna-get-paths.py --mode ancient     # only the backfill below, no new
+                                                       # haplogroups
     python tools/ftdna-get-paths.py --limit 100        # stop after 100 requests
+
+Every mode ends with a backfill: each node whose ancient list has not been read
+yet (one first seen as the ancestor of a fetched path) is fetched directly, which
+also brings its variants and TMRCA bounds. An update therefore leaves the new
+part of the tree complete; on a fresh tree the backfill is long, so pair it with
+--limit and re-run.
 
 Each node in the output carries:
     haplogroup, parent, note      tree topology and FTDNA historical-event label
@@ -19,7 +23,7 @@ Each node in the output carries:
                                   anywhere below it / ancient samples below it
     variants                      the block's variants - equivalent SNP names for Y-DNA,
                                   mutations for mtDNA; present only on nodes that were
-                                  fetched directly (see --mode variants)
+                                  fetched directly (see the backfill above)
 
 Every run also writes the ancient connections it saw to
 data/output/slo-{y,mt}dna-ancient.json:
@@ -32,12 +36,19 @@ haplogroup_mrca that is in the paths file (the branch where it joins our tree),
 coordinates, and a haplogroup of its own for this lineage. A burial reached from
 several haplogroups is stored once, on the deepest MRCA seen for it.
 
+--mode full rebuilds the tree topology from scratch but does not throw away the
+backfills: a rebuilt node keeps the variants and TMRCA bounds it had before when
+this run did not fetch it directly, and the ancient store is carried over too.
+Burials (and read markers) whose haplogroup is no longer in the tree are pruned
+once a run completes.
+
 On an HTTP 429 a request is retried once after RATE_LIMIT_RETRY_DELAY; if FTDNA is
 still throttling, the run stops and saves what it has (every successful fetch is
 saved, so re-running picks up where it left off).
 """
 
 import argparse
+import collections
 import json
 import os
 import sys
@@ -110,7 +121,7 @@ CONFIGS = {
         "path_root_sentinels": ["A0000"],
         # Whether the fallback find_path() accepts "parent" in addition to "parentName"
         "accept_parent_field": False,
-        # People whose ancestry is prioritised in --mode variants (Big Y testers)
+        # People whose ancestry is prioritised in --mode ancient (Big Y testers)
         "is_priority_person": lambda p: (p.get("test") or "").startswith("Big Y"),
     },
     "mt": {
@@ -363,9 +374,10 @@ def parse_ancient_entry(item, cfg, nodes_db):
 def merge_ancient(ancient_db, rec, nodes_db):
     """Store one burial, preferring the deepest MRCA it has been seen with: the
     same sample appears in the list of every haplogroup it connects to, and the
-    deepest of those is where it belongs on our tree."""
+    deepest of those is where it belongs on our tree. At equal depth the newer
+    record wins, so a refetch refreshes what was stored."""
     prev = ancient_db["samples"].get(rec["code"])
-    if prev is not None and len(ancestry_of(prev["mrca"], nodes_db)) >= len(ancestry_of(rec["mrca"], nodes_db)):
+    if prev is not None and len(ancestry_of(prev["mrca"], nodes_db)) > len(ancestry_of(rec["mrca"], nodes_db)):
         return
     ancient_db["samples"][rec["code"]] = rec
 
@@ -399,6 +411,13 @@ def load_ancient(cfg):
     except Exception as e:
         print(f"Warning: could not read {path}: {e}")
     return db
+
+
+def prune_ancient(ancient_db, nodes_db):
+    """Drop burials and read markers whose haplogroup has left the tree."""
+    ancient_db["fetched"] &= set(nodes_db)
+    ancient_db["samples"] = {c: r for c, r in ancient_db["samples"].items()
+                             if r["mrca"] in nodes_db}
 
 
 def save_ancient(cfg, ancient_db):
@@ -444,8 +463,12 @@ def find_path_in_json(obj, target_hg, sentinels, accept_parent_field):
 # Fetching
 # ---------------------------------------------------------------------------
 
-def fetch_one(hg, cfg, nodes_db, ancient_db=None):
+def fetch_one(hg, cfg, nodes_db, ancient_db=None, ancient_tree=None):
     """Fetch and store one haplogroup path.
+
+    `ancient_tree` is what ancient MRCAs are placed against; it defaults to
+    nodes_db, and a full rebuild passes the old tree behind the new one so
+    carried-over burials keep their depth while the new tree is still partial.
 
     A first HTTP 429 is waited out once (RATE_LIMIT_RETRY_DELAY) and the request
     repeated; FTDNA's throttle is usually short enough that a long run gets
@@ -494,13 +517,16 @@ def fetch_one(hg, cfg, nodes_db, ancient_db=None):
         return
 
     # Shape 1: {haplogroup: {...}, ancestors: [...], time: {...}}
+    if ancient_tree is None:
+        ancient_tree = nodes_db
+
     if (isinstance(next_data, dict)
             and "haplogroup" in next_data
             and "ancestors" in next_data):
         store_modern_response(next_data, nodes_db, hg)
         # After the path, so the MRCA of an ancient sample on a node first seen
         # in this very response is already known to be in the tree.
-        collect_ancient(next_data, ancient_db, hg, cfg, nodes_db)
+        collect_ancient(next_data, ancient_db, hg, cfg, ancient_tree)
         return "ok"
 
     # Shape 2: root JSON object is the haplogroup itself with embedded ancestors
@@ -524,7 +550,7 @@ def fetch_one(hg, cfg, nodes_db, ancient_db=None):
         return
 
     store_path_data(path_data, nodes_db, hg)
-    collect_ancient(next_data, ancient_db, hg, cfg, nodes_db)
+    collect_ancient(next_data, ancient_db, hg, cfg, ancient_tree)
     return "ok"
 
 
@@ -546,7 +572,7 @@ def ancestry_of(hg, nodes_db):
 def plan_backfill(missing, people, cfg, nodes_db):
     """Order a backfill, most useful first: nodes on the ancestry of priority
     testers (Big Y for Y-DNA, full sequence for mtDNA), youngest first; then the
-    rest. Used by both --mode variants and --mode ancient."""
+    rest. Used by --mode ancient."""
     priority_nodes = set()
     for p in people:
         if cfg["is_priority_person"](p) and is_valid_hg(p.get("haplogroup")):
@@ -573,9 +599,10 @@ def run_one(kind, mode, limit):
     target_haplogroups = collect_targets(people, cfg)
     print(f"Found {len(target_haplogroups)} unique haplogroups in {cfg['input']}")
 
-    # Load existing paths unless doing a full rebuild
+    # Load existing paths. A full rebuild starts its tree empty but keeps the
+    # old one to carry over what only a direct fetch provides.
     existing_nodes = {}
-    if mode != "full" and os.path.exists(cfg["output"]):
+    if os.path.exists(cfg["output"]):
         with open(cfg["output"], "r", encoding="utf-8") as f:
             try:
                 for node in json.load(f):
@@ -585,45 +612,46 @@ def run_one(kind, mode, limit):
                 print(f"Warning: could not read {cfg['output']}: {e}")
 
     nodes_db = existing_nodes if mode != "full" else {}
-    ancient_db = load_ancient(cfg) if mode != "full" else {"fetched": set(), "samples": {}}
+    previous = existing_nodes if mode == "full" else {}
+    ancient_db = load_ancient(cfg)
+    ancient_tree = collections.ChainMap(nodes_db, previous) if previous else nodes_db
 
-    if mode == "variants":
-        missing_hgs = plan_backfill([h for h, n in nodes_db.items() if "variants" not in n],
-                                    people, cfg, nodes_db)
-        # A node acquires "variants" only when fetched directly, so nothing
-        # gets populated as a side effect of an earlier request.
-        needs_fetch = lambda hg: "variants" not in nodes_db.get(hg, {})
-    elif mode == "ancient":
-        missing_hgs = plan_backfill([h for h in nodes_db if h not in ancient_db["fetched"]],
-                                    people, cfg, nodes_db)
-        # Same as variants: a node's own ancient list only arrives when that
-        # node is the one requested.
-        needs_fetch = lambda hg: hg not in ancient_db["fetched"]
-    else:
+    def path_pass():
         if mode == "full":
             candidates = list(target_haplogroups)
         else:
             candidates = [hg for hg in target_haplogroups if hg not in nodes_db]
+        needs_fetch = lambda hg: hg not in nodes_db
         # Fetch order: person-derived (likely deep, leaf-ish SNPs) before major
         # roots, and longer names before shorter within each bucket. Each FTDNA
         # response includes the queried node's full ancestry, so fetching the
         # deepest target first lets the skip-already-populated check eliminate
         # its ancestors from later iterations — fewer HTTP requests overall.
         major_roots_set = set(cfg["major_roots"])
-        missing_hgs = sorted(candidates, key=lambda h: (h in major_roots_set, -len(h), h))
-        needs_fetch = lambda hg: hg not in nodes_db
+        return sorted(candidates, key=lambda h: (h in major_roots_set, -len(h), h)), needs_fetch
 
-    print(f"Need to fetch paths for {len(missing_hgs)} haplogroups"
-          + (f" (limit {limit} this run)" if limit else ""))
+    def ancient_pass():
+        # A node's own ancient list, like its variants and TMRCA bounds, only
+        # arrives when that node is the one requested, so nodes first seen as
+        # the ancestors of a fetched path stay unread until this pass. One
+        # fetch fills all three.
+        unread = [h for h in nodes_db if h not in ancient_db["fetched"]]
+        return plan_backfill(unread, people, cfg, nodes_db), lambda hg: hg not in ancient_db["fetched"]
+
+    # Every mode ends with the ancient backfill, so the nodes an update or a
+    # rebuild adds are read in the same run; --mode ancient runs it alone.
+    passes = [ancient_pass] if mode == "ancient" else [path_pass, ancient_pass]
 
     # The on-disk JSON is the source of truth. Write it after every successful
     # fetch (atomically via temp+rename) so kill -9 at any moment leaves a valid
     # checkpoint, and a partial "full" run can be resumed by re-running in
     # "update" mode.
-    def save():
+    def save(complete=False):
         os.makedirs(os.path.dirname(cfg["output"]), exist_ok=True)
+        # Fields the rebuild did not fetch (variants, bounds) come from the old
+        # node of the same name; anything it did fetch wins.
         output_list = sorted(
-            nodes_db.values(),
+            ({**previous.get(n["haplogroup"], {}), **n} for n in nodes_db.values()),
             key=lambda n: (999999 if n.get("age") is None else n["age"], n.get("haplogroup", "")),
         )
         ordered = [
@@ -635,37 +663,47 @@ def run_one(kind, mode, limit):
         with open(tmp_path, "w", encoding="utf-8") as f:
             json.dump(ordered, f, indent=4, ensure_ascii=False)
         os.replace(tmp_path, cfg["output"])
+        # Mid-run the tree may still be partial, so prune only at the end.
+        if complete:
+            prune_ancient(ancient_db, nodes_db)
         save_ancient(cfg, ancient_db)
 
     requests_made = 0
-    for idx, hg in enumerate(missing_hgs, 1):
-        # Each FTDNA response includes the full ancestry, so by the time we
-        # reach a haplogroup that was an ancestor of an earlier target, it
-        # is already in nodes_db — no need to re-fetch it.
-        if not needs_fetch(hg):
-            print(f"[{idx}/{len(missing_hgs)}] {hg} already populated from earlier path; skipping")
-            continue
-        if limit and requests_made >= limit:
-            remaining = sum(1 for h in missing_hgs[idx - 1:] if needs_fetch(h))
-            save()
-            print(f"Reached --limit {limit}; {remaining} haplogroups still to fetch. "
-                  f"Saved {len(nodes_db)} nodes to {cfg['output']} (partial)")
-            return "ok"
-        print(f"[{idx}/{len(missing_hgs)}] Fetching path for {hg} ...")
-        requests_made += 1
-        status = fetch_one(hg, cfg, nodes_db, ancient_db)
-        if status == "ok":
-            save()
-        if status == "rate_limited":
-            save()
-            print(f"Saved {len(nodes_db)} nodes to {cfg['output']} (partial)")
-            print("FTDNA is still rate limiting requests (HTTP 429) after a retry. "
-                  "Stopping now to avoid a longer block. Please retry in about "
-                  "1 hour to fetch the remaining haplogroups.")
-            return "rate_limited"
-        time.sleep(SLEEP_BETWEEN_REQUESTS)
+    for plan in passes:
+        # Planned only when its turn comes: the backfill has to see the nodes
+        # the path pass just added.
+        missing_hgs, needs_fetch = plan()
+        label = "paths" if plan is path_pass else "ancient connections"
+        print(f"Need to fetch {label} for {len(missing_hgs)} haplogroups"
+              + (f" (limit {limit} this run)" if limit else ""))
+        for idx, hg in enumerate(missing_hgs, 1):
+            # Each FTDNA response includes the full ancestry, so by the time we
+            # reach a haplogroup that was an ancestor of an earlier target, it
+            # is already in nodes_db — no need to re-fetch it.
+            if not needs_fetch(hg):
+                print(f"[{idx}/{len(missing_hgs)}] {hg} already populated from earlier path; skipping")
+                continue
+            if limit and requests_made >= limit:
+                remaining = sum(1 for h in missing_hgs[idx - 1:] if needs_fetch(h))
+                save()
+                print(f"Reached --limit {limit}; {remaining} haplogroups still to fetch. "
+                      f"Saved {len(nodes_db)} nodes to {cfg['output']} (partial)")
+                return "ok"
+            print(f"[{idx}/{len(missing_hgs)}] Fetching {hg} ...")
+            requests_made += 1
+            status = fetch_one(hg, cfg, nodes_db, ancient_db, ancient_tree)
+            if status == "ok":
+                save()
+            if status == "rate_limited":
+                save()
+                print(f"Saved {len(nodes_db)} nodes to {cfg['output']} (partial)")
+                print("FTDNA is still rate limiting requests (HTTP 429) after a retry. "
+                      "Stopping now to avoid a longer block. Please retry in about "
+                      "1 hour to fetch the remaining haplogroups.")
+                return "rate_limited"
+            time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    save()
+    save(complete=True)
     print(f"Saved {len(nodes_db)} nodes to {cfg['output']}")
     print(f"Saved {len(ancient_db['samples'])} ancient samples to {cfg['ancient_output']}")
     return "ok"
@@ -675,10 +713,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     parser.add_argument("--kind", choices=["y", "mt"], default=None,
                         help="Lineage to process (omit to process both)")
-    parser.add_argument("--mode", choices=["update", "full", "variants", "ancient"], default="update",
-                        help="update: fetch new haplogroups only; full: rebuild everything; "
-                             "variants: fetch nodes that still lack their SNP list; "
-                             "ancient: fetch nodes whose ancient connections are not read yet")
+    parser.add_argument("--mode", choices=["update", "full", "ancient"], default="update",
+                        help="update: fetch new haplogroups; full: rebuild everything; "
+                             "ancient: skip both and only fetch nodes not yet requested "
+                             "directly, for their variants and ancient connections "
+                             "(update and full end with this too)")
     parser.add_argument("--limit", type=int, default=0,
                         help="Maximum number of HTTP requests per lineage this run "
                              "(0 = unlimited); useful to stay under FTDNA's rate limit")

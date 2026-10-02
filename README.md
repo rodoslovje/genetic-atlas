@@ -96,25 +96,18 @@ python tools/ftdna-get-paths.py
 python tools/ftdna-get-paths.py --mode full
 ```
 
-**Backfill variant lists (block tree data):**
+The tree topology is rebuilt from scratch, but the backfills below are not thrown away: a node keeps the `variants` and TMRCA bounds it already had unless this run fetched it directly, and the ancient store is carried over. Once the run completes, burials whose MRCA is no longer in the tree are dropped. An interrupted full run still loses the carried-over fields for nodes it had not reached yet.
 
-Each FTDNA response carries the full `variants` list and the 68 % / 99 % TMRCA bounds only for the haplogroup that was requested, while its ancestors arrive with ages and tester counts alone. This pass fetches the nodes that still lack `variants`, most useful first (ancestry of full-sequence testers — Big Y for Y-DNA, FMS for mtDNA — youngest first). On an HTTP 429 the tool waits five minutes and retries the request once before giving up; progress is saved after every successful fetch, so an interrupted run resumes where it stopped. Use `--limit` to stay well under FTDNA's rate limit and re-run until nothing is left:
+**Backfill variant lists and ancient connections (block tree and ancient samples):**
 
-```bash
-python tools/ftdna-get-paths.py --kind y --mode variants --limit 200
-python tools/ftdna-get-paths.py --kind mt --mode variants --limit 200
-```
-
-The mtDNA payload lists the mutations of the whole ancestral path, each tagged with the haplogroup it belongs to, so only the requested node's own entries are kept.
-
-**Backfill ancient connections:**
-
-Every Discover response also carries an `ancient` list — the excavated burials FTDNA connects to the requested haplogroup — but, like `variants`, only for the node actually requested. Any run collects what it sees; this pass fetches the nodes whose own list has not been read yet, in the same "most useful first" order as `--mode variants`:
+Each FTDNA response carries the full `variants` list, the 68 % / 99 % TMRCA bounds and the `ancient` list — the excavated burials FTDNA connects to the haplogroup — only for the haplogroup that was requested, while its ancestors arrive with ages and tester counts alone. Any run collects what it sees; this pass fetches the nodes not yet requested directly (those missing from the ancient file's `fetched` list), most useful first (ancestry of full-sequence testers — Big Y for Y-DNA, FMS for mtDNA — youngest first), and each fetch fills in all three. The incremental update and the full rebuild both end with this pass, so the branches they add are read in the same run; `--mode ancient` runs it on its own, without looking for new haplogroups. On an HTTP 429 the tool waits five minutes and retries the request once before giving up; progress is saved after every successful fetch, so an interrupted run resumes where it stopped. On a fresh tree the backlog is long, so use `--limit` to stay well under FTDNA's rate limit and re-run until nothing is left:
 
 ```bash
 python tools/ftdna-get-paths.py --kind y --mode ancient --limit 200
 python tools/ftdna-get-paths.py --kind mt --mode ancient --limit 200
 ```
+
+The mtDNA payload lists the mutations of the whole ancestral path, each tagged with the haplogroup it belongs to, so only the requested node's own entries are kept.
 
 The results go to `slo-ydna-ancient.json` / `slo-mtdna-ancient.json` as `{fetched, samples}` — the haplogroups already read, and one record per burial. Only burials the app can both place and map are kept: they need a `haplogroup_mrca` that is in the paths file (the branch where their line joins ours), coordinates, a date and a haplogroup of their own for that lineage. A burial reached from several haplogroups is stored once, on the deepest MRCA seen for it. Each record carries:
 

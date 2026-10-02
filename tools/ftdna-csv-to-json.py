@@ -90,6 +90,7 @@ COUNTRY_MAP = {
     "Switzerland": "ch",
     "Portugal": "pt",
     "Belarus": "by",
+    "Netherlands": "nl",
     "Unknown Origin": "",
     "": "",
 }
