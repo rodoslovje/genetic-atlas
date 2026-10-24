@@ -31,6 +31,25 @@ export default {
 
     entries: [
         {
+            date: "2026-10-24",
+            items: [
+                {
+                    title: "Private variants in the block tree",
+                    text: `In the block tree, each member's card now sits on the date line at the birth year of their
+                        earliest known ancestor, and the span above it, back to their branch, is a block of
+                        <strong>private variants</strong> — mutations not yet on any named branch — counted
+                        for Big Y and full mtDNA sequence results. It shows how much of a line's history is
+                        still its own, and where a new branch may appear once a relative tests.`,
+                },
+                {
+                    title: "Hide the tree overview",
+                    text: `The overview strip beside the tree views can now be hidden with
+                        its <strong>»</strong> button, and while it is shown the tree drags far enough
+                        left that no label is stuck underneath it.`,
+                },
+            ],
+        },
+        {
             date: "2026-10-01",
             items: [
                 {

@@ -4,13 +4,16 @@ import { zoom, zoomTransform, zoomIdentity } from "d3-zoom";
 import { drag } from "d3-drag";
 import { hierarchy } from "d3-hierarchy";
 const d3 = { select, zoom, zoomTransform, zoomIdentity, drag, hierarchy };
-import { state, t, formatAge, getPersonTooltip, getHaploColor, eraColors, eraColorFor, getSelectedGroups, translations, isProminentPerson, matchesSearchQuery, searchFilters, getAncientSamples, matchesAncientQuery, getAncientTooltip } from "./shared.js";
+import { state, t, updateURLState, formatAge, getPersonTooltip, getHaploColor, eraColors, eraColorFor, getSelectedGroups, translations, isProminentPerson, matchesSearchQuery, searchFilters, getAncientSamples, matchesAncientQuery, getAncientTooltip } from "./shared.js";
 import { getFlagDataUri } from "./flags.js";
 
 const NODE_ROW_HEIGHT = 45;
 const NODE_DEPTH_WIDTH = 50;
 const TRANSITION_DURATION = 600;
 const ZOOM_DURATION = 750;
+
+// Every tree view, so the shared minimap setting can reach them all.
+const visualizers = new Set();
 const ZOOM_SCALE = 0.75;
 const ZOOM_TX = 30;
 
@@ -53,6 +56,20 @@ export class TreeVisualizer {
         this.g = this.svg.append("g");
         this.minimap = container.append("div").attr("class", "tree-minimap");
         this.minimapSvg = this.minimap.append("svg");
+        // Hiding the overview hands its strip back to the tree. One setting
+        // serves both lineage views, so the button updates every instance.
+        this.minimapToggle = this.minimap.append("button")
+            .attr("type", "button")
+            .attr("class", "tree-minimap__toggle")
+            .on("pointerdown", (event) => event.stopPropagation())
+            .on("click", (event) => {
+                event.stopPropagation();
+                state.minimap = !state.minimap;
+                updateURLState();
+                visualizers.forEach((v) => v._applyMinimapVisibility());
+            });
+        visualizers.add(this);
+        this._applyMinimapVisibility();
 
         const goToPoint = (event) => {
             if (!this._minimapTreeBounds) return;
@@ -81,7 +98,7 @@ export class TreeVisualizer {
             .scaleExtent([0.05, 5])
             .constrain((transform, extent, translateExtent) => {
                 const dx0 = transform.invertX(extent[0][0]) - translateExtent[0][0];
-                const dx1 = transform.invertX(extent[1][0]) - translateExtent[1][0];
+                const dx1 = transform.invertX(extent[1][0] - this._minimapCover()) - translateExtent[1][0];
                 const dy0 = transform.invertY(extent[0][1]) - translateExtent[0][1];
                 const dy1 = transform.invertY(extent[1][1]) - translateExtent[1][1];
                 return transform.translate(
@@ -828,14 +845,41 @@ export class TreeVisualizer {
             [treeW + padding, treeH + padding]
         ]);
 
-        this._renderMinimap(nodes, links, treeW, treeH, getGroupKey);
+        this._minimapArgs = [nodes, links, treeW, treeH, getGroupKey];
+        this._renderMinimap(...this._minimapArgs);
+    }
+
+    // Screen pixels of the view's right edge that the floating minimap covers.
+    // The zoom constraint treats the view as that much narrower, so the tree
+    // can be dragged far enough left to bring the labels under it into the
+    // open. Measured on every call: the strip moves when the sidebar opens.
+    _minimapCover() {
+        const mmNode = this.minimap.node();
+        if (!state.minimap || !mmNode.offsetParent) return 0;
+        const svgRect = this.svg.node().getBoundingClientRect();
+        const mmRect = mmNode.getBoundingClientRect();
+        return Math.max(0, svgRect.right - mmRect.left);
+    }
+
+    _applyMinimapVisibility() {
+        const shown = state.minimap;
+        this.minimap.classed("tree-minimap--hidden", !shown);
+        const key = shown ? "minimapHide" : "minimapShow";
+        this.minimapToggle
+            .attr("data-i18n-title", key)
+            .attr("title", t(key))
+            .attr("aria-expanded", shown ? "true" : "false")
+            .text(shown ? "»" : "«");
+        // The strip's width is measured from its height, which a hidden strip
+        // doesn't have, so redraw it on the way back.
+        if (shown && this._minimapArgs) this._renderMinimap(...this._minimapArgs);
     }
 
     _renderMinimap(nodes, links, treeW, treeH, getGroupKey) {
         const mmNode = this.minimap.node();
         const contentH = mmNode.clientHeight - 8; // 4px padding top+bottom
         let scale = 1;
-        if (contentH > 0 && treeH > 0) {
+        if (state.minimap && contentH > 0 && treeH > 0) {
             let contentW = contentH * (treeW / treeH);
             if (contentW > 150) contentW = 150;
             this.minimap.style("width", `${contentW + 10}px`); // padding + border

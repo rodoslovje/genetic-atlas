@@ -16,6 +16,28 @@ export default {
 
     entries: [
         {
+            date: "2026-10-24",
+            items: [
+                {
+                    title: "Variantes privées dans l'arbre en blocs",
+                    text: `Dans l'arbre en blocs, la fiche de chaque membre se place désormais sur l'axe du temps à
+                        l'année de naissance de son plus ancien ancêtre connu, et l'intervalle au-dessus,
+                        jusqu'à sa branche, est un bloc de <strong>variantes privées</strong> — des mutations
+                        encore absentes de toute branche nommée — comptées pour les résultats Big Y et de
+                        séquence complète du mtDNA. On voit ainsi quelle part de l'histoire d'une lignée lui
+                        appartient encore en propre, et où une nouvelle branche peut apparaître quand un
+                        parent se fait tester.`,
+                },
+                {
+                    title: "Masquer l'aperçu de l'arbre",
+                    text: `La bande d'aperçu à côté des arbres peut désormais être
+                        masquée avec son bouton <strong>»</strong>, et tant qu'elle est affichée, l'arbre
+                        glisse assez loin vers la gauche pour qu'aucune étiquette ne reste cachée
+                        dessous.`,
+                },
+            ],
+        },
+        {
             date: "2026-10-01",
             items: [
                 {

@@ -14,6 +14,26 @@ export default {
 
     entries: [
         {
+            date: "2026-10-24",
+            items: [
+                {
+                    title: "Zasebne variante v blokovnem drevesu",
+                    text: `V blokovnem drevesu je kartica vsakega člana zdaj na časovni osi pri letu rojstva njegovega
+                        najstarejšega znanega prednika, razpon nad njo do njegove veje pa je blok
+                        <strong>zasebnih variant</strong> — mutacij, ki še niso na nobeni poimenovani veji —
+                        preštetih za rezultate Big Y in polnega zaporedja mtDNK. Tako se vidi, koliko
+                        zgodovine linije je še samo njene in kje se lahko pojavi nova veja, ko se testira kak
+                        sorodnik.`,
+                },
+                {
+                    title: "Skrivanje pregleda drevesa",
+                    text: `Pas s pregledom ob drevesih lahko zdaj skrijete z gumbom
+                        <strong>»</strong>, dokler je prikazan, pa se drevo povleče dovolj v levo, da pod
+                        njim ne ostane skrita nobena oznaka.`,
+                },
+            ],
+        },
+        {
             date: "2026-10-01",
             items: [
                 {

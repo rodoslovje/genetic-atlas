@@ -16,6 +16,27 @@ export default {
 
     entries: [
         {
+            date: "2026-10-24",
+            items: [
+                {
+                    title: "Private Varianten im Blockbaum",
+                    text: `Im Blockbaum steht die Karte jedes Mitglieds jetzt auf der Zeitachse beim Geburtsjahr seines
+                        frühesten bekannten Vorfahren, und die Spanne darüber bis zu seinem Zweig ist ein
+                        Block <strong>privater Varianten</strong> — Mutationen, die noch auf keinem benannten
+                        Zweig liegen —, gezählt für Big-Y- und mtDNA-Vollsequenz-Ergebnisse. So wird
+                        sichtbar, wie viel der Geschichte einer Linie noch ihr allein gehört und wo ein neuer
+                        Zweig entstehen kann, sobald sich ein Verwandter testen lässt.`,
+                },
+                {
+                    title: "Baumübersicht ausblenden",
+                    text: `Der Übersichtsstreifen neben den Bäumen lässt sich jetzt mit
+                        seiner Schaltfläche <strong>»</strong> ausblenden; solange er zu sehen ist, lässt
+                        sich der Baum so weit nach links ziehen, dass keine Beschriftung darunter
+                        verborgen bleibt.`,
+                },
+            ],
+        },
+        {
             date: "2026-10-01",
             items: [
                 {

@@ -73,7 +73,10 @@ export default {
         sigles SNP.</p>
         <p>Faites glisser pour déplacer l'arbre, faites défiler (ou pincez) pour zoomer. La bande étroite
         à droite est un aperçu de l'arbre entier, votre fenêtre actuelle y étant marquée ; un clic ou un
-        glissé à l'intérieur vous emmène ailleurs. Le pointeur sur un nœud en affiche les détails, et
+        glissé à l'intérieur vous emmène ailleurs. Le bouton <strong>»</strong> dans son coin (<em>Masquer
+        l'aperçu</em>) rend la bande à l'arbre, et <strong>«</strong> la fait revenir ; tant qu'elle est
+        affichée, l'arbre peut être glissé assez loin vers la gauche pour qu'aucune étiquette ne reste
+        cachée dessous. Le pointeur sur un nœud en affiche les détails, et
         sur un membre la même fiche que sur la carte.</p>
         <p>Un clic sur un haplogroupe replie la branche qui en dépend, un autre la rouvre. Un nœud dessiné
         creux — cerné de sa couleur mais non rempli — cache encore quelque chose derrière lui ; un nœud
@@ -107,6 +110,18 @@ export default {
         <p>Sous les blocs, chaque membre du projet reçoit sa propre fiche sous la branche jusqu'à laquelle
         il a été testé. Une fiche teintée signale un membre ayant passé le test le plus complet pour sa
         lignée, une fiche ambrée un membre correspondant à la recherche en cours.</p>
+        <p>La fiche d'un membre commence sur l'axe du temps à l'année de naissance de son plus ancien
+        ancêtre connu, lue dans les informations sur l'ancêtre. Entre la branche jusqu'à laquelle il a
+        été testé et cette année s'étend un bloc gris en pointillés de <strong>variantes
+        privées</strong> : des mutations de sa lignée qui n'appartiennent encore à aucune branche nommée
+        — un bloc comme les autres, simplement pas encore nommé. Dès qu'un autre testeur les partage,
+        FamilyTreeDNA en fait une nouvelle branche. Les nombres de l'Y-DNA viennent des résultats Big Y ;
+        pour le mtDNA, nous comparons une séquence complète aux mutations de son haplogroupe, en écartant
+        les positions que FamilyTreeDNA juge instables. Les membres sans un tel test, ou dont les
+        résultats complets ne sont pas partagés, ont à la place une ligne en pointillés ; un ancêtre sans
+        année dans ses informations est placé en 1600, à peu près là où s'arrêtent les registres
+        paroissiaux, et avec un ancêtre daté d'avant la branche la fiche reste en haut et indique le
+        nombre dans un petit encadré.</p>
         <p>Un clic sur un bloc redessine la vue avec cette branche pour nouveau point de départ — la façon
         de suivre une lignée dans le détail. Le bouton <strong>↑</strong> et le fil d'ariane à côté, en
         haut de la vue, ramènent vers la racine.</p>`,

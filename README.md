@@ -6,7 +6,7 @@ Interactive web application and data tooling for the **Slovenian Genetic Atlas**
 
 - **Map view** with two-ring jitter that spreads markers sharing the same address so individual haplogroup colours stay visible.
 - **Y-DNA & mtDNA tree views** rendered with D3, including era bands, lineage filters, prominent-tester highlighting, and SVG export.
-- **Block tree**, a second viewing mode of each haplotree view (`?ymode=block`, `?mtmode=block`): an icicle view with time on the vertical axis, showing each branch's TMRCA with its 68 % range, its variants (equivalent SNPs for Y-DNA, the block's mutations for mtDNA), and project members as one column each below their terminal haplogroup. It follows the lineage filter; the search box picks the starting haplogroup (the first split among the matched members' lines) and highlights matches. Any block can be focused by clicking it, from a haplogroup tooltip, or via `?block=R-BY32501` / `?mblock=H5a`; both views export to SVG. The two lineages keep their modes and roots independently.
+- **Block tree**, a second viewing mode of each haplotree view (`?ymode=block`, `?mtmode=block`): an icicle view with time on the vertical axis, showing each branch's TMRCA with its 68 % range, its variants (equivalent SNPs for Y-DNA, the block's mutations for mtDNA), and project members as one column each below their terminal haplogroup, headed by a box with their private variant count (Big Y for Y-DNA, full-sequence mtDNA). It follows the lineage filter; the search box picks the starting haplogroup (the first split among the matched members' lines) and highlights matches. Any block can be focused by clicking it, from a haplogroup tooltip, or via `?block=R-BY32501` / `?mblock=H5a`; both views export to SVG. The two lineages keep their modes and roots independently.
 - **Ancient connections** (`?anc=1`), an opt-in layer of excavated burials that FamilyTreeDNA places on the branches of the tree: diamonds and rings at their excavation site on the map, italic leaves under the branch they join in the tree, and a column ending at the year of death in the block tree. Coloured by era rather than lineage, so they never read as project members. The layer follows the lineage filters, and a search for a surname keeps the burials on that family's branches.
 - **Haplogroup-aware search** across kit, surname, ancestor, location, and the full ancestry chain (a search for an upstream SNP matches every downstream tester).
 - **Filterable lineages** with persistent state in the URL; "Ungrouped" is an opt-in filter and is intentionally not persisted.
@@ -69,6 +69,17 @@ python tools/ftdna-download-csv.py --only YDNASNP MTDNARESULTS
 ```
 
 Downloads `PANCESTRY`, `MANCESTRY`, `YDNASNP`, `MTDNARESULTS` into `data/input/` under the filenames FTDNA suggests (the same names you'd get from manual download). If the session has expired the script exits with code 2 and tells you to re-run `ftdna-login.py`.
+
+**1c. Download Big Y private variants:**
+
+```bash
+python tools/ftdna-get-private-variants.py                 # every Big Y kit
+python tools/ftdna-get-private-variants.py --only IN99945  # selected kits
+```
+
+For each Big Y tester in `slo-ydna-fetched.csv`, opens the member's Big Y page through the admin session and downloads its Private Variants CSV (position, ancestral, derived — private variants have no names). This works for members who gave the admins Limited or Advanced access; the access level is read from GAP's Member Information report. Everything goes to one file, `data/input/slo-big-y-private.json`, keyed by kit number: `status` (`ok`, `no-access`, `not-in-project`, …), `access`, `fetched`, and for fetched kits `count` and `variants` (`{"position": 10123675, "ancestral": "C", "derived": "T"}`, one per line). Step 3 merges the counts into `slo-ydna.json` as `private`. FTDNA ties a login to one server for about an hour, so run this right after `ftdna-login.py`; a kit that fails keeps its last good count.
+
+The mtDNA count needs no download: step 3 compares each full-sequence result in `Slovenianorigin_MTDNA_Results.csv` with the mutations on its haplogroup's path in `slo-mtdna-paths.json`, leaving out the positions Mitotree filters (the 303–315, 522–524 and 16182–16193 repeats, 573, 8281–8289, 16519) and heteroplasmies. Kits whose coding region is withheld, or whose path is not fully backfilled yet, get no count — re-run step 3 after step 4 when new haplogroups arrive.
 
 Generated JSON files land in `data/output/` (which is not tracked in git — `data/` is a symlink to an external store).
 

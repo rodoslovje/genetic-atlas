@@ -72,7 +72,10 @@ export default {
         linea si legga come un racconto e non come un elenco di sigle SNP.</p>
         <p>Trascinate per spostare l'albero e usate la rotellina (o le due dita) per ingrandire. La
         striscia sulla destra è una panoramica dell'intero albero con la finestra attuale segnata
-        sopra; un clic o un trascinamento al suo interno vi porta altrove. Passando sopra un nodo ne
+        sopra; un clic o un trascinamento al suo interno vi porta altrove. Il pulsante <strong>»</strong> nel suo angolo (<em>Nascondi
+        panoramica</em>) restituisce la striscia all'albero, e <strong>«</strong> la riporta; finché è
+        visibile, l'albero si può trascinare abbastanza a sinistra perché nessuna etichetta resti
+        nascosta sotto di essa. Passando sopra un nodo ne
         compaiono i dati, e sopra un membro la stessa scheda della mappa.</p>
         <p>Un clic su un aplogruppo chiude il ramo sottostante, un altro lo riapre. Un nodo disegnato
         vuoto — con il contorno del suo colore ma non riempito — ha ancora qualcosa di chiuso dietro di
@@ -106,6 +109,17 @@ export default {
         <p>Sotto i blocchi ogni membro del progetto ha una scheda propria sotto il ramo fino al quale è
         stato testato. Una scheda colorata segnala un membro con il test più informativo per il proprio
         lignaggio, una ambrata un membro che corrisponde alla ricerca in corso.</p>
+        <p>La scheda di un membro inizia sulla linea del tempo all'anno di nascita del suo antenato
+        più antico conosciuto, letto dai dati dell'antenato. Tra il ramo fino al quale è stato testato e
+        quell'anno si stende un blocco grigio tratteggiato di <strong>varianti private</strong>:
+        mutazioni della sua linea che non fanno ancora parte di alcun ramo con nome — un blocco come gli
+        altri, solo ancora senza nome. Quando un altro testato le condivide, FamilyTreeDNA ne ricava un
+        nuovo ramo. I numeri per il Y-DNA vengono dai risultati Big Y; per il mtDNA confrontiamo una
+        sequenza completa con le mutazioni del suo aplogruppo, tralasciando le posizioni che
+        FamilyTreeDNA considera instabili. I membri senza un test del genere, o con i risultati completi
+        non condivisi, hanno al suo posto una linea tratteggiata; un antenato senza anno nei suoi dati
+        viene posto al 1600, più o meno dove finiscono i registri parrocchiali, mentre con un antenato
+        datato prima del ramo la scheda resta in alto e mostra il numero in un piccolo riquadro.</p>
         <p>Un clic su un blocco ridisegna la vista con quel ramo come nuovo punto di partenza: è il modo
         di seguire una linea nel dettaglio. Il pulsante <strong>↑</strong> e il percorso accanto ad
         esso, in cima alla vista, riportano verso la radice.</p>`,

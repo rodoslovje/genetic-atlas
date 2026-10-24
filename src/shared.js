@@ -164,6 +164,8 @@ export const state = {
     block: initialParams.get("block") || null,
     mtmode: (initialParams.get("mtmode") === "block" || initialParams.get("mblock")) ? "block" : "tree",
     mblock: initialParams.get("mblock") || null,
+    // The tree views' overview strip; one setting for both lineages.
+    minimap: initialParams.get("mm") !== "0",
     ydnaAllSelected: true,
     mtdnaAllSelected: true
 };
@@ -243,6 +245,9 @@ export function updateURLState() {
     else params.delete("mtmode");
     if (state.mtmode === "block" && state.mblock) params.set("mblock", state.mblock);
     else params.delete("mblock");
+
+    if (state.minimap) params.delete("mm");
+    else params.set("mm", "0");
 
     if (state.startgroup) {
         params.set("startgroup", state.startgroup);
@@ -351,6 +356,7 @@ export function getPersonTooltip(person, error = "", kind = null, source = null)
     html += `${t("lineage")}: <b>${escHtml(majorGroup)}</b><br>`;
     html += `${t("haplogroup")}: <b>${haploCell}</b>${error}<br>`;
     if (person.haplotype) html += `${t("haplotype")}: <b>${escHtml(person.haplotype)}</b><br>`;
+    if (Number.isFinite(person.private)) html += `${t("privateVariants")}: <b>${person.private}</b><br>`;
     html += `${t("surname")}: <b>${escHtml(person.surname || "N/A")}</b><br>`;
     html += `${t("ancestor")}: <b>${escHtml(person.ancestor || "N/A")}</b><br>`;
     if (person.location) html += `${t("location")}: <b>${locationCell}</b>`;

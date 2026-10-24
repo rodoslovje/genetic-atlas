@@ -1,9 +1,15 @@
 # STATUS — genetic-atlas
 
-_Updated 2026-10-01_
+_Updated 2026-10-24_
 
 Slovenski genetski atlas (FTDNA Slovenian Origin). Rules: `CLAUDE.md` — every user-visible change updates the User Guide and Changelog in the same change.
-Last work: **Ancient connections** — an opt-in layer of excavated burials on the map and both lineage views (1. 10.), on top of the Block Tree and the Guide/Changelog pages (16. 9.).
+Last work: **Private variants** in the block tree (24. 10.) — each member's card sits on the date line at their earliest ancestor's birth year, under a dashed block of private variants; plus century gridlines and a hideable tree minimap. Before that: ancient connections (1. 10.).
+
+**State of private variants**
+
+- Y-DNA: `tools/ftdna-get-private-variants.py` downloads each Big Y kit's list through the admin session into `data/input/slo-big-y-private.json` (81/82 kits; members with Limited/Advanced access). A login lasts ~1 hour, so run it right after `ftdna-login.py`.
+- mtDNA: computed in `ftdna-csv-to-json.py` from the full-sequence export minus the haplogroup's path (101 kits); unstable Mitotree positions are filtered. Re-run the converter after `ftdna-get-paths.py` when new haplogroups arrive.
+- Card year: earliest 4-digit year in the ancestor text; none → 1600 (where parish registers end). An ancestor dated before the branch keeps the card at the top with a short private-variants box.
 
 **State of ancient connections**
 
@@ -14,7 +20,8 @@ Last work: **Ancient connections** — an opt-in layer of excavated burials on t
 **Next**
 
 - [ ] Review the SL/HR/DE/IT/FR/HU wording of the new guide section and changelog entry (written by Claude, not reviewed)
-- [ ] Commit the working tree (ancient layer + "Show only matches"); nothing is committed since 6751a14
+- [ ] Review the SL/HR/DE/IT/FR/HU wording of the private-variants and minimap guide/changelog text
+- [ ] Compare a few Big Y counts with FTDNA's own Block Tree (the download may include calls the Block Tree leaves out)
 - [ ] Refresh data after new Big Y results (Sedej, Velikonja upgrades)
 - [ ] Consider a per-block cap for branches with many burials (R-Z280 has 27 of its own)
 
@@ -26,4 +33,6 @@ Last work: **Ancient connections** — an opt-in layer of excavated burials on t
 - Ancient burials never open a branch that members alone would not fill
 - A search highlights rather than filters; "Show only matches" narrows, and then a surname search also keeps the burials on that family's branches
 - `.ftdna-session.json` and `data/` never committed
+- Private variants are published as counts only; the positions stay in `data/input`
+- Minimap visibility is one setting for both lineages, in the URL as `mm=0`
 - Do not run `npm run format` — the repo is not prettier-clean and it reformats every file

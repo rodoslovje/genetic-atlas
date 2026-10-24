@@ -74,7 +74,10 @@ export default {
         Liste von SNP-Codes.</p>
         <p>Ziehen verschiebt den Baum, Scrollen (oder Zusammenziehen) zoomt. Der schmale Streifen
         rechts ist eine Übersicht des ganzen Baums mit Ihrem aktuellen Ausschnitt darin; ein Klick oder
-        Zug darin springt woandershin. Der Zeiger auf einem Knoten zeigt dessen Angaben, auf einem
+        Zug darin springt woandershin. Die Schaltfläche <strong>»</strong> an seiner Ecke
+        (<em>Übersicht ausblenden</em>) gibt den Streifen dem Baum zurück, <strong>«</strong> holt ihn
+        wieder; solange er zu sehen ist, lässt sich der Baum so weit nach links ziehen, dass keine
+        Beschriftung darunter verborgen bleibt. Der Zeiger auf einem Knoten zeigt dessen Angaben, auf einem
         Mitglied dieselbe Karte wie auf der Karte.</p>
         <p>Ein Klick auf eine Haplogruppe klappt den Zweig darunter zu, ein weiterer öffnet ihn wieder.
         Ein hohl gezeichneter Knoten — in seiner Farbe umrandet, aber nicht gefüllt — hat noch etwas
@@ -109,6 +112,18 @@ export default {
         <p>Unter den Blöcken erhält jedes Projektmitglied eine eigene Karte unter dem Zweig, bis zu dem
         es getestet wurde. Eine getönte Karte kennzeichnet ein Mitglied mit dem aussagekräftigsten Test
         seiner Linie, eine bernsteinfarbene ein Mitglied, das der aktuellen Suche entspricht.</p>
+        <p>Die Karte eines Mitglieds beginnt auf der Zeitachse beim Geburtsjahr seines frühesten
+        bekannten Vorfahren, gelesen aus den Angaben zum Vorfahren. Zwischen dem Zweig, bis zu dem es
+        getestet wurde, und diesem Jahr liegt ein grauer, gestrichelter Block <strong>privater
+        Varianten</strong>: Mutationen seiner Linie, die noch zu keinem benannten Zweig gehören — ein
+        Block wie die anderen, nur noch ohne Namen. Sobald ein anderer Getesteter sie teilt, macht
+        FamilyTreeDNA daraus einen neuen Zweig. Die Y-DNA-Zahlen stammen aus Big-Y-Ergebnissen; für
+        mtDNA vergleichen wir eine Vollsequenz mit den Mutationen ihrer Haplogruppe und lassen die
+        Positionen weg, die FamilyTreeDNA als instabil behandelt. Mitglieder ohne einen solchen Test oder
+        mit nicht freigegebenen Vollergebnissen erhalten stattdessen eine gestrichelte Linie; ein Vorfahre ohne
+        Jahreszahl in seinen Angaben wird auf 1600 gesetzt, etwa dorthin, wo die Kirchenbücher enden;
+        ist der Vorfahre älter als der Zweig, bleibt die Karte oben und zeigt die Zahl in einem kleinen
+        Kästchen.</p>
         <p>Ein Klick auf einen Block zeichnet die Ansicht mit diesem Zweig als neuem Ausgangspunkt neu
         — so folgen Sie einer Linie in ihre Einzelheiten. Die Schaltfläche <strong>↑</strong> und die
         Spur daneben am oberen Rand führen wieder zur Wurzel zurück.</p>`,

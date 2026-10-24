@@ -67,7 +67,9 @@ export default {
         határoz meg —, az ismertebb ágak pedig leíró nevet is viselnek, így a vonal történetként olvasható,
         nem SNP-kódok listájaként.</p>
         <p>Húzással mozgatja a fát, görgetéssel (vagy csippentéssel) nagyít. A jobb oldali keskeny sáv az
-        egész fa áttekintése, rajta a jelenlegi kivágattal; kattintással vagy húzással bárhová ugorhat.
+        egész fa áttekintése, rajta a jelenlegi kivágattal; kattintással vagy húzással bárhová ugorhat. A sarkában lévő <strong>»</strong> gomb (<em>Áttekintés
+        elrejtése</em>) a sávot visszaadja a fának, a <strong>«</strong> pedig visszahozza; amíg látható,
+        a fa elég messzire húzható balra ahhoz, hogy egyetlen felirat se maradjon alatta rejtve.
         Ha egy csomópont fölött megáll, megjelennek az adatai, egy tag fölött pedig ugyanaz a kártya, mint
         a térképen.</p>
         <p>Egy haplocsoportra kattintva összecsukja az alatta lévő ágat, újabb kattintásra ismét kinyitja.
@@ -101,6 +103,17 @@ export default {
         <p>A blokkok alatt a projekt minden tagja saját kártyát kap az alatt az ág alatt, ameddig
         tesztelték. A színezett kártya azt a tagot jelöli, aki a vonalára nézve a legtöbbet eláruló tesztet
         végezte el, a borostyánsárga pedig azt, aki megfelel az aktuális keresésnek.</p>
+        <p>A tag kártyája az időtengelyen legkorábbi ismert őse születési événél kezdődik, amelyet az
+        ős adataiból olvasunk ki. Az ág között, ameddig tesztelték, és ezen év között szürke, szaggatott
+        szélű <strong>privát variáns</strong>-blokk húzódik: vonala olyan mutációi, amelyek még
+        egyetlen elnevezett ágnak sem részei — blokk, mint a többi, csak még név nélkül. Amint egy
+        másik tesztelt is osztozik rajtuk, a FamilyTreeDNA új ágat képez belőlük. Az Y-DNS-számok a
+        Big Y eredményekből származnak; az mtDNS-nél a teljes szekvenciát vetjük össze a haplocsoport
+        mutációival, kihagyva azokat a pozíciókat, amelyeket a FamilyTreeDNA instabilnak tekint. Akinek
+        nincs ilyen tesztje, vagy teljes eredményei nem nyilvánosak, annál szaggatott vonal áll
+        helyette; az adataiban évszám nélküli őst 1600-ra tesszük, nagyjából oda,
+        ahol az anyakönyvek véget érnek, az ágnál korábbra datált ős esetén pedig a kártya felül marad, és
+        a számot kis keretben mutatja.</p>
         <p>Egy blokkra kattintva a nézet újrarajzolódik úgy, hogy az az ág lesz az új kiindulópont — így
         követhet egyetlen vonalat a részletekig. A nézet tetején lévő <strong>↑</strong> gomb és a mellette
         húzódó útvonal vezet vissza a gyökér felé.</p>`,

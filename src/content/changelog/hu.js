@@ -16,6 +16,26 @@ export default {
 
     entries: [
         {
+            date: "2026-10-24",
+            items: [
+                {
+                    title: "Privát variánsok a blokkfán",
+                    text: `A blokkfán minden tag kártyája mostantól az időtengelyen legkorábbi ismert őse születési
+                        événél áll, fölötte pedig az ágáig tartó szakasz a <strong>privát variánsok</strong>
+                        blokkja — olyan mutációké, amelyek még egyetlen elnevezett ágon sincsenek rajta —,
+                        a Big Y és a teljes mtDNS-szekvencia eredményeknél megszámolva. Így látszik, a vonal
+                        történetéből mennyi az övé még egyedül, és hol jelenhet meg új ág, ha egy rokon is
+                        teszteltet.`,
+                },
+                {
+                    title: "A fa áttekintésének elrejtése",
+                    text: `A fák melletti áttekintő sáv mostantól elrejthető a
+                        <strong>»</strong> gombjával, és amíg látható, a fa elég messzire húzható balra
+                        ahhoz, hogy egyetlen felirat se maradjon alatta rejtve.`,
+                },
+            ],
+        },
+        {
             date: "2026-10-01",
             items: [
                 {

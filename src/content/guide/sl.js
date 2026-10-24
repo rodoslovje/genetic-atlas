@@ -69,7 +69,9 @@ export default {
         zgodba in ne kot seznam oznak SNP.</p>
         <p>Drevo premikate z vlečenjem, približujete pa z drsenjem (ali ščipom). Ozek pas na desni je
         pregled celotnega drevesa z označenim trenutnim izsekom; s klikom ali vlečenjem po njem
-        skočite drugam. Ko postojite nad vozliščem, se izpišejo njegovi podatki, nad članom pa enaka
+        skočite drugam. Gumb <strong>»</strong> v njegovem kotu (<em>Skrij pregled</em>)
+        pas prepusti drevesu, <strong>«</strong> pa ga vrne; dokler je prikazan, lahko drevo povlečete
+        dovolj v levo, da pod njim ne ostane skrita nobena oznaka. Ko postojite nad vozliščem, se izpišejo njegovi podatki, nad članom pa enaka
         kartica kot na zemljevidu.</p>
         <p>S klikom na haploskupino zložite vejo pod njo, z naslednjim klikom pa jo spet odprete.
         Votlo narisano vozlišče — obrobljeno v svoji barvi, a ne zapolnjeno — ima za seboj še nekaj
@@ -101,6 +103,16 @@ export default {
         <p>Pod bloki dobi vsak član projekta svojo kartico pod vejo, do katere je bil testiran.
         Obarvana kartica označuje člana z najbolj povednim testom za njegovo linijo, jantarna pa
         člana, ki ustreza trenutnemu iskanju.</p>
+        <p>Kartica člana se začne na časovni osi pri letu rojstva njegovega najstarejšega znanega
+        prednika, prebranem iz podatkov o predniku. Med vejo, do katere je bil testiran, in tem letom
+        poteka siv črtkan blok <strong>zasebnih variant</strong>: mutacij, ki jih nosi njegova linija, a
+        še niso del nobene poimenovane veje — blok kot drugi, le še brez imena. Ko jih deli še kdo od
+        testiranih, jih FamilyTreeDNA spremeni v novo vejo. Števila za Y-DNK izhajajo iz rezultatov
+        Big Y, za mtDNK pa primerjamo celotno zaporedje z mutacijami njegove haploskupine in izpustimo
+        mesta, ki jih FamilyTreeDNA šteje za nestabilna. Člani brez takega testa ali s skritimi polnimi
+        rezultati imajo namesto bloka črtkano črto; prednik brez letnice v podatkih je
+        postavljen v leto 1600, približno tja, kjer se končajo matične knjige, pri predniku, starejšem
+        od veje, pa ostane kartica na vrhu in število pokaže v majhnem okvirčku.</p>
         <p>S klikom na blok se pogled znova nariše s to vejo kot novim izhodiščem — tako sledite eni
         liniji v podrobnosti. Gumb <strong>↑</strong> in sled ob njem na vrhu pogleda vodita nazaj
         proti korenu.</p>`,

@@ -16,6 +16,27 @@ export default {
 
     entries: [
         {
+            date: "2026-10-24",
+            items: [
+                {
+                    title: "Varianti private nell'albero a blocchi",
+                    text: `Nell'albero a blocchi la scheda di ogni membro si trova ora sulla linea del tempo all'anno di
+                        nascita del suo antenato più antico conosciuto, e il tratto sopra di essa, fino al
+                        suo ramo, è un blocco di <strong>varianti private</strong> — mutazioni non ancora su
+                        alcun ramo con nome — contate per i risultati Big Y e di sequenza completa del mtDNA.
+                        Si vede così quanta parte della storia di una linea è ancora solo sua, e dove può
+                        nascere un nuovo ramo quando si testa un parente.`,
+                },
+                {
+                    title: "Nascondere la panoramica dell'albero",
+                    text: `La striscia di panoramica accanto agli alberi si può
+                        ora nascondere con il suo pulsante <strong>»</strong>, e finché è visibile
+                        l'albero si trascina abbastanza a sinistra perché nessuna etichetta resti
+                        nascosta sotto di essa.`,
+                },
+            ],
+        },
+        {
             date: "2026-10-01",
             items: [
                 {

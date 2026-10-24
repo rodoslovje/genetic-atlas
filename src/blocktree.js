@@ -32,6 +32,11 @@ const BOTTOM_PAD = 24;
 const LINE_H = 14;
 const BLOCK_PAD = 15;       // baseline of a block's name below the block's top edge
 const SAMPLE_PAD = 10;      // top of a sample card's flag below the card's top edge
+const PRIVATE_H = 30;       // private-variants box at the head of a member column
+// Where a member whose ancestor text carries no year goes on the date line:
+// about where the parish registers (matricula books) end, so no ancestor
+// further back can be found in them.
+const UNDATED_ANCESTOR = 1600;
 const CHAR_W = 6.4;         // approx. glyph width at 11-12px IBM Plex Sans
 const MAX_CRUMBS = 6;
 const MAX_AUTO_COLS = 150;  // wider than this, an automatic root asks for a narrower filter
@@ -97,6 +102,41 @@ function wrap(text, maxChars, maxLines) {
     return lines;
 }
 
+// Birth year of a member's earliest known ancestor, from the free text members
+// type in ("Luka Baraga, b. 1610", "Marija Sterle, 1778 - 1829", "~1781"):
+// the earliest plausible four-digit year, so a death year never wins. Null
+// when the text has none.
+function ancestorYear(text) {
+    const years = (String(text || "").match(/(?<!\d)1\d{3}(?!\d)/g) || [])
+        .map(Number)
+        .filter((y) => y >= 1300 && y <= PRESENT);
+    return years.length ? Math.min(...years) : null;
+}
+
+// The axis labels each branch's TMRCA, which can leave long stretches —
+// where member cards sit on their ancestors' years — with nothing to read
+// a date against. Fill every gap wider than CENTURY_GAP years with a line at
+// each round century inside it, and always mark 0 CE when the axis crosses
+// it. Sorted years in, sorted years out.
+const CENTURY_GAP = 200;
+function withCenturyLines(years) {
+    const out = [];
+    years.forEach((year, i) => {
+        const next = years[i + 1];
+        out.push(year);
+        if (next === undefined || next - year <= CENTURY_GAP) return;
+        for (let c = Math.floor(year / 100) * 100 + 100; c < next; c += 100) {
+            if (c > year) out.push(c);
+        }
+    });
+    // The turn of the era is always marked when the axis spans it.
+    if (years[0] < 0 && years[years.length - 1] > 0 && !out.includes(0)) {
+        out.push(0);
+        out.sort((a, b) => a - b);
+    }
+    return out;
+}
+
 // The live view is styled through class rules and CSS custom properties, which
 // many SVG consumers (Illustrator, older Inkscape, Word) ignore. Bake the same
 // values in as presentation attributes for the exported file. Colors mirror
@@ -111,12 +151,15 @@ function inlineExportStyles(svg) {
     set(".bt-block rect", { "stroke-width": 1.5 });
     set(".bt-block--root > rect", { "stroke-width": 2.5 });
     set(".bt-ci line", { "stroke-width": 1.5, opacity: 0.8 });
-    set(".bt-sample rect", { fill: "#ffffff", stroke: "#94a3b8", "stroke-width": 1.5 });
-    set(".bt-sample--full rect", { fill: "#e8eef6" });
-    set(".bt-sample--match rect", { fill: "#fff8e1" });
+    set(".bt-sample__card", { fill: "#ffffff", stroke: "#94a3b8", "stroke-width": 1.5 });
+    set(".bt-sample--full .bt-sample__card", { fill: "#e8eef6" });
+    set(".bt-sample--match .bt-sample__card", { fill: "#fff8e1" });
     set(".bt-sample__surname", { "font-size": 12, "font-weight": "bold", fill: "#1a365d" });
     set(".bt-sample__line", { "font-size": 11, fill: "#4a5568" });
     set(".bt-sample__sub", { "font-size": 10, fill: "#718096" });
+    set(".bt-private rect", { fill: "#94a3b8", "fill-opacity": 0.14, stroke: "#94a3b8", "stroke-width": 1.5, "stroke-dasharray": "4 3" });
+    set(".bt-private text", { "font-size": 11, "font-weight": "bold", fill: "#4a5568" });
+    set(".bt-sample__stem", { stroke: "#94a3b8", "stroke-width": 1.5, "stroke-dasharray": "4 3" });
     set(".bt-anc rect", { "stroke-width": 1.5 });
     set(".bt-anc__edge", { "stroke-width": 2.5 });
     set(".bt-anc__code", { "font-size": 10, "font-weight": "bold", fill: "#4a5568" });
@@ -485,7 +528,16 @@ export class BlockTree {
         const assignCols = (node, start) => {
             let cursor = start;
             node.children.forEach((c) => { assignCols(c, cursor); cursor += c.cols; });
-            node.samples = node.people.map((person) => ({ person, node, col: cursor++ }));
+            node.samples = node.people.map((person) => {
+                // The card sits on the date line at its earliest known ancestor;
+                // above that, back to the terminal haplogroup, the line runs on
+                // unnamed. An undated ancestor is put at UNDATED_ANCESTOR; one
+                // dated before the haplogroup (overlapping estimates) leaves the
+                // card at the top.
+                const year = ancestorYear(person.ancestor) ?? UNDATED_ANCESTOR;
+                const cardYear = year !== null && year > node.tmrca ? year : null;
+                return { person, node, col: cursor++, cardYear };
+            });
             node.ancientSamples = node.ancient.map((sample) => ({ sample, node, col: cursor++ }));
             this.ancientCols += node.ancientSamples.length;
             node.col0 = start;
@@ -496,9 +548,20 @@ export class BlockTree {
         // 3. Time → y. Linear in years, but every slice between consecutive
         //    boundaries gets a minimum height so short-lived blocks stay
         //    readable, and the sample area always fits a person card.
+        //    The latest ancestor year is a boundary too, so the slice from it to
+        //    the present gets the card's minimum height; every other card
+        //    starts earlier and so has more room.
         const years = new Set([rootFormed, PRESENT]);
-        const walk = (node) => { years.add(node.tmrca); node.children.forEach(walk); };
+        let latestCard = null;
+        const walk = (node) => {
+            years.add(node.tmrca);
+            node.samples.forEach((s) => {
+                if (s.cardYear !== null) latestCard = Math.max(latestCard ?? s.cardYear, s.cardYear);
+            });
+            node.children.forEach(walk);
+        };
         walk(tree);
+        if (latestCard !== null) years.add(latestCard);
         const sorted = [...years].sort((a, b) => a - b);
         const span = Math.max(1, PRESENT - rootFormed);
         const ppy = Math.min(PX_PER_YEAR, MAX_LINEAR_H / span);
@@ -535,7 +598,7 @@ export class BlockTree {
             .attr("x1", AXIS_W - 1).attr("x2", AXIS_W - 1).attr("y1", TOP_PAD).attr("y2", yPresent);
         const grid = this.svg.append("g");
         let lastLabelY = -Infinity;
-        for (const year of [...this.scale.labelYears].sort((a, b) => a - b)) {
+        for (const year of withCenturyLines([...this.scale.labelYears].sort((a, b) => a - b))) {
             const y = Y(year);
             grid.append("line").attr("class", "bt-grid")
                 .attr("x1", 0).attr("x2", width).attr("y1", y).attr("y2", y);
@@ -740,21 +803,65 @@ export class BlockTree {
         const Y = this.yearToY;
         const x = col * COL_W + INSET;
         const w = COL_W - INSET * 2;
-        const y0 = Y(node.tmrca);
+        const yHg = Y(node.tmrca);
         const y1 = Y(PRESENT);
-        const h = y1 - y0;
         const prominent = isProminentPerson(person);
         const isMatch = this.matchSet.has(person);
         const maxChars = Math.floor((w - 12) / CHAR_W);
+        const hasPrivate = Number.isFinite(person.private);
+        // The card starts on the date line at the earliest known ancestor, but
+        // always leaves a private-variants block room for its label.
+        const y0 = sample.cardYear !== null
+            ? Math.min(Math.max(Y(sample.cardYear), yHg + (hasPrivate ? PRIVATE_H : 0)), y1 - MIN_GAP)
+            : yHg;
+        const h = y1 - y0;
 
         const g = layer.append("g")
             .attr("class", `bt-sample${prominent ? " bt-sample--full" : ""}${isMatch ? " bt-sample--match" : ""}`)
             .on("mouseover", (event) => this.showTooltip(event, getPersonTooltip(person, "", this.kind, "tree")))
             .on("mouseout", () => this.hideTooltip());
 
-        g.append("rect")
+        // Private variants — Big Y's unnamed SNPs, or the mtDNA mutations off the
+        // haplogroup's path — are a block like any other, just one not named or
+        // placed yet: they accumulated on this line alone between the terminal
+        // haplogroup and the present, and become a branch once another tester
+        // shares them. It fills the span down to the earliest known ancestor.
+        // Kits without a count (no full test, results withheld) get only a
+        // dashed stem rather than a misleading zero.
+        if (y0 > yHg) {
+            if (hasPrivate) {
+                const pv = g.append("g").attr("class", "bt-private");
+                // Inset from the column, so it reads as a block of its own
+                // rather than as part of the branch above or the card below.
+                const padX = 6, padY = 8;
+                pv.append("rect")
+                    .attr("x", x + padX).attr("y", yHg + padY)
+                    .attr("width", w - padX * 2).attr("height", Math.max(1, y0 - yHg - padY * 2)).attr("rx", 3);
+                pv.append("text")
+                    .attr("x", x + w / 2).attr("y", (yHg + y0) / 2 + 4).attr("text-anchor", "middle")
+                    .text(truncate(t("privateVariantsCount", person.private), maxChars));
+            } else {
+                g.append("line").attr("class", "bt-sample__stem")
+                    .attr("x1", x + w / 2).attr("x2", x + w / 2).attr("y1", yHg).attr("y2", y0);
+            }
+        }
+
+        g.append("rect").attr("class", "bt-sample__card")
             .attr("x", x).attr("y", y0).attr("width", w).attr("height", h).attr("rx", 3)
             .style("stroke-dasharray", prominent ? null : "4 3");
+
+        // A card that could not move down to its ancestor's year still shows
+        // its count, as a short private-variants block at its head.
+        let top = y0;
+        if (hasPrivate && y0 === yHg) {
+            const pv = g.append("g").attr("class", "bt-private bt-private--inline");
+            pv.append("rect")
+                .attr("x", x + 6).attr("y", y0 + 6).attr("width", w - 12).attr("height", PRIVATE_H - 8).attr("rx", 3);
+            pv.append("text")
+                .attr("x", x + w / 2).attr("y", y0 + 6 + (PRIVATE_H - 8) / 2 + 4).attr("text-anchor", "middle")
+                .text(truncate(t("privateVariantsCount", person.private), maxChars));
+            top += PRIVATE_H;
+        }
 
         // Who the person is goes in a sliding, clipped group for the same reason
         // a block's name does: a card reaching back to an old terminal TMRCA is
@@ -769,10 +876,10 @@ export class BlockTree {
         const code = person.country || "un";
         const href = getFlagDataUri(code) || `https://flagcdn.com/w40/${code}.png`;
         cardG.append("image").attr("href", href).attr("xlink:href", href)
-            .attr("x", x + w / 2 - 12).attr("y", y0 + 10).attr("width", 24).attr("height", 16)
+            .attr("x", x + w / 2 - 12).attr("y", top + 10).attr("width", 24).attr("height", 16)
             .attr("preserveAspectRatio", "xMidYMid slice");
 
-        let ty = y0 + 44;
+        let ty = top + 44;
         cardG.append("text").attr("class", "bt-sample__surname")
             .attr("x", x + w / 2).attr("y", ty).attr("text-anchor", "middle")
             .text(truncate(decodeHtmlEntities(person.surname || person.kit || ""), maxChars));
@@ -794,13 +901,14 @@ export class BlockTree {
 
         cardG.node().__sticky = {
             centered: true,
-            x: x + w / 2, y: y0 + SAMPLE_PAD,
-            left: x, right: x + w, top: y0, bottom: y1,
+            x: x + w / 2, y: top + SAMPLE_PAD,
+            // Slides below the private-variants box, never over it.
+            left: x, right: x + w, top, bottom: y1,
             w: w - 12,              // replaced by the measured text width after layout
             pad: SAMPLE_PAD,
             // Unlike a block label, whose surplus lines may be clipped, the whole
             // card has to stay inside the card.
-            tail: ty - y0,
+            tail: ty - top,
         };
 
         // The test name belongs to the present-day end of the column, so it

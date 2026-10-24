@@ -68,7 +68,9 @@ export default {
         a ne kao popis SNP oznaka.</p>
         <p>Stablo pomičete povlačenjem, a približavate kotačićem (ili prstima). Uska traka desno
         pregled je cijelog stabla s označenim trenutnim isječkom; klikom ili povlačenjem po njoj
-        skačete drugamo. Zadržavanjem miša nad čvorom prikazuju se njegovi podaci, a nad članom ista
+        skačete drugamo. Gumb <strong>»</strong> u njegovu kutu (<em>Sakrij pregled</em>)
+        prepušta traku stablu, a <strong>«</strong> ga vraća; dok je prikazan, stablo možete povući
+        dovoljno ulijevo da ispod njega ne ostane skrivena nijedna oznaka. Zadržavanjem miša nad čvorom prikazuju se njegovi podaci, a nad članom ista
         kartica kao na karti.</p>
         <p>Klikom na haplogrupu sklapate granu ispod nje, a novim je klikom opet otvarate. Šuplje
         nacrtan čvor — obrubljen svojom bojom, ali neispunjen — iza sebe ima još nešto sklopljeno;
@@ -101,6 +103,16 @@ export default {
         <p>Ispod blokova svaki član projekta dobiva svoju karticu pod granom do koje je testiran.
         Obojena kartica označava člana s najpotpunijim testom za njegovu liniju, a jantarna člana koji
         odgovara trenutnom pretraživanju.</p>
+        <p>Kartica člana počinje na vremenskoj osi kod godine rođenja njegova najstarijeg poznatog
+        pretka, pročitane iz podataka o pretku. Između grane do koje je testiran i te godine proteže se
+        sivi isprekidani blok <strong>privatnih varijanti</strong>: mutacija koje nosi njegova linija, a
+        još nisu dio nijedne imenovane grane — blok poput ostalih, samo još bez imena. Kada ih podijeli
+        još netko od testiranih, FamilyTreeDNA od njih stvara novu granu. Brojevi za Y-DNK dolaze iz
+        rezultata Big Y, a za mtDNK uspoređujemo cjelovit slijed s mutacijama njegove haplogrupe i
+        izostavljamo mjesta koja FamilyTreeDNA smatra nestabilnima. Članovi bez takvog testa ili sa
+        skrivenim punim rezultatima umjesto bloka imaju isprekidanu crtu; predak bez godine u podacima
+        smješta se u 1600., otprilike gdje završavaju matične knjige, a kod pretka starijeg od grane
+        kartica ostaje na vrhu i broj pokazuje u malom okviru.</p>
         <p>Klikom na blok prikaz se ponovno crta s tom granom kao novim polazištem — tako pratite jednu
         liniju u dubinu. Gumb <strong>↑</strong> i trag uz njega na vrhu prikaza vode natrag prema
         korijenu.</p>`,

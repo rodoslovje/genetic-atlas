@@ -12,6 +12,7 @@ import argparse
 import glob
 import json
 import os
+import re
 import sys
 import pandas as pd
 
@@ -27,11 +28,13 @@ CONFIGS = {
         "fetched_extra": {"Test": "test"},
         # Extra columns pulled from the SNP CSV: source -> renamed
         "snp_extra": {},
+        # Big Y private variant counts from ftdna-get-private-variants.py (optional).
+        "input_private": "data/input/slo-big-y-private.json",
         # Priority list of columns to use for the final 'haplogroup' field.
         # First non-empty (and not "-") wins.
         "haplogroup_priority": ["haplogroup_fetched", "haplogroup_snp"],
         "field_order": [
-            "kit", "test", "group", "haplogroup", "surname",
+            "kit", "test", "group", "haplogroup", "private", "surname",
             "ancestor", "location", "country", "latitude", "longitude",
         ],
     },
@@ -44,11 +47,14 @@ CONFIGS = {
         "primary_name_alias": "Name_mtdna",
         "fetched_extra": {"Mitotree Haplogroup": "mitotree"},
         "snp_extra": {"Mitotree Haplogroup": "mitotree_snp", "Haplotype": "haplotype"},
+        # Private mutations are worked out from the full sequence in the SNP CSV
+        # against the haplogroup's path (see mt_private_counts).
+        "input_paths": "data/output/slo-mtdna-paths.json",
         # Mitotree wins over fetched, then SNP. mitotree_snp falls back to mitotree
         # via the merge step below.
         "haplogroup_priority": ["mitotree", "haplogroup_fetched", "haplogroup_snp"],
         "field_order": [
-            "kit", "group", "haplogroup", "haplotype", "surname",
+            "kit", "group", "haplogroup", "haplotype", "private", "surname",
             "ancestor", "location", "country", "latitude", "longitude",
         ],
     },
@@ -117,6 +123,80 @@ def first_nonempty(row, columns):
         if val and str(val).strip() != "-":
             return val
     return ""
+
+
+def load_private(path):
+    """kit -> private variant count, for kits fetched successfully."""
+    if not path or not os.path.exists(path):
+        return {}
+    with open(path, encoding="utf-8") as f:
+        kits = json.load(f)
+    return {kit: r["count"] for kit, r in kits.items() if r.get("status") == "ok"}
+
+
+# Positions FTDNA's Mitotree leaves out of haplogroup calls because they mutate
+# too often to mean anything: the poly-C and CA-repeat stretches of HVR2/HVR1,
+# 16519, and the 9-bp repeat at 8281-8289 (which the paths write in repeat
+# notation, so a member's raw deletions there would never match them).
+MT_UNSTABLE = re.compile(r"^(\d+)")
+MT_UNSTABLE_RANGES = [(303, 315), (522, 524), (573, 573), (8281, 8289),
+                      (16182, 16183), (16193, 16193), (16519, 16519)]
+MT_HETEROPLASMY = re.compile(r"[RYKMSW]$")
+
+
+def mt_unstable(mutation):
+    m = MT_UNSTABLE.match(mutation.lstrip("ACGT"))
+    if not m:
+        return True
+    pos = int(m.group(1))
+    return any(lo <= pos <= hi for lo, hi in MT_UNSTABLE_RANGES)
+
+
+def norm_mt(mutation):
+    return mutation.strip().strip("()").rstrip("!").upper()
+
+
+def mt_private_counts(snp_path, paths_path, haplogroups):
+    """kit -> number of the member's mutations that are not on their haplogroup's
+    path: their private mutations, as FTDNA's Block Tree counts them.
+
+    Needs the member's coding region (withheld ones read "Private") and a path
+    whose every block has its variant list; anything less would overcount, so
+    those kits get no count. Run ftdna-get-paths.py first for new haplogroups.
+    """
+    if not os.path.exists(paths_path):
+        return {}
+    with open(paths_path, encoding="utf-8") as f:
+        nodes = {n["haplogroup"]: n for n in json.load(f)}
+    df = pd.read_csv(snp_path, dtype=str).fillna("")
+    df.rename(columns=lambda x: x.strip("﻿").strip(), inplace=True)
+
+    def path_variants(hg):
+        variants = set()
+        while hg in nodes:
+            node = nodes[hg]
+            if "variants" in node:
+                variants |= {norm_mt(v) for v in node["variants"]}
+            elif "divergence" not in node.get("note", ""):
+                return None  # not backfilled yet; the archaic placeholders above the root never are
+            hg = node["parent"]
+        return variants
+
+    counts = {}
+    for _, row in df.iterrows():
+        kit = row["Kit Number"]
+        if row.get("Coding Region Mutations", "") in ("", "Private"):
+            continue
+        hg = haplogroups.get(kit, "")
+        if hg not in nodes:
+            continue
+        on_path = path_variants(hg)
+        if on_path is None:
+            continue
+        own = {norm_mt(m) for col in ("HVR1 Mutations", "HVR2 Mutations", "Coding Region Mutations")
+               for m in row.get(col, "").split(",") if m.strip()}
+        counts[kit] = sum(1 for m in own - on_path if not mt_unstable(m) and not MT_HETEROPLASMY.search(m))
+    return counts
 
 
 def run_one(kind):
@@ -235,10 +315,25 @@ def run_one(kind):
         return False
     df["country"] = df["country"].map(COUNTRY_MAP)
 
+    if kind == "mt":
+        private = mt_private_counts(cfg["input_snp"], cfg["input_paths"], dict(zip(df["kit"], df["haplogroup"])))
+    else:
+        private = load_private(cfg.get("input_private"))
+    if private:
+        df["private"] = df["kit"].map(private)
+
     df = df[[c for c in cfg["field_order"] if c in df.columns]]
 
     os.makedirs(os.path.dirname(cfg["output"]), exist_ok=True)
     records = df.to_dict(orient="records")
+    # Only kits with a fetched count carry the field; the rest omit it rather
+    # than read as zero.
+    for r in records:
+        if "private" in r:
+            if pd.isna(r["private"]):
+                del r["private"]
+            else:
+                r["private"] = int(r["private"])
     with open(cfg["output"], "w", encoding="utf-8") as f:
         json.dump(records, f, ensure_ascii=False, indent=4)
 

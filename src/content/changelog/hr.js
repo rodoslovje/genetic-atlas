@@ -14,6 +14,26 @@ export default {
 
     entries: [
         {
+            date: "2026-10-24",
+            items: [
+                {
+                    title: "Privatne varijante u blokovnom stablu",
+                    text: `U blokovnom stablu kartica svakog člana sada stoji na vremenskoj osi kod godine rođenja njegova
+                        najstarijeg poznatog pretka, a raspon iznad nje do njegove grane blok je
+                        <strong>privatnih varijanti</strong> — mutacija koje još nisu ni na jednoj imenovanoj
+                        grani — prebrojenih za rezultate Big Y i cjelovitog slijeda mtDNK. Tako se vidi
+                        koliko je povijesti linije još samo njezino i gdje se može pojaviti nova grana kada
+                        se testira neki rođak.`,
+                },
+                {
+                    title: "Skrivanje pregleda stabla",
+                    text: `Traku s pregledom uz stabla sada možete sakriti gumbom
+                        <strong>»</strong>, a dok je prikazana, stablo se povlači dovoljno ulijevo da
+                        ispod nje ne ostane skrivena nijedna oznaka.`,
+                },
+            ],
+        },
+        {
             date: "2026-10-01",
             items: [
                 {

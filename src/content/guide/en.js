@@ -71,7 +71,9 @@ export default {
         can be read as a story rather than as a list of SNP codes.</p>
         <p>Drag to move the tree and scroll (or pinch) to zoom. The small strip on the right is an
         overview of the whole tree with your current window marked on it; click or drag inside it to
-        jump elsewhere. Hovering over a node shows its details, and over a member shows the same
+        jump elsewhere. The <strong>»</strong> button on its corner (<em>Hide overview</em>)
+        gives its strip back to the tree, and <strong>«</strong> brings it back; while it is shown, the
+        tree can be dragged far enough left that no label stays hidden under it. Hovering over a node shows its details, and over a member shows the same
         card as on the map.</p>
         <p>Clicking a haplogroup collapses the branch below it, and clicking again opens it up. A
         node drawn hollow — outlined in its colour but not filled — has something folded away behind
@@ -105,6 +107,16 @@ export default {
         <p>Below the blocks, each project member gets a card of their own under the branch they were
         tested to. A tinted card marks a member with the most informative test for their lineage, and
         an amber one a member matching the current search.</p>
+        <p>A member's card starts on the date line at the birth year of their earliest known ancestor,
+        read from the ancestor's details. Between the branch they were tested to and that year runs a
+        grey dashed block of <strong>private variants</strong>: mutations their line carries that are not
+        yet part of any named branch — a block like the others, just one not named yet. Once another
+        tester shares them, FamilyTreeDNA turns them into a new branch. Y-DNA counts come from Big Y
+        results; mtDNA counts compare a full-sequence result with the mutations of its haplogroup,
+        leaving out the positions FamilyTreeDNA treats as unstable. Members without such a test, or
+        whose full results are not shared, get a dashed line instead; an ancestor with no year in their details is
+        placed at 1600, about where the parish registers end, and one dated before the branch leaves
+        the card at the top, with the count in a small box.</p>
         <p>Clicking a block redraws the view with that branch as the new starting point — the way to
         follow one line down into its detail. The <strong>↑</strong> button and the trail beside it,
         at the top of the view, lead back up towards the root.</p>`,
