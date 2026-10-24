@@ -9,7 +9,7 @@ Last work: **Private variants** in the block tree (24. 10.) — each member's ca
 
 - Y-DNA: `tools/ftdna-get-private-variants.py` downloads each Big Y kit's list through the admin session into `data/input/slo-big-y-private.json` (81/82 kits; members with Limited/Advanced access). A login lasts ~1 hour, so run it right after `ftdna-login.py`.
 - mtDNA: computed in `ftdna-csv-to-json.py` from the full-sequence export minus the haplogroup's path (101 kits); unstable Mitotree positions are filtered. Re-run the converter after `ftdna-get-paths.py` when new haplogroups arrive.
-- Card year: earliest 4-digit year in the ancestor text; none → 1600 (where parish registers end). An ancestor dated before the branch keeps the card at the top with a short private-variants box.
+- Card year: earliest 4-digit year in the ancestor text; none → 1900, so members see the year is missing and add it. An ancestor dated before the branch keeps the card at the top with a short private-variants box.
 
 **State of ancient connections**
 

@@ -115,7 +115,7 @@ export default {
         results; mtDNA counts compare a full-sequence result with the mutations of its haplogroup,
         leaving out the positions FamilyTreeDNA treats as unstable. Members without such a test, or
         whose full results are not shared, get a dashed line instead; an ancestor with no year in their details is
-        placed at 1600, about where the parish registers end, and one dated before the branch leaves
+        placed at 1900, close to the present, so the missing year shows; one dated before the branch leaves
         the card at the top, with the count in a small box.</p>
         <p>Clicking a block redraws the view with that branch as the new starting point — the way to
         follow one line down into its detail. The <strong>↑</strong> button and the trail beside it,

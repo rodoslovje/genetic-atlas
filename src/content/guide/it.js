@@ -118,7 +118,7 @@ export default {
         sequenza completa con le mutazioni del suo aplogruppo, tralasciando le posizioni che
         FamilyTreeDNA considera instabili. I membri senza un test del genere, o con i risultati completi
         non condivisi, hanno al suo posto una linea tratteggiata; un antenato senza anno nei suoi dati
-        viene posto al 1600, più o meno dove finiscono i registri parrocchiali, mentre con un antenato
+        viene posto al 1900, vicino al presente, perché l'anno mancante si noti, mentre con un antenato
         datato prima del ramo la scheda resta in alto e mostra il numero in un piccolo riquadro.</p>
         <p>Un clic su un blocco ridisegna la vista con quel ramo come nuovo punto di partenza: è il modo
         di seguire una linea nel dettaglio. Il pulsante <strong>↑</strong> e il percorso accanto ad

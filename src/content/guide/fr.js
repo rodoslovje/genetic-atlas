@@ -119,8 +119,8 @@ export default {
         pour le mtDNA, nous comparons une séquence complète aux mutations de son haplogroupe, en écartant
         les positions que FamilyTreeDNA juge instables. Les membres sans un tel test, ou dont les
         résultats complets ne sont pas partagés, ont à la place une ligne en pointillés ; un ancêtre sans
-        année dans ses informations est placé en 1600, à peu près là où s'arrêtent les registres
-        paroissiaux, et avec un ancêtre daté d'avant la branche la fiche reste en haut et indique le
+        année dans ses informations est placé en 1900, près du présent, pour que l'année manquante
+        se remarque, et avec un ancêtre daté d'avant la branche la fiche reste en haut et indique le
         nombre dans un petit encadré.</p>
         <p>Un clic sur un bloc redessine la vue avec cette branche pour nouveau point de départ — la façon
         de suivre une lignée dans le détail. Le bouton <strong>↑</strong> et le fil d'ariane à côté, en

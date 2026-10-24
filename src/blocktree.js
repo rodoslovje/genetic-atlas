@@ -34,9 +34,9 @@ const BLOCK_PAD = 15;       // baseline of a block's name below the block's top 
 const SAMPLE_PAD = 10;      // top of a sample card's flag below the card's top edge
 const PRIVATE_H = 30;       // private-variants box at the head of a member column
 // Where a member whose ancestor text carries no year goes on the date line:
-// about where the parish registers (matricula books) end, so no ancestor
-// further back can be found in them.
-const UNDATED_ANCESTOR = 1600;
+// close to the present, so the missing year shows — a nudge to the member to
+// add their earliest ancestor's birth year.
+const UNDATED_ANCESTOR = 1900;
 const CHAR_W = 6.4;         // approx. glyph width at 11-12px IBM Plex Sans
 const MAX_CRUMBS = 6;
 const MAX_AUTO_COLS = 150;  // wider than this, an automatic root asks for a narrower filter

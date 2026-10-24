@@ -121,7 +121,7 @@ export default {
         mtDNA vergleichen wir eine Vollsequenz mit den Mutationen ihrer Haplogruppe und lassen die
         Positionen weg, die FamilyTreeDNA als instabil behandelt. Mitglieder ohne einen solchen Test oder
         mit nicht freigegebenen Vollergebnissen erhalten stattdessen eine gestrichelte Linie; ein Vorfahre ohne
-        Jahreszahl in seinen Angaben wird auf 1600 gesetzt, etwa dorthin, wo die Kirchenbücher enden;
+        Jahreszahl in seinen Angaben wird auf 1900 gesetzt, nahe an die Gegenwart, damit das fehlende Jahr auffällt;
         ist der Vorfahre älter als der Zweig, bleibt die Karte oben und zeigt die Zahl in einem kleinen
         Kästchen.</p>
         <p>Ein Klick auf einen Block zeichnet die Ansicht mit diesem Zweig als neuem Ausgangspunkt neu

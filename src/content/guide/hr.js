@@ -111,7 +111,7 @@ export default {
         rezultata Big Y, a za mtDNK uspoređujemo cjelovit slijed s mutacijama njegove haplogrupe i
         izostavljamo mjesta koja FamilyTreeDNA smatra nestabilnima. Članovi bez takvog testa ili sa
         skrivenim punim rezultatima umjesto bloka imaju isprekidanu crtu; predak bez godine u podacima
-        smješta se u 1600., otprilike gdje završavaju matične knjige, a kod pretka starijeg od grane
+        smješta se u 1900., blizu sadašnjosti, da se vidi da godina nedostaje, a kod pretka starijeg od grane
         kartica ostaje na vrhu i broj pokazuje u malom okviru.</p>
         <p>Klikom na blok prikaz se ponovno crta s tom granom kao novim polazištem — tako pratite jednu
         liniju u dubinu. Gumb <strong>↑</strong> i trag uz njega na vrhu prikaza vode natrag prema

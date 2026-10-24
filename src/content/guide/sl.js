@@ -111,7 +111,7 @@ export default {
         Big Y, za mtDNK pa primerjamo celotno zaporedje z mutacijami njegove haploskupine in izpustimo
         mesta, ki jih FamilyTreeDNA šteje za nestabilna. Člani brez takega testa ali s skritimi polnimi
         rezultati imajo namesto bloka črtkano črto; prednik brez letnice v podatkih je
-        postavljen v leto 1600, približno tja, kjer se končajo matične knjige, pri predniku, starejšem
+        postavljen v leto 1900, blizu sedanjosti, da se vidi, da letnica manjka, pri predniku, starejšem
         od veje, pa ostane kartica na vrhu in število pokaže v majhnem okvirčku.</p>
         <p>S klikom na blok se pogled znova nariše s to vejo kot novim izhodiščem — tako sledite eni
         liniji v podrobnosti. Gumb <strong>↑</strong> in sled ob njem na vrhu pogleda vodita nazaj

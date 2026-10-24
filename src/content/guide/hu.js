@@ -111,8 +111,8 @@ export default {
         Big Y eredményekből származnak; az mtDNS-nél a teljes szekvenciát vetjük össze a haplocsoport
         mutációival, kihagyva azokat a pozíciókat, amelyeket a FamilyTreeDNA instabilnak tekint. Akinek
         nincs ilyen tesztje, vagy teljes eredményei nem nyilvánosak, annál szaggatott vonal áll
-        helyette; az adataiban évszám nélküli őst 1600-ra tesszük, nagyjából oda,
-        ahol az anyakönyvek véget érnek, az ágnál korábbra datált ős esetén pedig a kártya felül marad, és
+        helyette; az adataiban évszám nélküli őst 1900-ra tesszük, közel a
+        jelenhez, hogy feltűnjön a hiányzó év, az ágnál korábbra datált ős esetén pedig a kártya felül marad, és
         a számot kis keretben mutatja.</p>
         <p>Egy blokkra kattintva a nézet újrarajzolódik úgy, hogy az az ág lesz az új kiindulópont — így
         követhet egyetlen vonalat a részletekig. A nézet tetején lévő <strong>↑</strong> gomb és a mellette
