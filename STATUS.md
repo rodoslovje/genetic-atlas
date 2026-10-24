@@ -22,7 +22,7 @@ Last work: **Private variants** in the block tree (24. 10.) — each member's ca
 - [ ] Review the SL/HR/DE/IT/FR/HU wording of the new guide section and changelog entry (written by Claude, not reviewed)
 - [ ] Review the SL/HR/DE/IT/FR/HU wording of the private-variants and minimap guide/changelog text
 - [ ] Compare a few Big Y counts with FTDNA's own Block Tree (the download may include calls the Block Tree leaves out)
-- [ ] Refresh data after new Big Y results (Sedej, Velikonja upgrades)
+- [ ] Refresh data after new Big Y results (Sedej, Velikonja upgrades) — `python tools/ftdna-update.py` now runs the whole pipeline, signing in when needed
 - [ ] Consider a per-block cap for branches with many burials (R-Z280 has 27 of its own)
 
 **Decided**

@@ -51,6 +51,18 @@ playwright install chromium
 
 ### 2. Process Data
 
+**Full update in one command:**
+
+```bash
+python tools/ftdna-update.py                   # both lineages
+python tools/ftdna-update.py --kind y          # one lineage
+python tools/ftdna-update.py --skip private    # leave out a step
+```
+
+Runs the steps below in order: checks the saved admin session and opens the sign-in window (`ftdna-login.py`) if it is missing or expired, then downloads the CSVs (1b), fetches the public results (2), downloads Big Y private variants (1c), converts (3), collects paths (4) and converts once more so the mtDNA private counts see newly arrived haplogroups. A step that reports an expired session (exit code 2) triggers a new sign-in and is retried once. Any other failure stops the run. If FTDNA rate limits the paths step, the final conversion still runs on what was saved, and the script exits with code 2 and prints the command that finishes the backfill. `--login` forces a fresh sign-in, while `--paths-mode` and `--limit` are passed on to `ftdna-get-paths.py`.
+
+The individual tools:
+
 Each tool processes both lineages (Y-DNA and mtDNA) by default. Pass `--kind y` or `--kind mt` to limit it to one.
 
 **1a. (One-time) Bootstrap a FamilyTreeDNA admin session:**
