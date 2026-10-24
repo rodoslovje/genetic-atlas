@@ -5,6 +5,7 @@ through the admin (GAP) session captured by ftdna-login.py.
 Usage:
     python tools/ftdna-get-private-variants.py                 # every Big Y kit
     python tools/ftdna-get-private-variants.py --only IN99945  # selected kits
+    python tools/ftdna-get-private-variants.py --missing       # kits not fetched yet
 
 Flow:
     1. Reads kit number -> encrypted kit id (ekit) and the access level each
@@ -156,6 +157,8 @@ def save(results):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     parser.add_argument("--only", nargs="+", metavar="KIT", help="Fetch only these kit numbers.")
+    parser.add_argument("--missing", action="store_true",
+                        help="Skip kits that already have a successful fetch.")
     args = parser.parse_args()
 
     if not SESSION_FILE.exists():
@@ -165,6 +168,11 @@ def main():
 
     targets = args.only or bigy_kits()
     results = load_previous()
+    if args.missing:
+        targets = [k for k in targets if results.get(k, {}).get("status") != "ok"]
+        if not targets:
+            print("Every Big Y kit already has its private variants.")
+            return
     today = datetime.date.today().isoformat()
     print(f"Fetching private variants for {len(targets)} Big Y kit(s)")
 

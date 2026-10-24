@@ -6,16 +6,20 @@ Usage:
     python tools/ftdna-update.py --kind y            # paternal only
     python tools/ftdna-update.py --login             # force a fresh sign-in first
     python tools/ftdna-update.py --skip private      # leave out a step (repeatable)
-    python tools/ftdna-update.py --paths-mode full   # rebuild the tree from scratch
+    python tools/ftdna-update.py --mode full         # re-fetch every Big Y kit and
+                                                     # rebuild the tree from scratch
 
 Steps:
     session   check .ftdna-session.json against GAP; if it is missing or
               expired, run ftdna-login.py (opens Chromium, you sign in, press Enter)
     csv       ftdna-download-csv.py          admin CSV exports
     results   ftdna-fetch-results.py         public results tables
-    private   ftdna-get-private-variants.py  Big Y private variants (Y-DNA only)
+    private   ftdna-get-private-variants.py  Big Y private variants (Y-DNA only);
+                                             only kits without them yet, every
+                                             kit with --mode full
     convert   ftdna-csv-to-json.py           CSV -> JSON
-    paths     ftdna-get-paths.py             new haplogroups + backfill
+    paths     ftdna-get-paths.py             new haplogroups + backfill, with
+                                             --mode passed on (full rebuilds all)
     recount   ftdna-csv-to-json.py           again, so mtDNA private counts see
                                              the paths of newly arrived haplogroups
 
@@ -101,8 +105,10 @@ def main():
                         help="Sign in again even if the saved session still works")
     parser.add_argument("--skip", nargs="+", choices=STEPS, default=[], metavar="STEP",
                         help=f"Steps to leave out: {', '.join(STEPS)}")
-    parser.add_argument("--paths-mode", choices=["update", "full", "ancient"], default="update",
-                        help="Mode passed to ftdna-get-paths.py (default: update)")
+    parser.add_argument("--mode", choices=["update", "full", "ancient"], default="update",
+                        help="update: only Big Y kits and haplogroups not fetched yet; "
+                             "full: re-fetch every kit and rebuild every path; "
+                             "ancient: as update, with ftdna-get-paths.py --mode ancient")
     parser.add_argument("--limit", type=int, default=0,
                         help="Request limit per lineage passed to ftdna-get-paths.py")
     args = parser.parse_args()
@@ -135,14 +141,15 @@ def main():
         require("results", run("ftdna-fetch-results.py", *kind_args))
 
     if "private" in todo:
-        require("private", run_with_session("ftdna-get-private-variants.py"))
+        private_args = [] if args.mode == "full" else ["--missing"]
+        require("private", run_with_session("ftdna-get-private-variants.py", *private_args))
 
     if "convert" in todo:
         require("convert", run("ftdna-csv-to-json.py", *kind_args))
 
     rate_limited = False
     if "paths" in todo:
-        paths_args = [*kind_args, "--mode", args.paths_mode]
+        paths_args = [*kind_args, "--mode", args.mode]
         if args.limit:
             paths_args += ["--limit", str(args.limit)]
         code = run("ftdna-get-paths.py", *paths_args)
@@ -157,7 +164,8 @@ def main():
 
     if rate_limited:
         print("\nDone, but the paths backfill is incomplete. In about an hour run:")
-        print(f"  python tools/ftdna-update.py --skip session csv results private convert{' --kind ' + args.kind if args.kind else ''}")
+        print(f"  python tools/ftdna-update.py --skip session csv results private convert"
+              f"{' --kind ' + args.kind if args.kind else ''}")
         sys.exit(2)
     print("\nFull update done.")
 

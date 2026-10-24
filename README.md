@@ -57,9 +57,10 @@ playwright install chromium
 python tools/ftdna-update.py                   # both lineages
 python tools/ftdna-update.py --kind y          # one lineage
 python tools/ftdna-update.py --skip private    # leave out a step
+python tools/ftdna-update.py --mode full       # re-fetch everything
 ```
 
-Runs the steps below in order: checks the saved admin session and opens the sign-in window (`ftdna-login.py`) if it is missing or expired, then downloads the CSVs (1b), fetches the public results (2), downloads Big Y private variants (1c), converts (3), collects paths (4) and converts once more so the mtDNA private counts see newly arrived haplogroups. A step that reports an expired session (exit code 2) triggers a new sign-in and is retried once. Any other failure stops the run. If FTDNA rate limits the paths step, the final conversion still runs on what was saved, and the script exits with code 2 and prints the command that finishes the backfill. `--login` forces a fresh sign-in, while `--paths-mode` and `--limit` are passed on to `ftdna-get-paths.py`.
+Runs the steps below in order: checks the saved admin session and opens the sign-in window (`ftdna-login.py`) if it is missing or expired, then downloads the CSVs (1b), fetches the public results (2), downloads Big Y private variants (1c), converts (3), collects paths (4) and converts once more so the mtDNA private counts see newly arrived haplogroups. A step that reports an expired session (exit code 2) triggers a new sign-in and is retried once. Any other failure stops the run. If FTDNA rate limits the paths step, the final conversion still runs on what was saved, and the script exits with code 2 and prints the command that finishes the backfill. By default the update is incremental: it downloads private variants only for Big Y kits that have no successful fetch yet (`ftdna-get-private-variants.py --missing`), and fetches only new haplogroups. `--mode full` re-downloads every kit's private variants, which picks up upgraded or re-analysed Big Y results, and rebuilds every path (`ftdna-get-paths.py --mode full`). `--login` forces a fresh sign-in, and `--limit` is passed on to `ftdna-get-paths.py`.
 
 The individual tools:
 
@@ -87,6 +88,7 @@ Downloads `PANCESTRY`, `MANCESTRY`, `YDNASNP`, `MTDNARESULTS` into `data/input/`
 ```bash
 python tools/ftdna-get-private-variants.py                 # every Big Y kit
 python tools/ftdna-get-private-variants.py --only IN99945  # selected kits
+python tools/ftdna-get-private-variants.py --missing       # kits not fetched yet
 ```
 
 For each Big Y tester in `slo-ydna-fetched.csv`, opens the member's Big Y page through the admin session and downloads its Private Variants CSV (position, ancestral, derived — private variants have no names). This works for members who gave the admins Limited or Advanced access; the access level is read from GAP's Member Information report. Everything goes to one file, `data/input/slo-big-y-private.json`, keyed by kit number: `status` (`ok`, `no-access`, `not-in-project`, …), `access`, `fetched`, and for fetched kits `count` and `variants` (`{"position": 10123675, "ancestral": "C", "derived": "T"}`, one per line). Step 3 merges the counts into `slo-ydna.json` as `private`. FTDNA ties a login to one server for about an hour, so run this right after `ftdna-login.py`; a kit that fails keeps its last good count.
