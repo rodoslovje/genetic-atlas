@@ -74,6 +74,8 @@ python tools/ftdna-login.py
 
 Opens Chromium so you can sign in to GAP manually (including MFA / captcha). When the admin dashboard is visible, return to the terminal and press Enter — the session (cookies + localStorage) is saved to `.ftdna-session.json` (gitignored). Repeat whenever FTDNA expires the session.
 
+Over ssh (no `DISPLAY`/`WAYLAND_DISPLAY`, or with `--password`) the script asks for the kit number / username and password in the terminal (or reads `FTDNA_USER` and `FTDNA_PASSWORD`) and signs in with a headless browser, asking for a verification code if FTDNA wants one. `ftdna-update.py` picks this mode automatically. If FTDNA ever shows a captcha, `--cookie` takes a cookie instead: sign in at gap.familytreedna.com in Chrome on any computer, open DevTools → Network, reload, click the first `gap.familytreedna.com` request and copy the value of the `Cookie` request header (the cookies are HttpOnly, so `document.cookie` does not show them). Paste it at the prompt; the script checks it opens GAP before saving. `--remote` instead runs a headless Chromium with DevTools on `127.0.0.1:9222`, to sign in through `ssh -L 9222:localhost:9222` and `chrome://inspect`.
+
 **1b. Download the admin CSV exports:**
 
 ```bash
