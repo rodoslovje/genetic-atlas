@@ -169,7 +169,7 @@ def mt_private_counts(snp_path, paths_path, haplogroups):
     with open(paths_path, encoding="utf-8") as f:
         nodes = {n["haplogroup"]: n for n in json.load(f)}
     df = pd.read_csv(snp_path, dtype=str).fillna("")
-    df.rename(columns=lambda x: x.strip("﻿").strip(), inplace=True)
+    df = df.rename(columns=lambda x: x.strip("﻿").strip())
 
     def path_variants(hg):
         variants = set()
@@ -212,14 +212,15 @@ def run_one(kind):
             print(f"Error: Required file {file_path} not found.")
             return False
 
-    df_primary = pd.read_csv(primary_path, dtype=str)
-    df_fetched = pd.read_csv(cfg["input_fetched"], dtype=str)
-    df_snp = pd.read_csv(cfg["input_snp"], dtype=str)
+    def read(path):
+        # Strip BOM and whitespace from column names just in case
+        df = pd.read_csv(path, dtype=str)
+        df = df.rename(columns=lambda x: x.strip("﻿").strip())
+        return df.rename(columns={"Kit Number": "kit"})
 
-    # Strip BOM and whitespace from column names just in case
-    for df in [df_primary, df_fetched, df_snp]:
-        df.rename(columns=lambda x: x.strip("﻿").strip(), inplace=True)
-        df.rename(columns={"Kit Number": "kit"}, inplace=True)
+    df_primary = read(primary_path)
+    df_fetched = read(cfg["input_fetched"])
+    df_snp = read(cfg["input_snp"])
 
     # Primary source
     primary_cols = [
@@ -229,7 +230,7 @@ def run_one(kind):
     primary_cols = [c for c in primary_cols if c in df_primary.columns]
     df_primary = df_primary[primary_cols].copy()
     if "Name" in df_primary.columns:
-        df_primary.rename(columns={"Name": cfg["primary_name_alias"]}, inplace=True)
+        df_primary = df_primary.rename(columns={"Name": cfg["primary_name_alias"]})
     df_primary["sort_order"] = range(len(df_primary))  # preserve original order
 
     # Fetched: kit + Name + Group + Haplogroup + per-kind extras
@@ -237,26 +238,26 @@ def run_one(kind):
     fetched_cols = ["kit", "Name", "Group", "Haplogroup", *fetched_extra.keys()]
     fetched_cols = [c for c in fetched_cols if c in df_fetched.columns]
     df_fetched = df_fetched[fetched_cols].copy()
-    df_fetched.rename(columns={
+    df_fetched = df_fetched.rename(columns={
         "Name": "Name_fetched",
         "Group": "group_fetched",
         "Haplogroup": "haplogroup_fetched",
         **fetched_extra,
-    }, inplace=True)
+    })
 
     # SNP: kit + Haplogroup + per-kind extras
     snp_extra = cfg["snp_extra"]
     snp_cols = ["kit", "Haplogroup", *snp_extra.keys()]
     snp_cols = [c for c in snp_cols if c in df_snp.columns]
     df_snp = df_snp[snp_cols].copy()
-    df_snp.rename(columns={"Haplogroup": "haplogroup_snp", **snp_extra}, inplace=True)
+    df_snp = df_snp.rename(columns={"Haplogroup": "haplogroup_snp", **snp_extra})
 
     # primary LEFT JOIN fetched LEFT JOIN snp
     df = df_primary.merge(df_fetched, on="kit", how="left").merge(df_snp, on="kit", how="left")
     df = df.sort_values("sort_order", na_position="last")
-    df.drop(columns=["sort_order"], inplace=True)
+    df = df.drop(columns=["sort_order"])
 
-    df.rename(
+    df = df.rename(
         columns={
             cfg["primary_name_alias"]: "surname_primary",
             cfg["ancestor_col"]: "ancestor",
@@ -265,7 +266,6 @@ def run_one(kind):
             "Latitude": "latitude",
             "Longitude": "longitude",
         },
-        inplace=True,
     )
 
     df = df.fillna("")
@@ -291,7 +291,7 @@ def run_one(kind):
             axis=1,
         )
     elif "mitotree_snp" in df.columns:
-        df.rename(columns={"mitotree_snp": "mitotree"}, inplace=True)
+        df = df.rename(columns={"mitotree_snp": "mitotree"})
 
     # Final haplogroup: first non-empty/'-' value from the priority list
     priority = [c for c in cfg["haplogroup_priority"] if c in df.columns]
