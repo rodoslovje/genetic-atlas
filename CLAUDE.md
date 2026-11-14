@@ -12,7 +12,7 @@ npm run build    # dist/ + a copy of data/output
 npm run format   # prettier over src/**/*.js
 ```
 
-`data/` is a symlink to an external store and is never committed.
+`data/` is a symlink to an external store (`~/Work/srd/srd-dnk`) and is never committed.
 
 ## Layout
 
@@ -29,7 +29,7 @@ npm run format   # prettier over src/**/*.js
 | `src/style/` | `srd-tokens.css` → `srd.css` (shared components) → `style.css` (app) / `page.css` (document pages) |
 
 `srd-tokens.css` and `srd.css` are shared verbatim with
-`rodoslovje/genealogical-index`; keep changes to them portable, and put
+`genealogical-index` (`~/Work/rod/genealogical-index`); keep changes to them portable, and put
 Atlas-only rules in `style.css`.
 
 ## Conventions

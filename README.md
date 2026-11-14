@@ -97,7 +97,7 @@ For each Big Y tester in `slo-ydna-fetched.csv`, opens the member's Big Y page t
 
 The mtDNA count needs no download: step 3 compares each full-sequence result in `Slovenianorigin_MTDNA_Results.csv` with the mutations on its haplogroup's path in `slo-mtdna-paths.json`, leaving out the positions Mitotree filters (the 303–315, 522–524 and 16182–16193 repeats, 573, 8281–8289, 16519) and heteroplasmies. Kits whose coding region is withheld, or whose path is not fully backfilled yet, get no count — re-run step 3 after step 4 when new haplogroups arrive.
 
-Generated JSON files land in `data/output/` (which is not tracked in git — `data/` is a symlink to an external store).
+Generated JSON files land in `data/output/` (which is not tracked in git — `data/` is a symlink to an external store, `~/Work/srd/srd-dnk`).
 
 **2. Fetch public results from FamilyTreeDNA:**
 
