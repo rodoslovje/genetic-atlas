@@ -36,6 +36,14 @@ npm run dev
 npm run build
 ```
 
+### Deploy
+
+```bash
+npm run deploy
+```
+
+Builds and rsyncs `dist/` (with the current `data/output`) to `/srv/rodoslovje/dnk/` on `pojalabanda.meteor-beaufort.ts.net`, deleting files that are no longer in the build.
+
 ## 🛠️ Data Conversion Tools
 
 Python scripts that turn FamilyTreeDNA exports into the JSON consumed by the web app.

@@ -6,6 +6,7 @@
     "dev": "vite",
     "build": "vite build && mkdir -p dist/data && cp -rL data/output dist/data/",
     "preview": "vite preview",
+    "deploy": "npm run build && rsync -av --delete dist/ root@pojalabanda.meteor-beaufort.ts.net:/srv/rodoslovje/dnk/",
     "format": "prettier --write \"src/**/*.js\""
   },
   "devDependencies": {
