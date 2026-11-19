@@ -16,6 +16,15 @@ export default {
 
     entries: [
         {
+            date: "2026-11-19",
+            items: [
+                {
+                    title: "Több keresőkifejezés egyszerre",
+                    text: `Válassza el a keresőkifejezéseket vesszővel, és az Atlas bármelyiküket megtalálja — a <code>Renko, Jekovec</code> mindkét családot, az <code>IN134543, B473629</code> mindkét készletet mutatja —, így több saját vezetéknevét vagy készletét együtt követheti a térképen és a fákban.`,
+                },
+            ],
+        },
+        {
             date: "2026-10-24",
             items: [
                 {

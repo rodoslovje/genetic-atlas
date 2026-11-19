@@ -31,6 +31,15 @@ export default {
 
     entries: [
         {
+            date: "2026-11-19",
+            items: [
+                {
+                    title: "Search for several terms at once",
+                    text: `Separate search terms with commas to find any of them — <code>Renko, Jekovec</code> shows both families, <code>IN134543, B473629</code> both kits — so you can follow several of your own surnames or kits together on the map and in the trees.`,
+                },
+            ],
+        },
+        {
             date: "2026-10-24",
             items: [
                 {

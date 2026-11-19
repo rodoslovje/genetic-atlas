@@ -165,6 +165,9 @@ export default {
         <strong>lieu</strong> et chaque haplogroupe présent sur la lignée d'un membre. Rechercher une
         branche en amont telle que <code>R-M420</code> trouve donc tous ses descendants, et pas seulement
         les membres testés exactement jusque-là.</p>
+        <p>Pour rechercher plusieurs choses à la fois, séparez-les par des virgules :
+        <code>Renko, Jekovec</code> trouve les deux familles, et <code>IN134543, B473629</code> les deux
+        kits. Un membre correspond dès que l'un des termes correspond.</p>
         <p>Le compteur sous le champ indique combien de personnes correspondent ; lorsqu'aucune ne
         correspond, le texte passe au rouge. La recherche <strong>met en évidence</strong> ce
         qu'elle trouve et laisse tous les autres visibles, de sorte que les parents et voisins d'un

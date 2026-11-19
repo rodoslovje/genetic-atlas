@@ -14,6 +14,15 @@ export default {
 
     entries: [
         {
+            date: "2026-11-19",
+            items: [
+                {
+                    title: "Pretraživanje više pojmova odjednom",
+                    text: `Odvojite pojmove za pretraživanje zarezima i Atlas pronalazi bilo koji od njih — <code>Renko, Jekovec</code> prikazuje obje obitelji, <code>IN134543, B473629</code> oba kompleta — pa više svojih prezimena ili kompleta možete pratiti zajedno na karti i u stablima.`,
+                },
+            ],
+        },
+        {
             date: "2026-10-24",
             items: [
                 {

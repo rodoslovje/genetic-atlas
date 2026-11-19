@@ -168,6 +168,9 @@ export default {
         <strong>Ort</strong> und jede Haplogruppe auf der Linie eines Mitglieds. Die Suche nach einem
         übergeordneten Zweig wie <code>R-M420</code> findet daher alle seine Nachkommen, nicht nur die
         genau bis dorthin getesteten Mitglieder.</p>
+        <p>Um nach mehreren Begriffen zugleich zu suchen, trennen Sie sie durch Kommas:
+        <code>Renko, Jekovec</code> findet beide Familien, <code>IN134543, B473629</code> beide Kits.
+        Ein Mitglied ist ein Treffer, wenn einer der Begriffe passt.</p>
         <p>Der Zähler unter dem Feld nennt die Zahl der Treffer; gibt es keine, färbt sich der Text
         rot. Die Suche <strong>hebt hervor</strong>, was sie findet, und lässt alle anderen
         sichtbar, sodass Verwandte und Nachbarn eines gesuchten Mitglieds um es herum bleiben. Auf

@@ -157,6 +157,9 @@ export default {
         <strong>place</strong>, and every haplogroup on a member's line. Searching for an upstream
         branch such as <code>R-M420</code> therefore finds everyone descended from it, not only the
         members tested exactly to it.</p>
+        <p>To search for several things at once, separate them with commas: <code>Renko, Jekovec</code>
+        finds both families, and <code>IN134543, B473629</code> both kits. A member matches when any
+        one of the terms does.</p>
         <p>The counter under the box says how many people match; when nothing does, the text turns
         red. A search <strong>highlights</strong> what it finds and leaves everyone else in view, so
         the relatives and neighbours of a searched member stay around them. On the map the matching

@@ -152,6 +152,9 @@ export default {
         prednika</strong>, <strong>številko kompleta</strong>, <strong>kraj</strong> in vsako
         haploskupino na članovi liniji. Iskanje po nadrejeni veji, na primer <code>R-M420</code>, zato
         najde vse njene potomce, ne le članov, testiranih točno do nje.</p>
+        <p>Za iskanje več stvari hkrati jih ločite z vejicami: <code>Renko, Jekovec</code> najde obe
+        družini, <code>IN134543, B473629</code> pa oba kompleta. Član ustreza, kadar ustreza katerikoli
+        od izrazov.</p>
         <p>Števec pod poljem pove, koliko ljudi ustreza; kadar ne ustreza nihče, se besedilo obarva
         rdeče. Iskanje najdeno <strong>poudari</strong>, vse ostale pa pusti na ogled, tako da
         sorodniki in sosedje iskanega člana ostanejo ob njem. Na zemljevidu ujemajoče se oznake

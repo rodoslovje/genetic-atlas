@@ -14,6 +14,15 @@ export default {
 
     entries: [
         {
+            date: "2026-11-19",
+            items: [
+                {
+                    title: "Iskanje več izrazov hkrati",
+                    text: `Iskalne izraze ločite z vejicami in Atlas najde katerikoli od njih — <code>Renko, Jekovec</code> pokaže obe družini, <code>IN134543, B473629</code> oba kompleta — tako lahko več svojih priimkov ali kompletov spremljate skupaj na zemljevidu in v drevesih.`,
+                },
+            ],
+        },
+        {
             date: "2026-10-24",
             items: [
                 {

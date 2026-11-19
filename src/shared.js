@@ -307,16 +307,34 @@ export function searchFilters() {
     return !!state.searchQuery && state.searchOnly;
 }
 
+// The search box takes several terms separated by commas ("Renko, Jekovec")
+// and matches anything that matches any one of them. Memoized on the last
+// query, since the predicates below run once per person on every redraw.
+let searchTermsCache = { query: null, terms: [] };
+function searchTerms(query) {
+    if (searchTermsCache.query !== query) {
+        const terms = query.toLowerCase().split(",").map((s) => s.trim()).filter(Boolean);
+        searchTermsCache = { query, terms };
+    }
+    return searchTermsCache.terms;
+}
+
 // Single source of truth for the free-text search predicate. Used by the
 // search counter (main.js), the map markers (map.js) and the tree filter (tree.js).
 export function matchesSearchQuery(person, query) {
     if (!query) return true;
-    const q = query.toLowerCase();
-    return (person.surname && person.surname.toLowerCase().includes(q)) ||
-        (person.ancestor && person.ancestor.toLowerCase().includes(q)) ||
-        (person.kit && person.kit.toLowerCase().includes(q)) ||
+    const terms = searchTerms(query);
+    if (!terms.length) return true;
+    const surname = person.surname && person.surname.toLowerCase();
+    const ancestor = person.ancestor && person.ancestor.toLowerCase();
+    const kit = person.kit && person.kit.toLowerCase();
+    const location = person.location && person.location.toLowerCase();
+    return terms.some((q) =>
+        (surname && surname.includes(q)) ||
+        (ancestor && ancestor.includes(q)) ||
+        (kit && kit.includes(q)) ||
         (person._ancestry && person._ancestry.includes(q)) ||
-        (person.location && person.location.toLowerCase().includes(q));
+        (location && location.includes(q)));
 }
 
 // A person is "prominent" (bold label) when they have the most informative test
@@ -483,8 +501,9 @@ function prepareAncient(file, haploData, rootsMap, people) {
 // haplogroups it hangs below, so a search for an upstream SNP finds it too.
 export function matchesAncientQuery(sample, query) {
     if (!query) return true;
-    const q = query.toLowerCase();
-    return sample._text.includes(q) || sample._ancestry.includes(q);
+    const terms = searchTerms(query);
+    if (!terms.length) return true;
+    return terms.some((q) => sample._text.includes(q) || sample._ancestry.includes(q));
 }
 
 // Every haplogroup on the ancestry of a member the search matches, memoized for

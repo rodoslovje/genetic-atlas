@@ -16,6 +16,15 @@ export default {
 
     entries: [
         {
+            date: "2026-11-19",
+            items: [
+                {
+                    title: "Rechercher plusieurs termes à la fois",
+                    text: `Séparez les termes de recherche par des virgules pour trouver l'un ou l'autre — <code>Renko, Jekovec</code> affiche les deux familles, <code>IN134543, B473629</code> les deux kits — et suivez ainsi plusieurs de vos noms ou kits ensemble sur la carte et dans les arbres.`,
+                },
+            ],
+        },
+        {
             date: "2026-10-24",
             items: [
                 {

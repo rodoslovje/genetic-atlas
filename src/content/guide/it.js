@@ -164,6 +164,9 @@ export default {
         <strong>località</strong> e ogni aplogruppo sulla linea di un membro. Cercare un ramo a monte
         come <code>R-M420</code> trova quindi tutti i suoi discendenti, non soltanto i membri testati
         esattamente fino a quel punto.</p>
+        <p>Per cercare più cose insieme, separatele con virgole: <code>Renko, Jekovec</code> trova
+        entrambe le famiglie e <code>IN134543, B473629</code> entrambi i kit. Un membro corrisponde
+        quando corrisponde uno qualsiasi dei termini.</p>
         <p>Il contatore sotto il campo dice quante persone corrispondono; quando non ne corrisponde
         nessuna il testo diventa rosso. La ricerca <strong>evidenzia</strong> ciò che trova e lascia
         in vista tutti gli altri, così parenti e vicini di un membro cercato restano attorno a lui.

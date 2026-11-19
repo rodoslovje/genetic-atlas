@@ -153,6 +153,9 @@ export default {
         haplogrupu na članovoj liniji. Pretraživanje po nadređenoj grani, primjerice
         <code>R-M420</code>, stoga pronalazi sve njezine potomke, a ne samo članove testirane točno do
         nje.</p>
+        <p>Za pretraživanje više pojmova odjednom odvojite ih zarezima: <code>Renko, Jekovec</code>
+        pronalazi obje obitelji, a <code>IN134543, B473629</code> oba kompleta. Član odgovara kada
+        odgovara bilo koji od pojmova.</p>
         <p>Brojač ispod polja kaže koliko ljudi odgovara; kada ne odgovara nitko, tekst pocrveni.
         Pretraživanje <strong>ističe</strong> ono što pronađe, a sve ostale ostavlja na prikazu, pa
         rođaci i susjedi traženog člana ostaju uz njega. Na karti oznake koje odgovaraju zadržavaju

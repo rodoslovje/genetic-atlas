@@ -16,6 +16,15 @@ export default {
 
     entries: [
         {
+            date: "2026-11-19",
+            items: [
+                {
+                    title: "Cercare più termini insieme",
+                    text: `Separate i termini di ricerca con virgole per trovarne uno qualsiasi — <code>Renko, Jekovec</code> mostra entrambe le famiglie, <code>IN134543, B473629</code> entrambi i kit — così potete seguire insieme più cognomi o kit sulla mappa e negli alberi.`,
+                },
+            ],
+        },
+        {
             date: "2026-10-24",
             items: [
                 {

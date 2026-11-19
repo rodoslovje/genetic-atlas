@@ -155,6 +155,9 @@ export default {
         ős</strong> nevét, a <strong>készlet számát</strong>, a <strong>helyet</strong>, valamint minden
         haplocsoportot a tag vonalán. Egy feljebbi ágra, például az <code>R-M420</code>-ra keresve tehát
         annak minden leszármazottja előkerül, nem csak azok a tagok, akiket pontosan addig teszteltek.</p>
+        <p>Ha egyszerre több dologra keres, válassza el őket vesszővel: a <code>Renko, Jekovec</code>
+        mindkét családot, az <code>IN134543, B473629</code> mindkét készletet megtalálja. Egy tag akkor
+        felel meg, ha bármelyik kifejezés illik rá.</p>
         <p>A mező alatti számláló mutatja, hányan felelnek meg; ha senki, a szöveg pirosra vált. A
         keresés <strong>kiemeli</strong>, amit talál, és mindenki mást látható helyen hagy, így a
         keresett tag rokonai és szomszédai körülötte maradnak. A térképen a megfelelő jelölők

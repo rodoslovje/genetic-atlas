@@ -16,6 +16,15 @@ export default {
 
     entries: [
         {
+            date: "2026-11-19",
+            items: [
+                {
+                    title: "Mehrere Suchbegriffe zugleich",
+                    text: `Trennen Sie Suchbegriffe durch Kommas, um jeden davon zu finden — <code>Renko, Jekovec</code> zeigt beide Familien, <code>IN134543, B473629</code> beide Kits —, so verfolgen Sie mehrere eigene Nachnamen oder Kits gemeinsam auf der Karte und in den Bäumen.`,
+                },
+            ],
+        },
+        {
             date: "2026-10-24",
             items: [
                 {
